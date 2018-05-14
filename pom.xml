@@ -11,6 +11,7 @@
 
     <modules>
         <module>corgi-spark</module>
+        <module>corgi-web</module>
     </modules>
 
 </project>
