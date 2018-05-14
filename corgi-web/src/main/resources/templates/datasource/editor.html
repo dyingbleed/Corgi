@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="base :: base_header(~{::title}, ~{::link}, ~{::script})">
+    <title th:text="${appName}"></title>
+    <link rel="stylesheet" th:href="@{/css/datasource/editor.css}"/>
+    <script th:text="${id != null} ? |var id = ${id};|"></script>
+    <script th:src="@{/js/datasource/editor.js}"></script>
+</head>
+<body>
+<th:block th:replace="base :: navbar(${appName}, 'datasource')"></th:block>
+<div id="app" class="container">
+    <form v-on:submit.prevent="insertDataSource">
+        <div class="form-group">
+            <label for="name">名称</label>
+            <input type="text" class="form-control" id="name" required v-model="datasource.name">
+        </div>
+        <div class="form-group">
+            <label for="url">URL</label>
+            <input type="text" class="form-control" id="url" required v-model="datasource.url">
+        </div>
+        <div class="form-group">
+            <label for="username">用户名</label>
+            <input type="text" class="form-control" id="username" required v-model="datasource.username">
+        </div>
+        <div class="form-group">
+            <label for="password">密码</label>
+            <input type="password" class="form-control" id="password" required v-model="datasource.password">
+        </div>
+        <button type="submit" class="btn btn-primary">保存</button>
+        <button type="button" class="btn btn-primary" v-on:click.prevent="testDataSourceConnection">测试连接</button>
+    </form>
+</div>
+</body>
+</html>

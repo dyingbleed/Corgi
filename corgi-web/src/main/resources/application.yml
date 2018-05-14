@@ -1,0 +1,23 @@
+# Server
+server:
+  display-name: Corgi
+
+# Spring
+spring:
+  datasource:
+    name: mysql
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localnode4:3306/corgi?useUnicode=true&characterEncoding=utf-8
+    username: corgi
+    password: corgi
+  thymeleaf:
+    cache: false
+  devtools:
+    livereload:
+      enabled: true
+
+# Druid
+druid:
+  initial-size: 1
+  min-idle: 1
+  max-active: 20

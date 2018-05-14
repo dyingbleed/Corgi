@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="base :: base_header(~{::title}, ~{::link}, ~{::script})">
+    <title th:text="${appName}"></title>
+    <link rel="stylesheet" th:href="@{/css/index.css}" />
+    <script th:src="@{/js/index.js}"></script>
+</head>
+<body>
+<th:block th:replace="base :: navbar(${appName}, 'home')"></th:block>
+</body>
+</html>
