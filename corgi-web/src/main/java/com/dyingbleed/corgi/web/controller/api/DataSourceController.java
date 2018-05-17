@@ -28,6 +28,7 @@ public class DataSourceController {
      * @param ds 数据源
      *
      * @return 数据源
+     *
      * */
     @RequestMapping(method = RequestMethod.PUT)
     public DataSource insertDataSource(DataSource ds) {
@@ -51,6 +52,7 @@ public class DataSourceController {
      * @param ds 数据源
      *
      * @return 数据源
+     *
      * */
     @RequestMapping(method = RequestMethod.POST)
     public DataSource updateDataSource(DataSource ds) {
@@ -61,6 +63,7 @@ public class DataSourceController {
      * 查询所有数据源
      *
      * @return 数据源
+     *
      * */
     @RequestMapping(method = RequestMethod.GET)
     public List<DataSource> queryAllDataSource() {
@@ -73,6 +76,7 @@ public class DataSourceController {
      * @param id 数据源 ID
      *
      * @return 数据源
+     *
      * */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public DataSource queryDataSourceById(@PathVariable("id") Long id) {
@@ -85,10 +89,38 @@ public class DataSourceController {
      * @param ds 数据源
      *
      * @return 数据源
+     *
      * */
     @RequestMapping(value = "/test", method = RequestMethod.GET)
-    public String testDataSourceConnection(DataSource ds) {
-        return this.dataSourceService.testDataSourceConnection(ds);
+    public String testConnection(DataSource ds) {
+        return this.dataSourceService.testConnection(ds);
+    }
+
+    /**
+     * 显示所有数据库
+     *
+     * @param id 数据源 ID
+     *
+     * @return 数据库列表
+     *
+     * */
+    @RequestMapping(value = "/db/{id}", method = RequestMethod.GET)
+    public List<String> showDBs(@PathVariable("id") Long id) {
+        return this.dataSourceService.showDBs(id);
+    }
+
+    /**
+     * 显示数据库所有表
+     *
+     * @param id 数据源 ID
+     * @param db 数据库名
+     *
+     * @return 表列表
+     *
+     * */
+    @RequestMapping(value = "/table/{id}/{db}", method = RequestMethod.GET)
+    public List<String> showTables(@PathVariable("id") Long id, @PathVariable("db") String db) {
+        return this.dataSourceService.showTables(id, db);
     }
 
 }

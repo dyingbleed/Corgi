@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="ehcache.xsd">
+
+    <cache name="source_db"
+           maxEntriesLocalHeap="20"
+           timeToLiveSeconds="600">
+    </cache>
+
+    <cache name="source_table"
+           maxEntriesLocalHeap="100"
+           timeToLiveSeconds="600">
+    </cache>
+
+    <cache name="sink_db"
+           maxEntriesLocalHeap="1"
+           timeToLiveSeconds="600">
+    </cache>
+
+    <cache name="sink_table"
+           maxEntriesLocalHeap="50"
+           timeToLiveSeconds="600">
+    </cache>
+
+</ehcache>

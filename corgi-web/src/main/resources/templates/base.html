@@ -24,6 +24,7 @@
         <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
             <div class="navbar-nav">
                 <a class="nav-item nav-link" th:classappend="${moduleName == 'home'}? 'active'" href="/">首页 <span class="sr-only">home</span></a>
+                <a class="nav-item nav-link" th:classappend="${moduleName == 'batch'} ?'active'" href="/batch/">批量任务</a>
                 <a class="nav-item nav-link" th:classappend="${moduleName == 'datasource'} ?'active'" href="/datasource/">数据源</a>
             </div>
         </div>
