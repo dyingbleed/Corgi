@@ -1,2 +1,11 @@
+# IDE 相关
 .idea
 *.iml
+
+# Java 相关
+target
+*.class
+
+# 配置文件
+hive-site.xml
+
