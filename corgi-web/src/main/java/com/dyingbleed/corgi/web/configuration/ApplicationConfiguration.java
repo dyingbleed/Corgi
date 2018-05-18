@@ -13,7 +13,8 @@ import org.springframework.context.annotation.Import;
 @EnableCaching
 @ComponentScan(basePackages = {
         "com.dyingbleed.corgi.web.controller",
-        "com.dyingbleed.corgi.web.service"
+        "com.dyingbleed.corgi.web.service",
+        "com.dyingbleed.corgi.web.aop"
 })
 @Import(DBConfiguration.class)
 @MapperScan(basePackages = {

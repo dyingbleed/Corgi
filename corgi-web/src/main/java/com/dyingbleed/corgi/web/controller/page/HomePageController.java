@@ -3,7 +3,9 @@ package com.dyingbleed.corgi.web.controller.page;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
 
 /**
  * Created by 李震 on 2018/5/10.
@@ -11,15 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class HomePageController {
 
-    @Value("${server.display-name}")
-    private String appName;
-
     @RequestMapping("/")
-    public String homePage(Model model) {
-
-        model.addAttribute("appName", this.appName);
-
-        return "index";
+    public ModelAndView homePage(Model model) {
+        ModelAndView modelAndView = new ModelAndView("index");
+        return modelAndView;
     }
 
 }

@@ -15,26 +15,15 @@ import org.springframework.web.servlet.ModelAndView;
 @RequestMapping("/batch")
 public class BatchTaskPageController {
 
-    @Value("${server.display-name}")
-    private String appName;
-
     @GetMapping("/")
     public ModelAndView home() {
         ModelAndView modelAndView = new ModelAndView("/batch/index");
-
-        ModelMap modelMap = modelAndView.getModelMap();
-        modelMap.addAttribute("appName", appName);
-
         return modelAndView;
     }
 
     @GetMapping("/editor")
     public ModelAndView editor() {
         ModelAndView modelAndView = new ModelAndView("/batch/editor");
-
-        ModelMap modelMap = modelAndView.getModelMap();
-        modelMap.addAttribute("appName", appName);
-
         return modelAndView;
     }
 
@@ -43,7 +32,6 @@ public class BatchTaskPageController {
         ModelAndView modelAndView = new ModelAndView("/batch/editor");
 
         ModelMap modelMap = modelAndView.getModelMap();
-        modelMap.addAttribute("appName", appName);
         modelMap.addAttribute("id", id);
 
         return modelAndView;
