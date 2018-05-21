@@ -24,6 +24,7 @@
         <bootstrap.version>4.1.0</bootstrap.version>
         <jquery.version>3.3.1</jquery.version>
         <lodash.version>4.17.4</lodash.version>
+        <moment.version>2.22.1</moment.version>
         <vue.version>2.5.13</vue.version>
     </properties>
 
@@ -60,6 +61,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-quartz</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -136,6 +141,11 @@
             <groupId>org.webjars</groupId>
             <artifactId>vue</artifactId>
             <version>${vue.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>momentjs</artifactId>
+            <version>${moment.version}</version>
         </dependency>
 
     </dependencies>

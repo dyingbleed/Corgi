@@ -1,6 +1,8 @@
 package com.dyingbleed.corgi.web.bean;
 
 /**
+ * 批处理任务 POJO
+ *
  * Created by 李震 on 2018/5/15.
  */
 public class BatchTask {
@@ -83,5 +85,19 @@ public class BatchTask {
 
     public void setSink_table(String sink_table) {
         this.sink_table = sink_table;
+    }
+
+    @Override
+    public String toString() {
+        return "BatchTask{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", datasource_id=" + datasource_id +
+                ", source_db='" + source_db + '\'' +
+                ", source_table='" + source_table + '\'' +
+                ", mode='" + mode + '\'' +
+                ", sink_db='" + sink_db + '\'' +
+                ", sink_table='" + sink_table + '\'' +
+                '}';
     }
 }
