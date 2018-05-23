@@ -20,9 +20,9 @@ public interface BatchTaskMapper {
      *
      * */
     @Insert("insert into batch " +
-            "(name, datasource_id, source_db, source_table, mode, sink_db, sink_table) " +
+            "(name, datasource_id, source_db, source_table, mode, time_column, sink_db, sink_table) " +
             "values" +
-            "(#{task.name}, #{task.datasource_id}, #{task.source_db}, #{task.source_table}, #{task.mode}, #{task.sink_db}, #{task.sink_table})")
+            "(#{task.name}, #{task.datasource_id}, #{task.source_db}, #{task.source_table}, #{task.mode}, #{task.time_column}, #{task.sink_db}, #{task.sink_table})")
     public void insertBatchTask(@Param("task") BatchTask task);
 
     /**
@@ -49,8 +49,10 @@ public interface BatchTaskMapper {
             "source_db=#{task.source_db}, " +
             "source_table=#{task.source_table}, " +
             "mode=#{task.mode}, " +
+            "time_column=#{task.time_column}, " +
             "sink_db=#{task.sink_db}, " +
-            "sink_table=#{task.sink_table}")
+            "sink_table=#{task.sink_table}" +
+            "where id=#{task.id}")
     public void updateBatchTask(@Param("task") BatchTask task);
 
     /**
@@ -73,4 +75,14 @@ public interface BatchTaskMapper {
     @Select("select * from batch where id=#{id}")
     public BatchTask queryBatchTaskById(@Param("id") Long id);
 
+    /**
+     * 根据名称查询批量任务
+     *
+     * @param name 批量任务名称
+     *
+     * @return 批量任务
+     *
+     * */
+    @Select("select * from batch where name=#{name}")
+    public BatchTask queryBatchTaskByName(@Param("name") String name);
 }

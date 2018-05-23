@@ -19,6 +19,8 @@ public class BatchTask {
 
     private String mode;
 
+    private String time_column;
+
     private String sink_db;
 
     private String sink_table;
@@ -69,6 +71,14 @@ public class BatchTask {
 
     public void setMode(String mode) {
         this.mode = mode;
+    }
+
+    public String getTime_column() {
+        return time_column;
+    }
+
+    public void setTime_column(String time_column) {
+        this.time_column = time_column;
     }
 
     public String getSink_db() {

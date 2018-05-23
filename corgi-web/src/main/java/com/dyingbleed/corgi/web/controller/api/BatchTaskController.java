@@ -5,10 +5,7 @@ import com.dyingbleed.corgi.web.service.BatchTaskService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -69,7 +66,7 @@ public class BatchTaskController {
      *
      * */
     @RequestMapping(method = RequestMethod.GET)
-    public List<BatchTask> queryAllBatchTask() {
+    public List<BatchTask> queryAllBatchTask(@RequestParam(value = "name", required = false) String name) {
         return this.batchTaskService.queryAllBatchTask();
     }
 
@@ -81,7 +78,7 @@ public class BatchTaskController {
      * @return 批量任务
      *
      * */
-    @RequestMapping(value = "{id}", method = RequestMethod.GET)
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public BatchTask queryBatchTaskById(@PathVariable("id") Long id) {
         return this.batchTaskService.queryBatchTaskById(id);
     }

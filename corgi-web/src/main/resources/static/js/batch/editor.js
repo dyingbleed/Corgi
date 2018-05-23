@@ -5,6 +5,7 @@ $(function () {
     var dataSourceArray = []; // 数据源列表
     var sourceDBArray = []; // Source 数据库
     var sourceTableArray = []; // Source 表
+    var timeColumnObject = {}; // 时间列
     var sinkDBArray = []; // Sink 数据库
 
     // Vue 实例
@@ -15,6 +16,7 @@ $(function () {
             dataSourceArray: dataSourceArray,
             sourceDBArray: sourceDBArray,
             sourceTableArray: sourceTableArray,
+            timeColumnObject: timeColumnObject,
             sinkDBArray: sinkDBArray
         },
         watch: {
@@ -23,11 +25,22 @@ $(function () {
             },
             "batchTask.source_db": function(oldValue) {
                 queryAllSourceTable(app.batchTask.datasource_id, oldValue);
+            },
+            "batchTask.source_table": function (oldValue) {
+                queryAllTimeColumn(app.batchTask.datasource_id, app.batchTask.source_db, oldValue);
+            },
+            "batchTask.mode": function (oldValue) {
+                if (oldValue == 'COMPLETE') app.batchTask.time_column = null;
             }
         },
         methods: {
-            insertBatchTask: function () {
-                insertBatchTask(app.batchTask)
+            insertOrUpdateBatchTask: function () {
+                if (_.isNull(id)) {
+                    insertBatchTask(app.batchTask);
+                } else {
+                    updateBatchTask(app.batchTask);
+                }
+
             }
         }
     });
@@ -41,6 +54,22 @@ $(function () {
     function insertBatchTask(task) {
         $.ajax('/api/batch', {
             method: 'PUT',
+            data: task
+        }).done(function () {
+            alert('保存成功！');
+            window.location.href = '/batch/';
+        });
+    }
+
+    /**
+     * 修改批量任务
+     *
+     * @param task 批量任务
+     *
+     * */
+    function updateBatchTask(task) {
+        $.ajax('/api/batch', {
+            method: 'POST',
             data: task
         }).done(function () {
             alert('保存成功！');
@@ -95,6 +124,21 @@ $(function () {
     }
 
     /**
+     * 查询所有时间列
+     *
+     * @param id
+     * @param db
+     * @param table
+     *
+     * */
+    function queryAllTimeColumn(id, db, table) {
+        var url = '/api/datasource/timecolumn/' + id + '/' + db + '/' + table;
+        $.get(url).done(function (data) {
+            app.timeColumnObject = data;
+        });
+    }
+
+    /**
      * 根据 ID 查询批量任务
      *
      * @param id 批量任务 ID
@@ -109,7 +153,7 @@ $(function () {
 
     queryAllDataSource();
     queryAllSinkDB();
-    if (!_.isUndefined(id)) {
+    if (!_.isNull(id)) {
         queryBatchTaskById(id);
         app.batchTask.id = id;
     }

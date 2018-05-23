@@ -3,12 +3,10 @@ package com.dyingbleed.corgi.web.controller.api;
 import com.dyingbleed.corgi.web.bean.DataSource;
 import com.dyingbleed.corgi.web.service.DataSourceService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 数据源接口
@@ -121,6 +119,21 @@ public class DataSourceController {
     @RequestMapping(value = "/table/{id}/{db}", method = RequestMethod.GET)
     public List<String> showTables(@PathVariable("id") Long id, @PathVariable("db") String db) {
         return this.dataSourceService.showTables(id, db);
+    }
+
+    /**
+     * 显示所有修改时间字段
+     *
+     * @param id 数据源 ID
+     * @param db 数据库名
+     * @param table 表名
+     *
+     * @return 字段
+     *
+     * */
+    @RequestMapping(value = "/timecolumn/{id}/{db}/{table}")
+    public Map<String, String> getTimeColumns(@PathVariable("id") Long id, @PathVariable("db") String db, @PathVariable("table") String table) {
+        return this.dataSourceService.getTimeColumns(id, db, table);
     }
 
 }

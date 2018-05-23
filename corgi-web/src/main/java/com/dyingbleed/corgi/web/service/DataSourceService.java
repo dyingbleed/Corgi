@@ -11,8 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.sql.SQLException;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by 李震 on 2018/5/9.
@@ -84,6 +87,18 @@ public class DataSourceService {
     }
 
     /**
+     * 根据名称查询数据源
+     *
+     * @param name 数据源名称
+     *
+     * @return 数据源
+     *
+     * */
+    public DataSource queryDataSourceByName(String name) {
+        return this.dataSourceMapper.queryDataSourceByName(name);
+    }
+
+    /**
      * 测试数据源连接
      *
      * @param ds 数据源
@@ -144,6 +159,33 @@ public class DataSourceService {
         }
 
         return tables;
+    }
+
+    /**
+     * 显示所有修改时间字段
+     *
+     * @param id 数据源 ID
+     * @param database 数据库名
+     * @param table 表名
+     *
+     * @return 字段
+     *
+     * */
+    public Map<String, String> getTimeColumns(Long id, String database, String table) {
+        Map<String, String> columns = new LinkedHashMap<>();
+
+        DataSource ds = this.queryDataSourceById(id);
+        try {
+            Map<String, String> all = JDBCUtils.describeTable(ds.getUrl(), ds.getUsername(), ds.getPassword(), database, table);
+            Map<String, String> modifyTimeColumns = all.entrySet().stream()
+                    .filter(entry -> entry.getValue().equalsIgnoreCase("datetime") || entry.getValue().equalsIgnoreCase("timestamp"))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            columns.putAll(modifyTimeColumns);
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return columns;
     }
 
 }

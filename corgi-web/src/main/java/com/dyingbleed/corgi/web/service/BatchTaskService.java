@@ -78,4 +78,16 @@ public class BatchTaskService {
         return this.batchTaskMapper.queryBatchTaskById(id);
     }
 
+    /**
+     * 根据名称查询批量任务
+     *
+     * @param name 批量任务名称
+     *
+     * @return 批量任务
+     *
+     * */
+    public BatchTask queryBatchTaskByName(String name) {
+        return this.batchTaskMapper.queryBatchTaskByName(name);
+    }
+
 }

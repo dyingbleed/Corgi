@@ -58,4 +58,14 @@ public interface DataSourceMapper {
     @Select("select * from corgi.datasource where id=#{id}")
     public DataSource queryDataSourceById(@Param("id") Long id);
 
+    /**
+     * 根据名称查询数据源
+     *
+     * @param name 数据源名称
+     *
+     * @return 数据源
+     * */
+    @Select("select * from corgi.datasource where name=#{name}")
+    public DataSource queryDataSourceByName(@Param("name") String name);
+
 }
