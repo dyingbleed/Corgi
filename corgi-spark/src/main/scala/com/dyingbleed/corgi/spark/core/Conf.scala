@@ -38,13 +38,13 @@ class Conf @Inject()(@Named("appName") appName: String, @Named("apiServer") apiS
 
   def modifyTimeColumn: String = jobConf.getString("time_column")
 
-  def dbUrl: String = dbConf.getString("url")
+  def dbUrl: String = jobConf.getString("datasource_url")
 
   def dbTable: String = jobConf.getString("source_table")
 
-  def dbUser: String = dbConf.getString("username")
+  def dbUser: String = jobConf.getString("datasource_username")
 
-  def dbPassword: String = dbConf.getString("password")
+  def dbPassword: String = jobConf.getString("datasource_password")
 
   def hiveDB: String = jobConf.getString("sink_db")
 

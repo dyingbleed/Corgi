@@ -52,7 +52,7 @@ class DataSource {
 
   private def getTable(ts: LocalDateTime): String = {
     conf.mode match {
-      case COMPLETED => {
+      case COMPLETE => {
         // 全量
         conf.dbTable
       }
@@ -87,7 +87,7 @@ class DataSource {
 
   def loadSourceDF: DataFrame = {
     conf.mode match {
-      case COMPLETED => {
+      case COMPLETE => {
         // 全量
         spark.read
           .format("jdbc")
@@ -132,7 +132,7 @@ class DataSource {
 
   def persistSinkDF(df: DataFrame): Unit = {
     conf.mode match {
-      case COMPLETED => {
+      case COMPLETE => {
         // 创建表
         val schema = df.schema.add("ods_date", StringType)
         spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema).createOrReplaceTempView("t")

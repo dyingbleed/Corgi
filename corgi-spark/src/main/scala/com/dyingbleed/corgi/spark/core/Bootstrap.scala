@@ -15,7 +15,7 @@ class Bootstrap(args: Array[String]) {
   def bootstrap(execute: (AbstractModule) => Unit): Unit = {
     val spark = if (appName.startsWith("test") || appName.endsWith("test")) {
       val spark = SparkSession.builder()
-        .master("local[2]")
+        .master("local")
         .appName(appName)
         .enableHiveSupport()
         .config("hive.exec.dynamic.partition", "true") // 支持 Hive 动态分区
@@ -28,7 +28,7 @@ class Bootstrap(args: Array[String]) {
       spark
     } else {
       val spark = SparkSession.builder()
-        .master("yarn")
+        .master("local")
         .appName(appName)
         .enableHiveSupport()
         .config("hive.exec.dynamic.partition", true) // 支持 Hive 动态分区

@@ -1,19 +1,22 @@
 package com.dyingbleed.corgi.spark.core
 
-import javax.inject.Named
+import scala.collection.JavaConverters._
 
+import com.alibaba.fastjson.JSON
+import com.google.common.base.Charsets
 import com.google.inject.Inject
+import javax.inject.Named
+import org.apache.http.client.entity.UrlEncodedFormEntity
+import org.apache.http.client.methods.{HttpGet, HttpPost}
+import org.apache.http.impl.client.HttpClients
+import org.apache.http.message.BasicNameValuePair
+import org.apache.http.util.EntityUtils
 import org.joda.time.LocalDateTime
-import org.joda.time.format.DateTimeFormat
-import redis.clients.jedis.Jedis
 
 /**
   * Created by 李震 on 2018/3/1.
   */
-class Metadata @Inject()(@Named("appName") appName: String){
-
-  @Inject
-  var conf: Conf = _
+class Metadata @Inject()(@Named("appName") appName: String, @Named("apiServer") apiServer: String){
 
   def getLastModifyDate: LocalDateTime = {
     val httpClient = HttpClients.createDefault()
