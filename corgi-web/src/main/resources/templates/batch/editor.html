@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="base :: base_header(~{::title}, ~{::link}, ~{::script})">
+    <title th:text="${appName}"></title>
+    <link rel="stylesheet" th:href="@{/css/batch/editor.css}"/>
+    <script th:text="${id != null} ? |var id = ${id};| : |var id = null;|"></script>
+    <script th:src="@{/js/batch/editor.js}"></script>
+</head>
+<body>
+<th:block th:replace="base :: navbar(${appName}, 'batch')"></th:block>
+<div id="app" class="container">
+    <form v-on:submit.prevent="insertOrUpdateBatchTask()">
+        <div class="form-group">
+            <label for="name">名称</label>
+            <input type="text" class="form-control" id="name" required v-model="batchTask.name">
+        </div>
+        <div class="form-group">
+            <label for="datasource_id">数据源</label>
+            <select class="form-control" id="datasource_id" required v-model="batchTask.datasource_id">
+                <option v-for="i in dataSourceArray" :value="i.id">{{ i.name }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="source_db">Source 数据库</label>
+            <select class="form-control" id="source_db" required :disabled="!batchTask.datasource_id" v-model="batchTask.source_db">
+                <option v-for="i in sourceDBArray" :value="i">{{ i }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="source_table">Source 表</label>
+            <select class="form-control" id="source_table" required :disabled="!batchTask.source_db" v-model="batchTask.source_table">
+                <option v-for="i in sourceTableArray" :value="i">{{ i }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="mode">模式</label>
+            <select class="form-control" id="mode" required v-model="batchTask.mode">
+                <option value="UPDATE">更新数据</option>
+                <option value="COMPLETE">全量数据</option>
+                <option value="APPEND">追加数据</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="time_column">时间列</label>
+            <select class="form-control" id="time_column" required :disabled="batchTask.mode != 'UPDATE'" v-model="batchTask.time_column">
+                <option v-for="(v, k) in timeColumnObject" :value="k">{{ k }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="sink_db">Sink 数据库</label>
+            <select class="form-control" id="sink_db" required v-model="batchTask.sink_db">
+                <option v-for="i in sinkDBArray" :value="i">{{ i }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="sink_table">Sink 表</label>
+            <input type="text" class="form-control" id="sink_table" required v-model="batchTask.sink_table">
+        </div>
+        <button type="submit" class="btn btn-primary">保存</button>
+    </form>
+</div>
+</body>
+</html>

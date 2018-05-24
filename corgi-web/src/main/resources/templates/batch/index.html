@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="base :: base_header(~{::title}, ~{::link}, ~{::script})">
+    <title th:text="${appName}"></title>
+    <link rel="stylesheet" th:href="@{/css/batch/index.css}"/>
+    <script th:src="@{/js/batch/index.js}"></script>
+</head>
+<body>
+<th:block th:replace="base :: navbar(${appName}, 'batch')"></th:block>
+<div id="app" class="container">
+    <table class="table table-borderless">
+        <thead>
+        <tr>
+            <th scope="col">名称</th>
+            <th scope="col">Source</th>
+            <th scope="col">Sink</th>
+            <th scope="col" width="20%">操作</th>
+        </tr>
+        </thead>
+        <tbody v-for="i in batchTaskArray">
+        <tr>
+            <td>
+                <a :href="'/batch/editor/' + i.id">{{ i.name }}</a>
+            </td>
+            <td>{{ i.source_db }}.{{ i.source_table }}</td>
+            <td>{{ i.sink_db }}.{{ i.sink_table }}</td>
+            <td>
+                <a href="#" class="btn btn-sm btn-danger" v-on:click="deleteBatchTaskById(i.id)">删除</a>
+            </td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <a class="btn btn-light" v-on:click="gotoAddBatchTask">新增批量任务</a>
+        </tfoot>
+    </table>
+</div>
+</body>
+</html>

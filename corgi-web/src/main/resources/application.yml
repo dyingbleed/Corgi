@@ -1,0 +1,31 @@
+# Server
+server:
+  display-name: Corgi
+  address: 127.0.0.1
+  port: 8080
+
+# Spring
+spring:
+  datasource:
+    name: mysql
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localnode4:3306/corgi?useUnicode=true&characterEncoding=utf-8
+    username: corgi
+    password: corgi
+  thymeleaf:
+    cache: false
+  quartz:
+    job-store-type: jdbc
+  devtools:
+    livereload:
+      enabled: true
+
+# Druid
+druid:
+  initial-size: 1
+  min-idle: 1
+  max-active: 20
+
+# Spark
+spark:
+  spark_home: /Users/anthony/spark/2.2.0
