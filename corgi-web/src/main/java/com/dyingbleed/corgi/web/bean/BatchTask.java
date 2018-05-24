@@ -13,6 +13,12 @@ public class BatchTask {
 
     private Long datasource_id;
 
+    private String datasource_url;
+
+    private String datasource_username;
+
+    private String datasource_password;
+
     private String source_db;
 
     private String source_table;
@@ -47,6 +53,30 @@ public class BatchTask {
 
     public void setDatasource_id(Long datasource_id) {
         this.datasource_id = datasource_id;
+    }
+
+    public String getDatasource_url() {
+        return datasource_url;
+    }
+
+    public void setDatasource_url(String datasource_url) {
+        this.datasource_url = datasource_url;
+    }
+
+    public String getDatasource_username() {
+        return datasource_username;
+    }
+
+    public void setDatasource_username(String datasource_username) {
+        this.datasource_username = datasource_username;
+    }
+
+    public String getDatasource_password() {
+        return datasource_password;
+    }
+
+    public void setDatasource_password(String datasource_password) {
+        this.datasource_password = datasource_password;
     }
 
     public String getSource_db() {

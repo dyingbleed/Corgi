@@ -83,6 +83,22 @@ public interface BatchTaskMapper {
      * @return 批量任务
      *
      * */
-    @Select("select * from batch where name=#{name}")
+    @Select("SELECT " +
+            "b.id, " +
+            "b.name, " +
+            "b.datasource_id, " +
+            "d.url as datasource_url, " +
+            "d.username as datasource_username, " +
+            "d.password as datasource_password, " +
+            "b.source_db, " +
+            "b.source_table, " +
+            "b.mode, " +
+            "b.time_column, " +
+            "b.sink_db, " +
+            "b.sink_table " +
+            "FROM batch b " +
+            "LEFT JOIN datasource d " +
+            "ON b.datasource_id = d.id " +
+            "WHERE b.name=#{name}")
     public BatchTask queryBatchTaskByName(@Param("name") String name);
 }
