@@ -5,7 +5,7 @@ package com.dyingbleed.corgi.spark.core;
  */
 public enum ODSMode {
 
-    COMPLETED, // 全量
+    COMPLETE, // 全量
     APPEND, // 增量
     UPDATE // 修改
 

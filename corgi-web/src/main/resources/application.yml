@@ -1,6 +1,8 @@
 # Server
 server:
   display-name: Corgi
+  address: 127.0.0.1
+  port: 8080
 
 # Spring
 spring:
@@ -23,3 +25,7 @@ druid:
   initial-size: 1
   min-idle: 1
   max-active: 20
+
+# Spark
+spark:
+  spark_home: /Users/anthony/spark/2.2.0

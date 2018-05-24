@@ -1,9 +1,7 @@
 package com.dyingbleed.corgi.spark
 
-import com.google.inject.name.Named
-import com.google.inject.{Guice, Inject}
 import com.dyingbleed.corgi.spark.core.{Bootstrap, DataSource}
-import org.apache.spark.sql.SparkSession
+import com.google.inject.{AbstractModule, Guice, Inject}
 
 /**
   * Created by 李震 on 2018/3/1.
@@ -14,14 +12,14 @@ object Application {
     Bootstrap(args).bootstrap(execute)
   }
 
-  def execute(spark: SparkSession, appName: String): Unit = {
-    val injector = Guice.createInjector(new ApplicationModule(spark, appName))
+  def execute(module: AbstractModule): Unit = {
+    val injector = Guice.createInjector(module)
     injector.getInstance(classOf[Application]).run()
   }
 
 }
 
-class Application @Inject() (spark: SparkSession, @Named("appName") appName: String) {
+class Application {
 
   @Inject
   var dataSource: DataSource = _

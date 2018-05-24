@@ -16,29 +16,35 @@ class Metadata @Inject()(@Named("appName") appName: String){
   var conf: Conf = _
 
   def getLastModifyDate: LocalDateTime = {
-    val jedis = new Jedis(conf.cacheHost, conf.cachePort)
-    jedis.auth(conf.cachePassword)
-    val key = s"spark_ods_job_${appName}"
+    val httpClient = HttpClients.createDefault()
+    val httpGet = new HttpGet("http://" + apiServer + "/api/metric?name=" + appName)
+    val httpResponse = httpClient.execute(httpGet)
 
-    val lastModifyTime = if (jedis.exists(key)) {
-      // 缓存命中
-      LocalDateTime.parse(jedis.get(key), DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss"))
+    val statusCode = httpResponse.getStatusLine.getStatusCode
+    if (statusCode >= 200 && statusCode < 300) {
+      val entity = httpResponse.getEntity
+      val content = EntityUtils.toString(entity, Charsets.UTF_8)
+      httpClient.close()
+
+      LocalDateTime.fromDateFields(JSON.parseObject(content).getDate("execute_time"))
     } else {
-      // 缓存未命中，取前天零点
-      LocalDateTime.now().minusDays(1).withTime(0, 0, 0, 0)
+      httpClient.close()
+      throw new RuntimeException("调用任务指标接口返回 " + statusCode)
     }
-
-    jedis.close()
-
-    lastModifyTime
   }
 
   def saveLastModifyDate(lastModifyTime: LocalDateTime): Unit = {
-    val jedis = new Jedis(conf.cacheHost, conf.cachePort)
-    jedis.auth(conf.cachePassword)
-    val key = s"spark_ods_job_${appName}"
-    jedis.set(key, lastModifyTime.toString("yyyy-MM-dd HH:mm:ss"))
-    jedis.close()
+    val httpClient = HttpClients.createDefault()
+
+    val httpPost = new HttpPost("http://" + apiServer + "/api/metric")
+    val params = List(
+      new BasicNameValuePair("batch_task_name", appName),
+      new BasicNameValuePair("execute_time", lastModifyTime.toString("yyyy-MM-dd HH:mm:ss"))
+    )
+    httpPost.setEntity(new UrlEncodedFormEntity(params.asJava))
+    httpClient.execute(httpPost)
+
+    httpClient.close()
   }
 
 }

@@ -1,58 +1,53 @@
 package com.dyingbleed.corgi.spark.core
 
 import com.alibaba.fastjson.JSON
+import com.google.common.base.Charsets
 import com.google.inject.Inject
 import com.google.inject.name.Named
-import org.apache.commons.io.IOUtils
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.impl.client.HttpClients
+import org.apache.http.util.EntityUtils
 
 /**
   * Created by 李震 on 2018/3/1.
   */
-class Conf @Inject()(@Named("appName") appName: String) {
+class Conf @Inject()(@Named("appName") appName: String, @Named("apiServer") apiServer: String) {
 
-  private val jobConf = JSON.parseObject(loadHDFS(s"${Constants.JOB_CONF_BASE_PATH}/${appName}.json"))
-  
-  private val sourceConf = jobConf.getJSONObject("source")
-  private val sinkConf = jobConf.getJSONObject("sink")
-  
-  private val dbConf = JSON.parseObject(loadHDFS(s"${Constants.DB_CONF_BASE_PATH}/${sourceConf.getString("db")}.json"))
+  private val jobConf = JSON.parseObject(queryBatchTaskApi())
 
-  private val cacheConf = JSON.parseObject(loadHDFS(Constants.CACHE_CONF_BASE_PATH))
+  private val cacheConf = JSON.parseObject("")
 
-  private def loadHDFS(filePath: String): String = {
-    val conf = new Configuration()
-    val path = new Path(filePath)
-    val fs = FileSystem.get(path.toUri, conf)
+  private def queryBatchTaskApi(): String = {
+    val httpClient = HttpClients.createDefault()
+    val httpGet = new HttpGet("http://" + apiServer + "/api/conf?name=" + appName)
+    val httpResponse = httpClient.execute(httpGet)
 
-    val inputStream = fs.open(path)
-    val content = IOUtils.toString(inputStream)
-    IOUtils.closeQuietly(inputStream)
-
-    content
+    val statusCode = httpResponse.getStatusLine.getStatusCode
+    if (statusCode >= 200 && statusCode < 300) {
+      val entity = httpResponse.getEntity
+      val content = EntityUtils.toString(entity, Charsets.UTF_8)
+      httpClient.close()
+      content
+    } else {
+      httpClient.close()
+      throw new RuntimeException("调用批处理任务接口返回 " + statusCode)
+    }
   }
 
-  def mode: ODSMode = ODSMode.valueOf(sourceConf.getString("mode"))
+  def mode: ODSMode = ODSMode.valueOf(jobConf.getString("mode"))
 
-  def modifyTimeColumn: String = sourceConf.getString("modify_time_column")
+  def modifyTimeColumn: String = jobConf.getString("time_column")
 
   def dbUrl: String = dbConf.getString("url")
 
-  def dbTable: String = sourceConf.getString("table")
+  def dbTable: String = jobConf.getString("source_table")
 
   def dbUser: String = dbConf.getString("username")
 
   def dbPassword: String = dbConf.getString("password")
 
-  def cacheHost: String = cacheConf.getString("host")
+  def hiveDB: String = jobConf.getString("sink_db")
 
-  def cachePort: Integer = cacheConf.getInteger("port")
-
-  def cachePassword: String = cacheConf.getString("password")
-
-  def hiveDB: String = sinkConf.getString("db")
-
-  def hiveTable: String = sinkConf.getString("table")
+  def hiveTable: String = jobConf.getString("sink_table")
 
 }
