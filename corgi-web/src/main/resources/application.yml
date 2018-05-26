@@ -14,8 +14,6 @@ spring:
     password: corgi
   thymeleaf:
     cache: false
-  quartz:
-    job-store-type: jdbc
   devtools:
     livereload:
       enabled: true
