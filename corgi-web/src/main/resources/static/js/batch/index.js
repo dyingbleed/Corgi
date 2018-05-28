@@ -33,6 +33,8 @@ $(function () {
         }).done(function () {
             alert("删除成功！");
             queryAllBatchTask();
+        }).fail(function () {
+            alert("删除失败！");
         });
     }
 
@@ -40,10 +42,11 @@ $(function () {
      * 查询所有批量任务
      * */
     function queryAllBatchTask() {
-        $.get('/api/batch')
-            .done(function (data) {
-                app.batchTaskArray = data;
-            });
+        $.get('/api/batch').done(function (data) {
+            app.batchTaskArray = data;
+        }).fail(function () {
+            alert("加载数据失败！");
+        });
     }
 
     queryAllBatchTask();

@@ -17,10 +17,9 @@ $(function () {
                 }
             },
             testDataSourceConnection: function () {
-                $.get('/api/datasource/test', app. dataSource)
-                    .done(function (data) {
-                        alert(data);
-                    });
+                $.get('/api/datasource/test', app. dataSource).done(function (data) {
+                    alert(data);
+                });
             }
         }
     });
@@ -30,8 +29,10 @@ $(function () {
             method: 'PUT',
             data: app. dataSource
         }).done(function () {
-            alert('保存成功！');
+            alert("保存成功！");
             window.location.href = '/datasource/';
+        }).fail(function () {
+            alert("保存失败！");
         });
     }
 
@@ -40,8 +41,10 @@ $(function () {
             method: 'POST',
             data: app. dataSource
         }).done(function () {
-            alert('保存成功！');
+            alert("保存成功！");
             window.location.href = '/datasource/';
+        }).fail(function () {
+            alert("保存失败！");
         });
     }
 
@@ -49,6 +52,8 @@ $(function () {
         var url = '/api/datasource/' + id;
         $.get(url).done(function (data) {
             app. dataSource = data;
+        }).fail(function () {
+            alert("加载数据失败！");
         });
     }
 

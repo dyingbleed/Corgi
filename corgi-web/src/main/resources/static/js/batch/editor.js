@@ -56,8 +56,10 @@ $(function () {
             method: 'PUT',
             data: task
         }).done(function () {
-            alert('保存成功！');
+            alert("保存成功！");
             window.location.href = '/batch/';
+        }).fail(function () {
+            alert("保存失败！");
         });
     }
 
@@ -72,8 +74,10 @@ $(function () {
             method: 'POST',
             data: task
         }).done(function () {
-            alert('保存成功！');
+            alert("保存成功！");
             window.location.href = '/batch/';
+        }).fail(function () {
+            alert("保存失败！");
         });
     }
 
@@ -148,6 +152,8 @@ $(function () {
         var url = '/api/batch/' + id;
         $.get(url).done(function (data) {
             app.batchTask = data;
+        }).fail(function () {
+            alert("加载数据失败！");
         });
     }
 
