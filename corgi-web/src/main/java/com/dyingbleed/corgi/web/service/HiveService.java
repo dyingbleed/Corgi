@@ -11,6 +11,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
+ * Hive Metadata
+ *
  * Created by 李震 on 2018/5/17.
  */
 @Service

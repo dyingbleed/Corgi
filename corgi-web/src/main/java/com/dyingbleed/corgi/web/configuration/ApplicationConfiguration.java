@@ -13,12 +13,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @Configuration
 @EnableCaching
-@EnableScheduling
 @ComponentScan(basePackages = {
         "com.dyingbleed.corgi.web.controller",
         "com.dyingbleed.corgi.web.service",
-        "com.dyingbleed.corgi.web.aop",
-        "com.dyingbleed.corgi.web.job"
+        "com.dyingbleed.corgi.web.aop"
 })
 @Import(DBConfiguration.class)
 @MapperScan(basePackages = {

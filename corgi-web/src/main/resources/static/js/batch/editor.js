@@ -5,7 +5,7 @@ $(function () {
     var dataSourceArray = []; // 数据源列表
     var sourceDBArray = []; // Source 数据库
     var sourceTableArray = []; // Source 表
-    var timeColumnObject = {}; // 时间列
+    var timeColumn = {}; // 时间列
     var sinkDBArray = []; // Sink 数据库
 
     // Vue 实例
@@ -16,21 +16,21 @@ $(function () {
             dataSourceArray: dataSourceArray,
             sourceDBArray: sourceDBArray,
             sourceTableArray: sourceTableArray,
-            timeColumnObject: timeColumnObject,
+            timeColumn: timeColumn,
             sinkDBArray: sinkDBArray
         },
         watch: {
-            "batchTask.datasource_id": function (oldValue) {
+            "batchTask.dataSourceId": function (oldValue) {
                 queryAllSourceDB(oldValue);
             },
-            "batchTask.source_db": function(oldValue) {
-                queryAllSourceTable(app.batchTask.datasource_id, oldValue);
+            "batchTask.sourceDb": function(oldValue) {
+                queryAllSourceTable(app.batchTask.dataSourceId, oldValue);
             },
-            "batchTask.source_table": function (oldValue) {
-                queryAllTimeColumn(app.batchTask.datasource_id, app.batchTask.source_db, oldValue);
+            "batchTask.sourceTable": function (oldValue) {
+                queryAllTimeColumn(app.batchTask.dataSourceId, app.batchTask.sourceDb, oldValue);
             },
             "batchTask.mode": function (oldValue) {
-                if (oldValue == 'COMPLETE') app.batchTask.time_column = null;
+                if (oldValue == 'COMPLETE') app.batchTask.timeColumn = null;
             }
         },
         methods: {
@@ -134,7 +134,7 @@ $(function () {
     function queryAllTimeColumn(id, db, table) {
         var url = '/api/datasource/timecolumn/' + id + '/' + db + '/' + table;
         $.get(url).done(function (data) {
-            app.timeColumnObject = data;
+            app.timeColumn = data;
         });
     }
 

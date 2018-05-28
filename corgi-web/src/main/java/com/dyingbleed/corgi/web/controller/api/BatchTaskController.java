@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
+ * 批处理任务接口
+ *
  * Created by 李震 on 2018/5/15.
  */
 @RestController

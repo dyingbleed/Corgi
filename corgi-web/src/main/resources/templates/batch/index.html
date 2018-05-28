@@ -22,8 +22,8 @@
             <td>
                 <a :href="'/batch/editor/' + i.id">{{ i.name }}</a>
             </td>
-            <td>{{ i.source_db }}.{{ i.source_table }}</td>
-            <td>{{ i.sink_db }}.{{ i.sink_table }}</td>
+            <td>{{ i.sourceDb }}.{{ i.sourceTable }}</td>
+            <td>{{ i.sinkDb }}.{{ i.sinkTable }}</td>
             <td>
                 <a href="#" class="btn btn-sm btn-danger" v-on:click="deleteBatchTaskById(i.id)">删除</a>
             </td>

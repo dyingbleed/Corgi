@@ -1,6 +1,7 @@
 package com.dyingbleed.corgi.web.service;
 
 import com.dyingbleed.corgi.web.bean.DataSource;
+import com.dyingbleed.corgi.web.mapper.BatchTaskMapper;
 import com.dyingbleed.corgi.web.mapper.DataSourceMapper;
 import com.dyingbleed.corgi.web.utils.JDBCUtils;
 import org.slf4j.Logger;
@@ -18,6 +19,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
+ * 数据源
+ *
  * Created by 李震 on 2018/5/9.
  */
 @Service
@@ -27,6 +30,9 @@ public class DataSourceService {
 
     @Autowired
     private DataSourceMapper dataSourceMapper;
+
+    @Autowired
+    private BatchTaskMapper batchTaskMapper;
 
     /**
      * 新增数据源
@@ -48,7 +54,8 @@ public class DataSourceService {
      *
      * */
     public void deleteDataSourceById(Long id) {
-        this.dataSourceMapper.deleteDataSourceById(id);
+        this.dataSourceMapper.deleteDataSourceById(id); // 删除 datasource
+        this.batchTaskMapper.deleteBatchTaskByDataSourceId(id); // 删除 datasource 关联的 batch_task
     }
 
     /**

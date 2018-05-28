@@ -14,6 +14,9 @@ spring:
     password: corgi
   thymeleaf:
     cache: false
+  cache:
+    ehcache:
+      config: classpath:ehcache.xml
   devtools:
     livereload:
       enabled: true

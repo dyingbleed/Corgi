@@ -2,20 +2,18 @@ package com.dyingbleed.corgi.web.service;
 
 import com.dyingbleed.corgi.web.bean.BatchTask;
 import com.dyingbleed.corgi.web.mapper.BatchTaskMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 /**
+ * 批处理任务
+ *
  * Created by 李震 on 2018/5/15.
  */
 @Service
 public class BatchTaskService {
-
-    private static Logger logger = LoggerFactory.getLogger(BatchTaskService.class);
 
     @Autowired
     private BatchTaskMapper batchTaskMapper;

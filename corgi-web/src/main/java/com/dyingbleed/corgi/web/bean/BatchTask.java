@@ -11,25 +11,25 @@ public class BatchTask {
 
     private String name;
 
-    private Long datasource_id;
+    private Long dataSourceId;
 
-    private String datasource_url;
+    private String dataSourceUrl;
 
-    private String datasource_username;
+    private String dataSourceUsername;
 
-    private String datasource_password;
+    private String datasourcePassword;
 
-    private String source_db;
+    private String sourceDb;
 
-    private String source_table;
+    private String sourceTable;
 
     private String mode;
 
-    private String time_column;
+    private String timeColumn;
 
-    private String sink_db;
+    private String sinkDb;
 
-    private String sink_table;
+    private String sinkTable;
 
     public Long getId() {
         return id;
@@ -47,52 +47,52 @@ public class BatchTask {
         this.name = name;
     }
 
-    public Long getDatasource_id() {
-        return datasource_id;
+    public Long getDataSourceId() {
+        return dataSourceId;
     }
 
-    public void setDatasource_id(Long datasource_id) {
-        this.datasource_id = datasource_id;
+    public void setDataSourceId(Long dataSourceId) {
+        this.dataSourceId = dataSourceId;
     }
 
-    public String getDatasource_url() {
-        return datasource_url;
+    public String getDataSourceUrl() {
+        return dataSourceUrl;
     }
 
-    public void setDatasource_url(String datasource_url) {
-        this.datasource_url = datasource_url;
+    public void setDataSourceUrl(String dataSourceUrl) {
+        this.dataSourceUrl = dataSourceUrl;
     }
 
-    public String getDatasource_username() {
-        return datasource_username;
+    public String getDataSourceUsername() {
+        return dataSourceUsername;
     }
 
-    public void setDatasource_username(String datasource_username) {
-        this.datasource_username = datasource_username;
+    public void setDataSourceUsername(String dataSourceUsername) {
+        this.dataSourceUsername = dataSourceUsername;
     }
 
-    public String getDatasource_password() {
-        return datasource_password;
+    public String getDatasourcePassword() {
+        return datasourcePassword;
     }
 
-    public void setDatasource_password(String datasource_password) {
-        this.datasource_password = datasource_password;
+    public void setDatasourcePassword(String datasourcePassword) {
+        this.datasourcePassword = datasourcePassword;
     }
 
-    public String getSource_db() {
-        return source_db;
+    public String getSourceDb() {
+        return sourceDb;
     }
 
-    public void setSource_db(String source_db) {
-        this.source_db = source_db;
+    public void setSourceDb(String sourceDb) {
+        this.sourceDb = sourceDb;
     }
 
-    public String getSource_table() {
-        return source_table;
+    public String getSourceTable() {
+        return sourceTable;
     }
 
-    public void setSource_table(String source_table) {
-        this.source_table = source_table;
+    public void setSourceTable(String sourceTable) {
+        this.sourceTable = sourceTable;
     }
 
     public String getMode() {
@@ -103,41 +103,28 @@ public class BatchTask {
         this.mode = mode;
     }
 
-    public String getTime_column() {
-        return time_column;
+    public String getTimeColumn() {
+        return timeColumn;
     }
 
-    public void setTime_column(String time_column) {
-        this.time_column = time_column;
+    public void setTimeColumn(String timeColumn) {
+        this.timeColumn = timeColumn;
     }
 
-    public String getSink_db() {
-        return sink_db;
+    public String getSinkDb() {
+        return sinkDb;
     }
 
-    public void setSink_db(String sink_db) {
-        this.sink_db = sink_db;
+    public void setSinkDb(String sinkDb) {
+        this.sinkDb = sinkDb;
     }
 
-    public String getSink_table() {
-        return sink_table;
+    public String getSinkTable() {
+        return sinkTable;
     }
 
-    public void setSink_table(String sink_table) {
-        this.sink_table = sink_table;
+    public void setSinkTable(String sinkTable) {
+        this.sinkTable = sinkTable;
     }
 
-    @Override
-    public String toString() {
-        return "BatchTask{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", datasource_id=" + datasource_id +
-                ", source_db='" + source_db + '\'' +
-                ", source_table='" + source_table + '\'' +
-                ", mode='" + mode + '\'' +
-                ", sink_db='" + sink_db + '\'' +
-                ", sink_table='" + sink_table + '\'' +
-                '}';
-    }
 }

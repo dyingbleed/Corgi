@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
+ * Hive Metadata 接口
+ *
  * Created by 李震 on 2018/5/17.
  */
 @RestController

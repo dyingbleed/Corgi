@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * JDBC 工具类
+ *
  * Created by 李震 on 2018/5/14.
  */
 public class JDBCUtils {

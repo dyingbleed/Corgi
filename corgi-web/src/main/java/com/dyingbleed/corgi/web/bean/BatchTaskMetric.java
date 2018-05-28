@@ -11,10 +11,10 @@ public class BatchTaskMetric {
 
     private Long id;
 
-    private String batch_task_name;
+    private String batchTaskName;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date execute_time;
+    private Date executeTime;
 
     public BatchTaskMetric() { super(); }
 
@@ -22,8 +22,8 @@ public class BatchTaskMetric {
         super();
 
         this.id = id;
-        this.batch_task_name = batch_task_name;
-        this.execute_time = execute_time;
+        this.batchTaskName = batch_task_name;
+        this.executeTime = execute_time;
     }
 
     public Long getId() {
@@ -34,19 +34,19 @@ public class BatchTaskMetric {
         this.id = id;
     }
 
-    public String getBatch_task_name() {
-        return batch_task_name;
+    public String getBatchTaskName() {
+        return batchTaskName;
     }
 
-    public void setBatch_task_name(String batch_task_name) {
-        this.batch_task_name = batch_task_name;
+    public void setBatchTaskName(String batchTaskName) {
+        this.batchTaskName = batchTaskName;
     }
 
-    public Date getExecute_time() {
-        return execute_time;
+    public Date getExecuteTime() {
+        return executeTime;
     }
 
-    public void setExecute_time(Date execute_time) {
-        this.execute_time = execute_time;
+    public void setExecuteTime(Date executeTime) {
+        this.executeTime = executeTime;
     }
 }

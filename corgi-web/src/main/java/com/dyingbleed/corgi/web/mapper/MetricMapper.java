@@ -1,10 +1,7 @@
 package com.dyingbleed.corgi.web.mapper;
 
 import com.dyingbleed.corgi.web.bean.BatchTaskMetric;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 /**
  * Created by 李震 on 2018/5/24.
@@ -13,24 +10,35 @@ import org.apache.ibatis.annotations.Select;
 public interface MetricMapper {
 
     @Insert("insert into metric " +
-            "(batch_task_name, execute_time) " +
-            "values " +
-            "(#{m.batch_task_name}, #{m.execute_time})")
-    public void insertBatchTaskMetric(@Param("m") BatchTaskMetric metric);
-    
-    @Select("SELECT " +
-            "  m.* " +
-            "FROM metric m " +
-            "JOIN ( " +
-            "  SELECT " +
+            "(" +
+            "  batch_task_name, " +
+            "  execute_time" +
+            ") values (" +
+            "  #{m.batchTaskName}, " +
+            "  #{m.executeTime}" +
+            ")")
+    void insertBatchTaskMetric(@Param("m") BatchTaskMetric metric);
+
+    @Results(value = {
+            @Result(property = "id", column = "id"),
+            @Result(property = "batchTaskName", column = "batch_task_name"),
+            @Result(property = "executeTime", column = "execute_time")
+    })
+    @Select("select " +
+            "  m.id, " +
+            "  m.batch_task_name, " +
+            "  m.execute_time  " +
+            "from metric m " +
+            "join ( " +
+            "  select " +
             "    m.batch_task_name, " +
-            "    MAX(m.execute_time) as execute_time " +
-            "  FROM metric m " +
-            "  WHERE m.batch_task_name = #{name} " +
-            "  GROUP BY m.batch_task_name " +
+            "    max(m.execute_time) as execute_time " +
+            "  from metric m " +
+            "  where m.batch_task_name = #{name} " +
+            "  group by m.batch_task_name " +
             ") f  " +
-            "ON m.batch_task_name = f.batch_task_name " +
-            "AND m.execute_time = f.execute_time")
-    public BatchTaskMetric queryLastBatchTaskMetricByName(@Param("name") String name);
+            "on m.batch_task_name = f.batch_task_name " +
+            "and m.execute_time = f.execute_time")
+    BatchTaskMetric queryLastBatchTaskMetricByName(@Param("name") String name);
 
 }

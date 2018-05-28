@@ -1,7 +1,7 @@
 package com.dyingbleed.corgi.web.bean;
 
 /**
- * 数据源
+ * 数据源 POJO
  *
  * Created by 李震 on 2018/5/9.
  */
