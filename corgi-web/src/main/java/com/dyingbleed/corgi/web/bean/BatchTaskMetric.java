@@ -18,12 +18,12 @@ public class BatchTaskMetric {
 
     public BatchTaskMetric() { super(); }
 
-    public BatchTaskMetric(Long id, String batch_task_name, Date execute_time) {
+    public BatchTaskMetric(Long id, String batchTaskName, Date executeTime) {
         super();
 
         this.id = id;
-        this.batchTaskName = batch_task_name;
-        this.executeTime = execute_time;
+        this.batchTaskName = batchTaskName;
+        this.executeTime = executeTime;
     }
 
     public Long getId() {

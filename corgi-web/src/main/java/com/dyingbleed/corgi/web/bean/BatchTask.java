@@ -17,7 +17,7 @@ public class BatchTask {
 
     private String dataSourceUsername;
 
-    private String datasourcePassword;
+    private String dataSourcePassword;
 
     private String sourceDb;
 
@@ -71,12 +71,12 @@ public class BatchTask {
         this.dataSourceUsername = dataSourceUsername;
     }
 
-    public String getDatasourcePassword() {
-        return datasourcePassword;
+    public String getDataSourcePassword() {
+        return dataSourcePassword;
     }
 
-    public void setDatasourcePassword(String datasourcePassword) {
-        this.datasourcePassword = datasourcePassword;
+    public void setDataSourcePassword(String dataSourcePassword) {
+        this.dataSourcePassword = dataSourcePassword;
     }
 
     public String getSourceDb() {

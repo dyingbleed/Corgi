@@ -151,7 +151,7 @@ public interface BatchTaskMapper {
             @Result(property = "dataSourceId", column = "datasource_id"),
             @Result(property = "dataSourceUrl", column = "datasource_url"),
             @Result(property = "dataSourceUsername", column = "datasource_username"),
-            @Result(property = "datasourcePassword", column = "datasource_password"),
+            @Result(property = "dataSourcePassword", column = "datasource_password"),
             @Result(property = "sourceDb", column = "source_db"),
             @Result(property = "sourceTable", column = "source_table"),
             @Result(property = "mode", column = "mode"),

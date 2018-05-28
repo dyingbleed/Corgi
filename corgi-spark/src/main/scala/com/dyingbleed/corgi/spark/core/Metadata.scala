@@ -1,13 +1,12 @@
 package com.dyingbleed.corgi.spark.core
 
 import scala.collection.JavaConverters._
-
 import com.alibaba.fastjson.JSON
 import com.google.common.base.Charsets
 import com.google.inject.Inject
 import javax.inject.Named
 import org.apache.http.client.entity.UrlEncodedFormEntity
-import org.apache.http.client.methods.{HttpGet, HttpPost}
+import org.apache.http.client.methods.{HttpGet, HttpPost, HttpPut}
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
@@ -39,13 +38,13 @@ class Metadata @Inject()(@Named("appName") appName: String, @Named("apiServer") 
   def saveLastModifyDate(lastModifyTime: LocalDateTime): Unit = {
     val httpClient = HttpClients.createDefault()
 
-    val httpPost = new HttpPost("http://" + apiServer + "/api/metric")
+    val httpPut = new HttpPut("http://" + apiServer + "/api/metric")
     val params = List(
-      new BasicNameValuePair("batch_task_name", appName),
-      new BasicNameValuePair("execute_time", lastModifyTime.toString("yyyy-MM-dd HH:mm:ss"))
+      new BasicNameValuePair("batchTaskName", appName),
+      new BasicNameValuePair("executeTime", lastModifyTime.toString("yyyy-MM-dd HH:mm:ss"))
     )
-    httpPost.setEntity(new UrlEncodedFormEntity(params.asJava))
-    httpClient.execute(httpPost)
+    httpPut.setEntity(new UrlEncodedFormEntity(params.asJava))
+    httpClient.execute(httpPut)
 
     httpClient.close()
   }

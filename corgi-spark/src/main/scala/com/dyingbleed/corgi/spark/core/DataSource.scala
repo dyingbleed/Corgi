@@ -200,11 +200,10 @@ class DataSource {
               |from sink
             """.stripMargin)
         }
-
-        metadata.saveLastModifyDate(timestamp) // 保存执行时间戳
       }
     }
 
+    metadata.saveLastModifyDate(timestamp) // 保存执行时间戳
   }
 
 }

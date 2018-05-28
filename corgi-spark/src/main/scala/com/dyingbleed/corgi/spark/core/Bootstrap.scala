@@ -1,5 +1,8 @@
 package com.dyingbleed.corgi.spark.core
 
+import java.io.FileInputStream
+import java.util.Properties
+
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names
 import org.apache.spark.sql.SparkSession
@@ -10,9 +13,16 @@ import org.apache.spark.sql.SparkSession
 class Bootstrap(args: Array[String]) {
 
   val appName = args(0)
-  val apiServer = args(1)
 
   def bootstrap(execute: (AbstractModule) => Unit): Unit = {
+
+    // 加载本地配置文件
+    val properties = new Properties()
+    val propertiesIn = classOf[Bootstrap].getClassLoader.getResourceAsStream("spark.properties")
+    properties.load(propertiesIn)
+    propertiesIn.close()
+
+    // 初识化 SparkSession
     val spark = if (appName.startsWith("test") || appName.endsWith("test")) {
       val spark = SparkSession.builder()
         .master("local")
@@ -28,7 +38,7 @@ class Bootstrap(args: Array[String]) {
       spark
     } else {
       val spark = SparkSession.builder()
-        .master("local")
+        .master("yarn")
         .appName(appName)
         .enableHiveSupport()
         .config("hive.exec.dynamic.partition", true) // 支持 Hive 动态分区
@@ -41,12 +51,13 @@ class Bootstrap(args: Array[String]) {
       spark
     }
 
+    // 依赖注入绑定
     val module = new AbstractModule() {
 
       override def configure(): Unit = {
         bind(classOf[SparkSession]).toInstance(spark)
         bind(classOf[String]).annotatedWith(Names.named("appName")).toInstance(appName)
-        bind(classOf[String]).annotatedWith(Names.named("apiServer")).toInstance(apiServer)
+        bind(classOf[String]).annotatedWith(Names.named("apiServer")).toInstance(properties.getProperty("api.sesrver"))
         bind(classOf[Conf])
         bind(classOf[Metadata])
         bind(classOf[DataSource])

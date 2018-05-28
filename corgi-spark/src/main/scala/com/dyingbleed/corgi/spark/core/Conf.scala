@@ -36,18 +36,18 @@ class Conf @Inject()(@Named("appName") appName: String, @Named("apiServer") apiS
 
   def mode: ODSMode = ODSMode.valueOf(jobConf.getString("mode"))
 
-  def modifyTimeColumn: String = jobConf.getString("time_column")
+  def modifyTimeColumn: String = jobConf.getString("timeColumn")
 
-  def dbUrl: String = jobConf.getString("datasource_url")
+  def dbUrl: String = jobConf.getString("dataSourceUrl")
 
-  def dbTable: String = jobConf.getString("source_table")
+  def dbTable: String = jobConf.getString("sourceTable")
 
-  def dbUser: String = jobConf.getString("datasource_username")
+  def dbUser: String = jobConf.getString("dataSourceUsername")
 
-  def dbPassword: String = jobConf.getString("datasource_password")
+  def dbPassword: String = jobConf.getString("dataSourcePassword")
 
-  def hiveDB: String = jobConf.getString("sink_db")
+  def hiveDB: String = jobConf.getString("sinkDb")
 
-  def hiveTable: String = jobConf.getString("sink_table")
+  def hiveTable: String = jobConf.getString("sinkTable")
 
 }
