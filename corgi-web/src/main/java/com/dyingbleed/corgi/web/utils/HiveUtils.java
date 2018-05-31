@@ -1,9 +1,11 @@
 package com.dyingbleed.corgi.web.utils;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,6 +26,8 @@ public class HiveUtils {
         List<String> databases = new LinkedList<>();
 
         HiveConf conf = new HiveConf();
+        conf.addResource(new Path("file://" + System.getenv("CORGI_HOME") + File.separator + "conf" + File.separator + "hive-site.xml"));
+
         HiveMetaStoreClient client = null;
         try {
             client = new HiveMetaStoreClient(conf);
@@ -49,6 +53,8 @@ public class HiveUtils {
         List<String> tables = new LinkedList<>();
 
         HiveConf conf = new HiveConf();
+        conf.addResource(new Path("file://" + System.getenv("CORGI_HOME") + File.separator + "conf" + File.separator + "hive-site.xml"));
+
         HiveMetaStoreClient client = null;
         try {
             client = new HiveMetaStoreClient(conf);
