@@ -21,7 +21,7 @@ public class DataSourcePageController {
      * */
     @GetMapping("/")
     public ModelAndView home() {
-        ModelAndView modelAndView = new ModelAndView("/datasource/index");
+        ModelAndView modelAndView = new ModelAndView("datasource/index");
         return modelAndView;
     }
 
@@ -30,7 +30,7 @@ public class DataSourcePageController {
      * */
     @GetMapping("/editor")
     public ModelAndView editor() {
-        ModelAndView modelAndView = new ModelAndView("/datasource/editor");
+        ModelAndView modelAndView = new ModelAndView("datasource/editor");
         return modelAndView;
     }
 
@@ -42,7 +42,7 @@ public class DataSourcePageController {
      * */
     @GetMapping("/editor/{id}")
     public ModelAndView editor(@PathVariable("id") Long id) {
-        ModelAndView modelAndView = new ModelAndView("/datasource/editor");
+        ModelAndView modelAndView = new ModelAndView("datasource/editor");
 
         ModelMap modelMap = modelAndView.getModelMap();
         modelMap.addAttribute("id", id);

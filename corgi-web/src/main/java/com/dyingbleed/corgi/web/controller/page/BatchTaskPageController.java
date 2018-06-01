@@ -21,7 +21,7 @@ public class BatchTaskPageController {
      * */
     @GetMapping("/")
     public ModelAndView home() {
-        ModelAndView modelAndView = new ModelAndView("/batch/index");
+        ModelAndView modelAndView = new ModelAndView("batch/index");
         return modelAndView;
     }
 
@@ -30,7 +30,7 @@ public class BatchTaskPageController {
      * */
     @GetMapping("/editor")
     public ModelAndView editor() {
-        ModelAndView modelAndView = new ModelAndView("/batch/editor");
+        ModelAndView modelAndView = new ModelAndView("batch/editor");
         return modelAndView;
     }
 
@@ -39,7 +39,7 @@ public class BatchTaskPageController {
      * */
     @GetMapping("/editor/{id}")
     public ModelAndView editor(@PathVariable("id") Long id) {
-        ModelAndView modelAndView = new ModelAndView("/batch/editor");
+        ModelAndView modelAndView = new ModelAndView("batch/editor");
 
         ModelMap modelMap = modelAndView.getModelMap();
         modelMap.addAttribute("id", id);
