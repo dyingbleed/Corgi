@@ -22,6 +22,8 @@ class Bootstrap(args: Array[String]) {
     properties.load(propertiesIn)
     propertiesIn.close()
 
+    System.setProperty("hive.metastore.uris", properties.getProperty("hive.metastore.uris"))
+
     // 初识化 SparkSession
     val spark = if (appName.startsWith("test") || appName.endsWith("test")) {
       val spark = SparkSession.builder()

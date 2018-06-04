@@ -29,14 +29,14 @@ class DataSource {
 
   private def getSourceStats(): (Int, Int, Int) = {
     Class.forName("com.mysql.jdbc.Driver")
-    val conn = DriverManager.getConnection(conf.dbUrl, conf.dbUser, conf.dbPassword)
+    val conn = DriverManager.getConnection(conf.sourceDbUrl, conf.sourceDbUser, conf.sourceDbPassword)
     val stat = conn.createStatement()
 
     val rs = stat.executeQuery(s"""
       |select
       |  min(id) as lowerbound,
       |  max(id) as upperbound
-      |from ${conf.hiveTable}
+      |from ${conf.sourceDb}.${conf.sourceTable}
     """.stripMargin)
     rs.next()
 
@@ -54,16 +54,16 @@ class DataSource {
     conf.mode match {
       case COMPLETE => {
         // 全量
-        conf.dbTable
+        conf.sourceTable
       }
       case APPEND | UPDATE => {
-        if (!spark.catalog.tableExists(conf.hiveDB, conf.hiveTable)) {
+        if (!spark.catalog.tableExists(conf.sinkDb, conf.sinkTable)) {
           // 全量
           s"""
             |(select
-            |  *, date(${conf.modifyTimeColumn}) as ods_date
-            |from ${conf.dbTable}
-            |where ${conf.modifyTimeColumn} < '${ts.toString("yyyy-MM-dd HH:mm:ss")}'
+            |  *, date(${conf.sourceTimeColumn}) as ods_date
+            |from ${conf.sourceDb}.${conf.sourceTable}
+            |where ${conf.sourceTimeColumn} < '${ts.toString("yyyy-MM-dd HH:mm:ss")}'
             |) t
           """.stripMargin
         } else {
@@ -71,9 +71,9 @@ class DataSource {
           s"""
              |(select
              |  *
-             |from ${conf.dbTable}
-             |where ${conf.modifyTimeColumn} >= '${metadata.getLastModifyDate.toString("yyyy-MM-dd HH:mm:ss")}'
-             |and ${conf.modifyTimeColumn} < '${ts.toString("yyyy-MM-dd HH:mm:ss")}'
+             |from ${conf.sourceDb}.${conf.sourceTable}
+             |where ${conf.sourceTimeColumn} >= '${metadata.getLastModifyDate.toString("yyyy-MM-dd HH:mm:ss")}'
+             |and ${conf.sourceTimeColumn} < '${ts.toString("yyyy-MM-dd HH:mm:ss")}'
              |) t
          """.stripMargin
         }
@@ -91,24 +91,24 @@ class DataSource {
         // 全量
         spark.read
           .format("jdbc")
-          .option("url", conf.dbUrl)
+          .option("url", conf.sourceDbUrl)
           .option("dbtable", getTable(timestamp))
-          .option("user", conf.dbUser)
-          .option("password", conf.dbPassword)
+          .option("user", conf.sourceDbUser)
+          .option("password", conf.sourceDbPassword)
           .option("driver", "com.mysql.jdbc.Driver")
           .load()
       }
       case APPEND | UPDATE => {
-        if (!spark.catalog.tableExists(conf.hiveDB, conf.hiveTable)) {
+        if (!spark.catalog.tableExists(conf.sinkDb, conf.sinkTable)) {
           // 全量
           val sourceStats = getSourceStats()
 
           spark.read
             .format("jdbc")
-            .option("url", conf.dbUrl)
+            .option("url", conf.sourceDbUrl)
             .option("dbtable", getTable(timestamp))
-            .option("user", conf.dbUser)
-            .option("password", conf.dbPassword)
+            .option("user", conf.sourceDbUser)
+            .option("password", conf.sourceDbPassword)
             .option("driver", "com.mysql.jdbc.Driver")
             .option("partitionColumn", "id")
             .option("lowerBound", sourceStats._1)
@@ -119,10 +119,10 @@ class DataSource {
           // 增量
           spark.read
             .format("jdbc")
-            .option("url", conf.dbUrl)
+            .option("url", conf.sourceDbUrl)
             .option("dbtable", getTable(timestamp))
-            .option("user", conf.dbUser)
-            .option("password", conf.dbPassword)
+            .option("user", conf.sourceDbUser)
+            .option("password", conf.sourceDbPassword)
             .option("driver", "com.mysql.jdbc.Driver")
             .load()
         }
@@ -138,7 +138,7 @@ class DataSource {
         spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema).createOrReplaceTempView("t")
         spark.sql(
           s"""
-            |create table if not exists ${conf.hiveDB}.${conf.hiveTable}
+            |create table if not exists ${conf.sinkDb}.${conf.sinkTable}
             |using PARQUET
             |partitioned by (ods_date)
             |as select * from t
@@ -148,7 +148,7 @@ class DataSource {
         // 增加分区
         spark.sql(
           s"""
-            |alter table ${conf.hiveDB}.${conf.hiveTable}
+            |alter table ${conf.sinkDb}.${conf.sinkTable}
             |add if not exists partition (ods_date='${timestamp.toString("yyyy-MM-dd")}')
           """.stripMargin)
 
@@ -157,21 +157,21 @@ class DataSource {
         df.createOrReplaceTempView("sink")
         spark.sql(
           s"""
-            |insert overwrite table ${conf.hiveDB}.${conf.hiveTable}
+            |insert overwrite table ${conf.sinkDb}.${conf.sinkTable}
             |partition(ods_date='${timestamp.toString("yyyy-MM-dd")}')
             |select
-            |    ${getTableColumns(conf.hiveDB, conf.hiveTable).map(_.name).filter(!_.equals("ods_date")).mkString(",")}
+            |    ${getTableColumns(conf.sinkDb, conf.sinkTable).map(_.name).filter(!_.equals("ods_date")).mkString(",")}
             |from sink
           """.stripMargin)
       }
       case APPEND | UPDATE => {
-        if (!spark.catalog.tableExists(conf.hiveDB, conf.hiveTable)) {
+        if (!spark.catalog.tableExists(conf.sinkDb, conf.sinkTable)) {
           df.createOrReplaceTempView("sink")
 
           // 创建表
           spark.sql(
             s"""
-              |create table if not exists ${conf.hiveDB}.${conf.hiveTable}
+              |create table if not exists ${conf.sinkDb}.${conf.sinkTable}
               |using PARQUET
               |partitioned by (ods_date)
               |as select * from sink
@@ -182,7 +182,7 @@ class DataSource {
           // 动态分区
           spark.sql(
             s"""
-              |insert overwrite table ${conf.hiveDB}.${conf.hiveTable}
+              |insert overwrite table ${conf.sinkDb}.${conf.sinkTable}
               |partition(ods_date)
               |select * from sink
             """.stripMargin)
@@ -193,10 +193,10 @@ class DataSource {
           // 静态分区
           spark.sql(
             s"""
-              |insert overwrite table ${conf.hiveDB}.${conf.hiveTable}
+              |insert overwrite table ${conf.sinkDb}.${conf.sinkTable}
               |partition(ods_date='${timestamp.toString("yyyy-MM-dd")}')
               |select
-              |  ${getTableColumns(conf.hiveDB, conf.hiveTable).map(_.name).filter(!_.equals("ods_date")).mkString(",")}
+              |  ${getTableColumns(conf.sinkDb, conf.sinkTable).map(_.name).filter(!_.equals("ods_date")).mkString(",")}
               |from sink
             """.stripMargin)
         }

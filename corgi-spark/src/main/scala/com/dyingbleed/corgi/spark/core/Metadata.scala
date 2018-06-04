@@ -11,6 +11,7 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.joda.time.LocalDateTime
+import org.joda.time.format.ISODateTimeFormat
 
 /**
   * Created by 李震 on 2018/3/1.
@@ -19,7 +20,7 @@ class Metadata @Inject()(@Named("appName") appName: String, @Named("apiServer") 
 
   def getLastModifyDate: LocalDateTime = {
     val httpClient = HttpClients.createDefault()
-    val httpGet = new HttpGet("http://" + apiServer + "/api/metric?name=" + appName)
+    val httpGet = new HttpGet("http://" + apiServer + "/api/metric/last?name=" + appName)
     val httpResponse = httpClient.execute(httpGet)
 
     val statusCode = httpResponse.getStatusLine.getStatusCode
@@ -28,7 +29,7 @@ class Metadata @Inject()(@Named("appName") appName: String, @Named("apiServer") 
       val content = EntityUtils.toString(entity, Charsets.UTF_8)
       httpClient.close()
 
-      LocalDateTime.fromDateFields(JSON.parseObject(content).getDate("execute_time"))
+      LocalDateTime.parse(JSON.parseObject(content).getString("executeTime"), ISODateTimeFormat.dateTime())
     } else {
       httpClient.close()
       throw new RuntimeException("调用任务指标接口返回 " + statusCode)

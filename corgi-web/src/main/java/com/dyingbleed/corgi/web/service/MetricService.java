@@ -2,9 +2,12 @@ package com.dyingbleed.corgi.web.service;
 
 import com.dyingbleed.corgi.web.bean.BatchTaskMetric;
 import com.dyingbleed.corgi.web.mapper.MetricMapper;
+import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
 
 /**
  * 任务指标
@@ -28,15 +31,13 @@ public class MetricService {
     }
 
     /**
-     * 根据批处理任务名称查询最新的批处理任务指标
+     * 根据批处理任务名称查询上一次执行时间
      *
      * @param name 批处理任务名
      *
      * */
-    public BatchTaskMetric queryLastBatchTaskMetricByName(String name) {
-        BatchTaskMetric metric = this.metricMapper.queryLastBatchTaskMetricByName(name);
-        if (metric == null) return new BatchTaskMetric(0l, name, LocalDateTime.now().minusDays(1).withTime(0, 0, 0, 0).toDate());
-        else return metric;
+    public BatchTaskMetric queryLastMetricByName(String name) {
+        return this.metricMapper.queryLastMetricByName(name);
     }
 
 }

@@ -15,8 +15,6 @@ class Conf @Inject()(@Named("appName") appName: String, @Named("apiServer") apiS
 
   private val jobConf = JSON.parseObject(queryBatchTaskApi())
 
-  private val cacheConf = JSON.parseObject("")
-
   private def queryBatchTaskApi(): String = {
     val httpClient = HttpClients.createDefault()
     val httpGet = new HttpGet("http://" + apiServer + "/api/conf?name=" + appName)
@@ -36,18 +34,20 @@ class Conf @Inject()(@Named("appName") appName: String, @Named("apiServer") apiS
 
   def mode: ODSMode = ODSMode.valueOf(jobConf.getString("mode"))
 
-  def modifyTimeColumn: String = jobConf.getString("timeColumn")
+  def sourceTimeColumn: String = jobConf.getString("timeColumn")
 
-  def dbUrl: String = jobConf.getString("dataSourceUrl")
+  def sourceDbUrl: String = jobConf.getString("dataSourceUrl")
 
-  def dbTable: String = jobConf.getString("sourceTable")
+  def sourceDb: String = jobConf.getString("sourceDb")
 
-  def dbUser: String = jobConf.getString("dataSourceUsername")
+  def sourceTable: String = jobConf.getString("sourceTable")
 
-  def dbPassword: String = jobConf.getString("dataSourcePassword")
+  def sourceDbUser: String = jobConf.getString("dataSourceUsername")
 
-  def hiveDB: String = jobConf.getString("sinkDb")
+  def sourceDbPassword: String = jobConf.getString("dataSourcePassword")
 
-  def hiveTable: String = jobConf.getString("sinkTable")
+  def sinkDb: String = jobConf.getString("sinkDb")
+
+  def sinkTable: String = jobConf.getString("sinkTable")
 
 }

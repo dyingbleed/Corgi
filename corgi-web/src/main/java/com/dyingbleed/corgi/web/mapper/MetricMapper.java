@@ -3,6 +3,8 @@ package com.dyingbleed.corgi.web.mapper;
 import com.dyingbleed.corgi.web.bean.BatchTaskMetric;
 import org.apache.ibatis.annotations.*;
 
+import java.util.Date;
+
 /**
  * Created by 李震 on 2018/5/24.
  */
@@ -35,10 +37,11 @@ public interface MetricMapper {
             "    max(m.execute_time) as execute_time " +
             "  from metric m " +
             "  where m.batch_task_name = #{name} " +
+            "  and m.execute_time < curdate() " +
             "  group by m.batch_task_name " +
             ") f  " +
             "on m.batch_task_name = f.batch_task_name " +
             "and m.execute_time = f.execute_time")
-    BatchTaskMetric queryLastBatchTaskMetricByName(@Param("name") String name);
+    BatchTaskMetric queryLastMetricByName(@Param("name") String name);
 
 }

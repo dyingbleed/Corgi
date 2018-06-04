@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Date;
+
 /**
  * 任务指标接口
  *
@@ -32,14 +34,14 @@ public class MetricController {
     }
 
     /**
-     * 根据批处理任务名称查询最新的批处理任务指标
+     * 根据批处理任务名称查询上一次执行时间
      *
      * @param name 批处理任务名
      *
      * */
-    @RequestMapping(method = RequestMethod.GET)
-    public BatchTaskMetric queryLastBatchTaskMetricByName(@RequestParam("name") String name) {
-        return this.metricService.queryLastBatchTaskMetricByName(name);
+    @RequestMapping(value = "/last", method = RequestMethod.GET)
+    public BatchTaskMetric queryLastMetricByName(@RequestParam("name") String name) {
+        return this.metricService.queryLastMetricByName(name);
     }
 
 }
