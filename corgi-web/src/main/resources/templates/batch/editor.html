@@ -42,7 +42,7 @@
         </div>
         <div class="form-group">
             <label for="timeColumn">时间列</label>
-            <select class="form-control" id="timeColumn" required :disabled="batchTask.mode != 'UPDATE'" v-model="batchTask.timeColumn">
+            <select class="form-control" id="timeColumn" required :disabled="batchTask.mode != 'UPDATE' && batchTask.mode != 'APPEND'" v-model="batchTask.timeColumn">
                 <option v-for="(v, k) in timeColumn" :value="k">{{ k }}</option>
             </select>
         </div>
