@@ -7,6 +7,9 @@ server:
 # Spring
 spring:
   datasource:
+    initialize: true
+    initialization-mode: always
+    platform: mysql
     name: mysql
     driver-class-name: com.mysql.jdbc.Driver
     url: jdbc:mysql://localnode4:3306/corgi?useUnicode=true&characterEncoding=utf-8
