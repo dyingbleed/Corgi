@@ -1,11 +1,6 @@
 package com.dyingbleed.corgi.web.utils;
 
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
-import org.apache.hadoop.hive.metastore.api.MetaException;
-
-import java.io.File;
+import java.sql.*;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,20 +17,13 @@ public class HiveUtils {
      * @return 数据库列表
      *
      * */
-    public static List<String> showDatabases() throws MetaException {
+    public static List<String> showDatabases(String url) throws ClassNotFoundException, SQLException {
         List<String> databases = new LinkedList<>();
 
-        HiveConf conf = new HiveConf();
-        conf.addResource(new Path("file://" + System.getenv("CORGI_HOME") + File.separator + "conf" + File.separator + "hive-site.xml"));
+        Class.forName("org.apache.hive.jdbc.HiveDriver");
 
-        HiveMetaStoreClient client = null;
-        try {
-            client = new HiveMetaStoreClient(conf);
-            databases.addAll(client.getAllDatabases());
-        } catch (MetaException e) {
-            throw e;
-        } finally {
-            if (client != null) client.close();
+        try (Connection connection = DriverManager.getConnection(url); Statement statement = connection.createStatement(); ResultSet rs = statement.executeQuery("show databases")) {
+            while (rs.next()) databases.add(rs.getString("database_name"));
         }
 
         return databases;
@@ -49,20 +37,12 @@ public class HiveUtils {
      * @return 数据库列表
      *
      * */
-    public static List<String> showTables(String db) throws MetaException {
+    public static List<String> showTables(String url, String db) throws ClassNotFoundException, SQLException {
         List<String> tables = new LinkedList<>();
 
-        HiveConf conf = new HiveConf();
-        conf.addResource(new Path("file://" + System.getenv("CORGI_HOME") + File.separator + "conf" + File.separator + "hive-site.xml"));
-
-        HiveMetaStoreClient client = null;
-        try {
-            client = new HiveMetaStoreClient(conf);
-            tables.addAll(client.getTables(db, "*"));
-        } catch (MetaException e) {
-            throw e;
-        } finally {
-            if (client != null) client.close();
+        Class.forName("org.apache.hive.jdbc.HiveDriver");
+        try (Connection connection = DriverManager.getConnection(url); Statement statement = connection.createStatement(); ResultSet rs = statement.executeQuery("show tables in " + db)) {
+            while (rs.next()) tables.add(rs.getString("table_name"));
         }
 
         return tables;
