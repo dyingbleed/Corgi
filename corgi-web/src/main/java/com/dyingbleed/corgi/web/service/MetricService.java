@@ -1,9 +1,14 @@
 package com.dyingbleed.corgi.web.service;
 
+import com.dyingbleed.corgi.web.bean.BatchTask;
 import com.dyingbleed.corgi.web.bean.BatchTaskMetric;
+import com.dyingbleed.corgi.web.func.Sync;
+import com.dyingbleed.corgi.web.mapper.BatchTaskMapper;
 import com.dyingbleed.corgi.web.mapper.MetricMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * 任务指标
@@ -16,6 +21,12 @@ public class MetricService {
     @Autowired
     private MetricMapper metricMapper;
 
+    @Autowired
+    private BatchTaskMapper batchTaskMapper;
+
+    @Autowired
+    private Sync sync;
+
     /**
      * 新建任务指标
      *
@@ -24,6 +35,10 @@ public class MetricService {
      * */
     public void insertBatchTaskMetric(BatchTaskMetric metric) {
         this.metricMapper.insertBatchTaskMetric(metric);
+
+        BatchTask task = this.batchTaskMapper.queryBatchTaskByName(metric.getBatchTaskName());
+        checkNotNull(task);
+        if (task.getSync()) this.sync.syncBatchTaskIncrementally(task); // 增量同步
     }
 
     /**

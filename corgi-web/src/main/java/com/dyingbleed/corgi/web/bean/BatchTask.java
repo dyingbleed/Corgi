@@ -31,6 +31,8 @@ public class BatchTask {
 
     private String sinkTable;
 
+    private Boolean isSync;
+
     public Long getId() {
         return id;
     }
@@ -127,4 +129,11 @@ public class BatchTask {
         this.sinkTable = sinkTable;
     }
 
+    public Boolean getSync() {
+        return isSync;
+    }
+
+    public void setSync(Boolean sync) {
+        isSync = sync;
+    }
 }

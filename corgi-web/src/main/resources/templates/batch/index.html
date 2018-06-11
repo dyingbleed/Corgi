@@ -4,6 +4,13 @@
     <title th:text="${appName}"></title>
     <link rel="stylesheet" th:href="@{/css/batch/index.css}"/>
     <script th:src="@{/js/batch/index.js}"></script>
+    <script>
+        var MODE_CODE = {
+            "UPDATE": "更新数据",
+            "COMPLETE": "全量数据",
+            "APPEND": "追加数据"
+        };
+    </script>
 </head>
 <body>
 <th:block th:replace="base :: navbar(${appName}, 'batch')"></th:block>
@@ -14,6 +21,7 @@
             <th scope="col">名称</th>
             <th scope="col">Source</th>
             <th scope="col">Sink</th>
+            <th scope="col">模式</th>
             <th scope="col" width="20%">操作</th>
         </tr>
         </thead>
@@ -24,13 +32,16 @@
             </td>
             <td>{{ i.sourceDb }}.{{ i.sourceTable }}</td>
             <td>{{ i.sinkDb }}.{{ i.sinkTable }}</td>
+            <td>{{ MODE_CODE[i.mode] }}</td>
             <td>
+                <a href="#" class="btn btn-sm btn-primary" v-if="i.sync" v-on:click="updateBatchTaskSyncById(i.id, !i.sync)">关闭同步</a>
+                <a href="#" class="btn btn-sm btn-danger" v-else v-on:click="updateBatchTaskSyncById(i.id, !i.sync)">启动同步</a>
                 <a href="#" class="btn btn-sm btn-danger" v-on:click="deleteBatchTaskById(i.id)">删除</a>
             </td>
         </tr>
         </tbody>
         <tfoot>
-        <a class="btn btn-light" v-on:click="gotoAddBatchTask">新增批量任务</a>
+        <a class="btn btn-light" v-on:click="gotoAddBatchTask()">新增批量任务</a>
         </tfoot>
     </table>
 </div>

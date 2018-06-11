@@ -1,9 +1,9 @@
 package com.dyingbleed.corgi.web.service;
 
 import com.dyingbleed.corgi.web.utils.HiveUtils;
-import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.PropertySource;
@@ -19,16 +19,31 @@ import java.util.List;
  * Created by 李震 on 2018/5/17.
  */
 @Service
-@PropertySource("file:${CORGI_HOME}/conf/hive.properties")
+@PropertySource("file:${CORGI_HOME}/conf/cluster.properties")
 public class HiveService {
 
     private static final Logger logger = LoggerFactory.getLogger(HiveService.class);
 
     @Value("${hive.master.url}")
-    private String masterUrl;
+    private String hiveMasterUrl;
+
+    @Value("${hive.master.username}")
+    private String hiveMasterUsername;
+
+    @Value("${hive.master.password}")
+    private String hiveMasterPassword;
 
     @Value("${hive.slave.url}")
-    private String slaveUrl;
+    private String hiveSlaveUrl;
+
+    @Value("${hive.slave.username}")
+    private String hiveSlaveUsername;
+
+    @Value("${hive.slave.password}")
+    private String hiveSlavePassword;
+
+    @Autowired
+    private BatchTaskService batchTaskService;
 
     /**
      * 显示 Hive 所有数据库
@@ -40,7 +55,7 @@ public class HiveService {
     public List<String> showDBs() {
         List<String> databases = new LinkedList<>();
         try {
-            databases.addAll(HiveUtils.showDatabases(masterUrl));
+            databases.addAll(HiveUtils.showDatabases(this.hiveMasterUrl, this.hiveMasterUsername, this.hiveMasterPassword));
         } catch (SQLException | ClassNotFoundException e) {
             logger.error("显示所有 Hive 数据库出错", e);
         }
@@ -59,7 +74,7 @@ public class HiveService {
     public List<String> showTables(String db) {
         List<String> tables = new LinkedList<>();
         try {
-            tables.addAll(HiveUtils.showTables(masterUrl, db));
+            tables.addAll(HiveUtils.showTables(this.hiveMasterUrl, this.hiveMasterUsername, this.hiveMasterPassword, db));
         } catch (SQLException | ClassNotFoundException e) {
             logger.error("显示所有 Hive 数据库表出错", e);
         }

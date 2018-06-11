@@ -1,11 +1,14 @@
 package com.dyingbleed.corgi.web.service;
 
 import com.dyingbleed.corgi.web.bean.BatchTask;
+import com.dyingbleed.corgi.web.func.Sync;
 import com.dyingbleed.corgi.web.mapper.BatchTaskMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+
+import static com.google.common.base.Preconditions.*;
 
 /**
  * 批处理任务
@@ -17,6 +20,9 @@ public class BatchTaskService {
 
     @Autowired
     private BatchTaskMapper batchTaskMapper;
+
+    @Autowired
+    private Sync sync;
 
     /**
      * 新增批量任务
@@ -52,6 +58,21 @@ public class BatchTaskService {
     public BatchTask updateBatchTask(BatchTask task) {
         this.batchTaskMapper.updateBatchTask(task);
         return task;
+    }
+
+    /**
+     * 修改批量任务同步
+     *
+     * @param id 批量任务 ID
+     * @param isSync 批量任务是否同步
+     *
+     * */
+    public void updateBatchTaskSync(Long id, Boolean isSync) {
+        BatchTask task = this.batchTaskMapper.queryBatchTaskById(id);
+        checkNotNull(task);
+        this.sync.syncBatchTaskTotally(task); // 全量同步
+
+        this.batchTaskMapper.updateBatchTaskSync(id, isSync);
     }
 
     /**

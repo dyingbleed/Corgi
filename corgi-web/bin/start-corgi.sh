@@ -13,6 +13,9 @@ corgi_home=${bin_absolute_path}/..
 
 export CORGI_HOME=$corgi_home
 
+# Enviroment Var
+source $corgi_home/conf/corgi-env.sh
+
 # Java
 if [ -z "$JAVA" ] ; then
   JAVA=$(which java)
