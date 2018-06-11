@@ -68,9 +68,11 @@ public class BatchTaskService {
      *
      * */
     public void updateBatchTaskSync(Long id, Boolean isSync) {
-        BatchTask task = this.batchTaskMapper.queryBatchTaskById(id);
-        checkNotNull(task);
-        this.sync.syncBatchTaskTotally(task); // 全量同步
+        if (isSync) {
+            BatchTask task = this.batchTaskMapper.queryBatchTaskById(id);
+            checkNotNull(task);
+            this.sync.syncBatchTaskTotally(task); // 全量同步
+        }
 
         this.batchTaskMapper.updateBatchTaskSync(id, isSync);
     }
