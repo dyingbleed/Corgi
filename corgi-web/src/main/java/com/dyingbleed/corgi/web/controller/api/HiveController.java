@@ -1,5 +1,6 @@
 package com.dyingbleed.corgi.web.controller.api;
 
+import com.dyingbleed.corgi.web.bean.Column;
 import com.dyingbleed.corgi.web.service.HiveService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,6 +44,19 @@ public class HiveController {
     @RequestMapping(value = "/table/{db}", method = RequestMethod.GET)
     public List<String> showTables(@PathVariable("db") String db) {
         return this.hiveService.showTables(db);
+    }
+
+    /**
+     * 显示 Hive 表所有字段
+     *
+     * @param db
+     * @param table
+     *
+     * @return 表字段
+     * */
+    @RequestMapping(value = "/column/{db}/{table}", method = RequestMethod.GET)
+    public List<Column> descTable(@PathVariable("db") String db, @PathVariable("table") String table) {
+        return this.hiveService.descTable(db, table);
     }
 
 }

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="base :: base_header(~{::title}, ~{::link}, ~{::script})">
+    <title th:text="${appName}"></title>
+    <link rel="stylesheet" th:href="@{/css/metadata/index.css}"/>
+    <script th:src="@{/js/metadata/index.js}"></script>
+</head>
+<body>
+<th:block th:replace="base :: navbar(${appName}, 'metadata')"></th:block>
+<div id="app" class="container">
+    <table class="table table-borderless">
+        <thead>
+        <tr>
+            <th scope="col">字段名</th>
+            <th scope="col">字段类型</th>
+            <th scope="col">注释</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="i in columnArray">
+            <td>{{ i.name }}</td>
+            <td>{{ i.type }}</td>
+            <td>{{ i.comment }}</td>
+        </tr>
+        </tbody>
+        <tfoot>
+            <form>
+                <div class="form-group">
+                    <select class="form-control" v-model="batchTaskId">
+                        <option v-for="i in batchTaskArray" :value="i.id">{{ i.sinkDb }}.{{ i.sinkTable }}</option>
+                    </select>
+                </div>
+            </form>
+        </tfoot>
+    </table>
+</div>
+</body>
+</html>
