@@ -1,20 +1,19 @@
 package com.dyingbleed.corgi.spark.core
 
 import java.sql.DriverManager
-import scala.collection.JavaConversions._
 
+import scala.collection.JavaConversions._
 import com.google.inject.Inject
 import org.apache.spark.sql.catalog.Column
 import org.apache.spark.sql.types.StringType
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.joda.time.LocalDateTime
-
+import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
+import org.joda.time.{LocalDate, LocalDateTime}
 import com.dyingbleed.corgi.spark.core.ODSMode._
 
 /**
   * Created by 李震 on 2018/3/2.
   */
-class DataSource {
+private[spark] class DataSource {
   
   @Inject
   var spark: SparkSession = _
@@ -154,15 +153,7 @@ class DataSource {
 
         // 插入数据
         // 静态分区
-        df.createOrReplaceTempView("sink")
-        spark.sql(
-          s"""
-            |insert overwrite table ${conf.sinkDb}.${conf.sinkTable}
-            |partition(ods_date='${timestamp.toString("yyyy-MM-dd")}')
-            |select
-            |    ${getTableColumns(conf.sinkDb, conf.sinkTable).map(_.name).filter(!_.equals("ods_date")).mkString(",")}
-            |from sink
-          """.stripMargin)
+        forceInsertOverwriteTablePartition(df, conf.sinkDb, conf.sinkTable, timestamp.toLocalDate)
       }
       case APPEND | UPDATE => {
         if (!spark.catalog.tableExists(conf.sinkDb, conf.sinkTable)) {
@@ -187,23 +178,34 @@ class DataSource {
               |select * from sink
             """.stripMargin)
         } else {
-          df.createOrReplaceTempView("sink")
-
-          // 插入数据
-          // 静态分区
+          // 增加分区
           spark.sql(
             s"""
-              |insert overwrite table ${conf.sinkDb}.${conf.sinkTable}
-              |partition(ods_date='${timestamp.toString("yyyy-MM-dd")}')
-              |select
-              |  ${getTableColumns(conf.sinkDb, conf.sinkTable).map(_.name).filter(!_.equals("ods_date")).mkString(",")}
-              |from sink
-            """.stripMargin)
+               |alter table ${conf.sinkDb}.${conf.sinkTable}
+               |add if not exists partition (ods_date='${timestamp.toString("yyyy-MM-dd")}')
+          """.stripMargin)
+
+          forceInsertOverwriteTablePartition(df, conf.sinkDb, conf.sinkTable, timestamp.toLocalDate)
         }
       }
     }
 
     metadata.saveLastModifyDate(timestamp) // 保存执行时间戳
+  }
+
+  /**
+    * 强制插入覆盖到表分区
+    *
+    * @param df
+    * @param db
+    * @param table
+    * @param date
+    *
+    * */
+  private def forceInsertOverwriteTablePartition(df: DataFrame, db: String, table: String, date: LocalDate): Unit = {
+    val location = spark.sql(s"desc formatted ${db}.${table}").filter("col_name = 'Location'").collect().last.getString(1)
+    val path = s"${location}/ods_date=${date.toString("yyyy-MM-dd")}"
+    df.coalesce(8).write.mode(SaveMode.Overwrite).parquet(path)
   }
 
 }

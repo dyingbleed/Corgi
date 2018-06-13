@@ -1,6 +1,5 @@
 package com.dyingbleed.corgi.spark.core
 
-import java.io.FileInputStream
 import java.util.Properties
 
 import com.google.inject.AbstractModule
@@ -10,7 +9,7 @@ import org.apache.spark.sql.SparkSession
 /**
   * Created by 李震 on 2018/1/9.
   */
-class Bootstrap(args: Array[String]) {
+private[spark] class Bootstrap(args: Array[String]) {
 
   val appName = args(0)
 

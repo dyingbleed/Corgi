@@ -11,7 +11,7 @@ import org.apache.http.util.EntityUtils
 /**
   * Created by 李震 on 2018/3/1.
   */
-class Conf @Inject()(@Named("appName") appName: String, @Named("apiServer") apiServer: String) {
+private[spark] class Conf @Inject()(@Named("appName") appName: String, @Named("apiServer") apiServer: String) {
 
   private val jobConf = JSON.parseObject(queryBatchTaskApi())
 
