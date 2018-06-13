@@ -15,14 +15,14 @@
 <body>
 <th:block th:replace="base :: navbar(${appName}, 'batch')"></th:block>
 <div id="app" class="container">
-    <table class="table table-borderless">
+    <table class="table table-borderless table-responsive">
         <thead>
         <tr>
-            <th scope="col">名称</th>
+            <th scope="col" class="name-column">名称</th>
             <th scope="col">Source</th>
             <th scope="col">Sink</th>
-            <th scope="col">模式</th>
-            <th scope="col" width="20%">操作</th>
+            <th scope="col" class="mode-column">模式</th>
+            <th scope="col" class="operation-column">操作</th>
         </tr>
         </thead>
         <tbody v-for="i in batchTaskArray">
