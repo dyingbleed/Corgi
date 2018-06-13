@@ -51,8 +51,8 @@ public interface DataSourceMapper {
             "set " +
             "  name=#{ds.name}, " +
             "  url=#{ds.url}, " +
-            "  username=#{username}, " +
-            "  password=#{password}" +
+            "  username=#{ds.username}, " +
+            "  password=#{ds.password}" +
             "where id=#{ds.id}")
     void updateDataSource(@Param("ds") DataSource ds);
 
