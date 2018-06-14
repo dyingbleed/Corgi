@@ -7,7 +7,7 @@ import java.util.Date;
 /**
  * Created by 李震 on 2018/5/24.
  */
-public class BatchTaskMetric {
+public class ExecuteLog {
 
     private Long id;
 
@@ -16,9 +16,9 @@ public class BatchTaskMetric {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date executeTime;
 
-    public BatchTaskMetric() { super(); }
+    public ExecuteLog() { super(); }
 
-    public BatchTaskMetric(Long id, String batchTaskName, Date executeTime) {
+    public ExecuteLog(Long id, String batchTaskName, Date executeTime) {
         super();
 
         this.id = id;
