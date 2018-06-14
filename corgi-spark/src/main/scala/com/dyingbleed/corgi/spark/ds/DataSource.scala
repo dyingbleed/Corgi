@@ -1,14 +1,16 @@
-package com.dyingbleed.corgi.spark.core
+package com.dyingbleed.corgi.spark.ds
 
 import java.sql.DriverManager
 
-import scala.collection.JavaConversions._
+import com.dyingbleed.corgi.spark.core.{Conf, Rpc}
+import com.dyingbleed.corgi.spark.core.ODSMode._
 import com.google.inject.Inject
 import org.apache.spark.sql.catalog.Column
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 import org.joda.time.{LocalDate, LocalDateTime}
-import com.dyingbleed.corgi.spark.core.ODSMode._
+
+import scala.collection.JavaConversions._
 
 /**
   * Created by 李震 on 2018/3/2.
@@ -22,7 +24,7 @@ private[spark] class DataSource {
   var conf: Conf = _
 
   @Inject
-  var metadata: Metadata = _
+  var rpc: Rpc = _
 
   private val timestamp: LocalDateTime = LocalDateTime.now() // 当前读入数据时间戳
 
@@ -71,7 +73,7 @@ private[spark] class DataSource {
              |(select
              |  *
              |from ${conf.sourceDb}.${conf.sourceTable}
-             |where ${conf.sourceTimeColumn} >= '${metadata.getLastModifyDate.toString("yyyy-MM-dd HH:mm:ss")}'
+             |where ${conf.sourceTimeColumn} >= '${rpc.getLastExecuteTime.toString("yyyy-MM-dd HH:mm:ss")}'
              |and ${conf.sourceTimeColumn} < '${ts.toString("yyyy-MM-dd HH:mm:ss")}'
              |) t
          """.stripMargin
@@ -190,7 +192,7 @@ private[spark] class DataSource {
       }
     }
 
-    metadata.saveLastModifyDate(timestamp) // 保存执行时间戳
+    rpc.saveExecuteTime(timestamp) // 保存执行时间戳
   }
 
   /**
@@ -203,7 +205,7 @@ private[spark] class DataSource {
     *
     * */
   private def forceInsertOverwriteTablePartition(df: DataFrame, db: String, table: String, date: LocalDate): Unit = {
-    val location = spark.sql(s"desc formatted ${db}.${table}").filter("col_name = 'Location'").collect().last.getString(1)
+    val location = spark.sql(s"desc formatted ${db}.${table}").filter("col_name like 'Location%'").collect().last.getString(1)
     val path = s"${location}/ods_date=${date.toString("yyyy-MM-dd")}"
     df.coalesce(8).write.mode(SaveMode.Overwrite).parquet(path)
   }
