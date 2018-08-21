@@ -94,8 +94,15 @@ private[spark] class AppendAndUpdateEL extends DataSourceEL {
   }
 
   private def getPatitionInfo(): Option[(String, Int, Int, Int)] = {
-    Class.forName("com.mysql.jdbc.Driver")
-    val conn = DriverManager.getConnection(conf.sourceDbUrl, conf.sourceDbUser, conf.sourceDbPassword)
+    val conn = if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
+      Class.forName("com.mysql.jdbc.Driver")
+      DriverManager.getConnection(conf.sourceDbUrl, conf.sourceDbUser, conf.sourceDbPassword)
+    } else if (conf.sourceDbUrl.startsWith("jdbc:oracle:thin")) {
+      Class.forName("oracle.jdbc.OracleDriver")
+      DriverManager.getConnection(conf.sourceDbUrl, conf.sourceDbUser, conf.sourceDbPassword)
+    } else {
+      throw new RuntimeException("不支持的数据源")
+    }
 
     /*
      * 1.检查是否满足分区条件
@@ -128,13 +135,26 @@ private[spark] class AppendAndUpdateEL extends DataSourceEL {
       val partitionInfo = getPatitionInfo()
 
       val table =
-        s"""
-           |(select
-           |  *, date(${conf.sourceTimeColumn}) as ods_date
-           |from ${conf.sourceDb}.${conf.sourceTable}
-           |where ${conf.sourceTimeColumn} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
-           |) t
+        if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
+          s"""
+             |(select
+             |  *, date(${conf.sourceTimeColumn}) as ods_date
+             |from ${conf.sourceDb}.${conf.sourceTable}
+             |where ${conf.sourceTimeColumn} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
+             |) t
           """.stripMargin
+        } else if(conf.sourceDbUrl.startsWith("jdbc:oracle:thin")) {
+          s"""
+            |(SELECT
+            |	t.*,
+            |	TO_CHAR(t.${conf.sourceTimeColumn}, 'yyyy-mm-dd') as ods_date
+            |FROM ${conf.sourceDb}.${conf.sourceTable} t
+            |WHERE t.${conf.sourceTimeColumn} < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
+            |) t
+          """.stripMargin
+        } else {
+          throw new RuntimeException("不支持的数据源")
+        }
 
       val reader = spark.read
         .format("jdbc")
@@ -142,7 +162,12 @@ private[spark] class AppendAndUpdateEL extends DataSourceEL {
         .option("dbtable", table)
         .option("user", conf.sourceDbUser)
         .option("password", conf.sourceDbPassword)
-        .option("driver", "com.mysql.jdbc.Driver")
+
+      if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
+        reader.option("driver", "com.mysql.jdbc.Driver")
+      } else if(conf.sourceDbUrl.startsWith("jdbc:oracle:thin")) {
+        reader.option("driver", "oracle.jdbc.OracleDriver")
+      }
 
       (if (partitionInfo.isDefined) {
         val info = partitionInfo.get
@@ -164,14 +189,20 @@ private[spark] class AppendAndUpdateEL extends DataSourceEL {
            |) t
          """.stripMargin
 
-      spark.read
+      val reader = spark.read
         .format("jdbc")
         .option("url", conf.sourceDbUrl)
         .option("dbtable", table)
         .option("user", conf.sourceDbUser)
         .option("password", conf.sourceDbPassword)
-        .option("driver", "com.mysql.jdbc.Driver")
-        .load()
+
+      if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
+        reader.option("driver", "com.mysql.jdbc.Driver")
+      } else if(conf.sourceDbUrl.startsWith("jdbc:oracle:thin")) {
+        reader.option("driver", "oracle.jdbc.OracleDriver")
+      }
+
+      reader.load()
     }
   }
 

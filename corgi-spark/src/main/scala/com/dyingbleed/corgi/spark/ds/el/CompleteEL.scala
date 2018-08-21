@@ -24,14 +24,22 @@ private[spark] class CompleteEL extends DataSourceEL {
     * @return
     **/
   override def loadSourceDF: DataFrame = {
-    spark.read
+    val reader = spark.read
       .format("jdbc")
       .option("url", conf.sourceDbUrl)
       .option("dbtable", conf.sourceTable)
       .option("user", conf.sourceDbUser)
       .option("password", conf.sourceDbPassword)
-      .option("driver", "com.mysql.jdbc.Driver")
-      .load()
+
+      if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
+        reader.option("driver", "com.mysql.jdbc.Driver")
+      } else if(conf.sourceDbUrl.startsWith("jdbc:oracle:thin")) {
+        reader.option("driver", "oracle.jdbc.OracleDriver")
+      } else {
+        throw new RuntimeException("不支持的数据源")
+      }
+
+      reader.load()
   }
 
   /**

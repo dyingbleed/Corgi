@@ -16,6 +16,7 @@
         <guice.version>4.1.0</guice.version>
         <fastjson.version>1.2.3</fastjson.version>
         <mysql.connector.version>5.1.40</mysql.connector.version>
+        <oracle.driver.version>10.2.0.3.0</oracle.driver.version>
     </properties>
 
     <dependencies>
@@ -42,6 +43,12 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>${mysql.connector.version}</version>
+        </dependency>
+        <!-- oracle -->
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>ojdbc14</artifactId>
+            <version>${oracle.driver.version}</version>
         </dependency>
     </dependencies>
 
