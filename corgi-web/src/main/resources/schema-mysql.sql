@@ -22,14 +22,14 @@ CREATE TABLE IF NOT EXISTS `batch` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-CREATE TABLE `execute_log` (
+CREATE TABLE IF NOT EXISTS `execute_log` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `batch_task_name` varchar(32) NOT NULL,
   `execute_time` datetime NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `measure` (
+CREATE TABLE IF NOT EXISTS `measure` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
   `submission_time` datetime NOT NULL,
