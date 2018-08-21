@@ -8,7 +8,7 @@
 <body>
 <th:block th:replace="base :: navbar(${appName}, 'home')"></th:block>
 <div id="app" class="container">
-    <p>今日共完成 <strong>{{ measureStat.taskCount }}</strong> 项任务，总耗时约 <strong>{{ formatSeconds(measureStat.elapsedSecondSum) }}</strong></p>
+    <div class="alert alert-primary" role="alert">今日共完成 <strong>{{ measureStat.taskCount }}</strong> 项任务，总耗时约 <strong>{{ formatSeconds(measureStat.elapsedSecondSum) }}</strong></div>
     <table class="table table-borderless table-responsive">
         <thead>
             <tr>
@@ -16,10 +16,10 @@
                 <th scope="col">提交时间</th>
                 <th scope="col">完成时间</th>
                 <th scope="col">耗时</th>
-                <th scope="col">输入数据条数</th>
-                <th scope="col">输入数据大小</th>
-                <th scope="col">输出数据条数</th>
-                <th scope="col">输出数据大小</th>
+                <th scope="col">输入行数</th>
+                <th scope="col">输入大小</th>
+                <th scope="col">输出行数</th>
+                <th scope="col">输出大小</th>
             </tr>
         </thead>
         <tbody v-for="i in measureDetailArray">

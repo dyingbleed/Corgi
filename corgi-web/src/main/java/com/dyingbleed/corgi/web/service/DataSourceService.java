@@ -116,7 +116,7 @@ public class DataSourceService {
     public String testConnection(DataSource ds) {
         String message = "success";
         try {
-            JDBCUtils.testMySQLConnection(ds.getUrl(), ds.getUsername(), ds.getPassword());
+            JDBCUtils.testConnection(ds.getUrl(), ds.getUsername(), ds.getPassword());
         } catch (Exception e) {
             message = e.getLocalizedMessage();
         }
@@ -185,7 +185,7 @@ public class DataSourceService {
         try {
             Map<String, String> all = JDBCUtils.describeTable(ds.getUrl(), ds.getUsername(), ds.getPassword(), database, table);
             Map<String, String> modifyTimeColumns = all.entrySet().stream()
-                    .filter(entry -> entry.getValue().equalsIgnoreCase("datetime") || entry.getValue().equalsIgnoreCase("timestamp"))
+                    .filter(entry -> entry.getValue().toLowerCase().equals("date") || entry.getValue().toLowerCase().equals("datetime") || entry.getValue().toLowerCase().startsWith("timestamp"))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
             columns.putAll(modifyTimeColumns);
         } catch (SQLException | ClassNotFoundException e) {

@@ -4,29 +4,29 @@ function formatTime(time) {
 
 function formatSeconds(seconds) {
     if (seconds > 3600) {
-        var hour = seconds / 3600;
-        var minute = seconds % 3600 / 60;
+        var hour = Math.floor(seconds / 3600);
+        var minute = Math.floor(seconds % 3600 / 60);
         var second = seconds % 60;
-        return hour + " 小时 " + minute + " 分钟 " + second + "秒";
+        return hour + " 小时 " + minute + " 分钟 " + second + " 秒";
     } else if (seconds > 60) {
-        var minute = seconds % 3600 / 60;
+        var minute = Math.floor(seconds % 3600 / 60);
         var second = seconds % 60;
-        return minute + " 分钟 " + second + "秒";
+        return minute + " 分钟 " + second + " 秒";
     } else {
-        return seconds + "秒";
+        return seconds + " 秒";
     }
 }
 
 function formatBytes(bytes) {
     if (bytes > (1024 * 1024 * 1024)) {
-        var gb = bytes / (1024 * 1024 * 1024);
-        var mb = bytes % (1024 * 1024 * 1024) / (1024 * 1024);
+        var gb = Math.floor(bytes / (1024 * 1024 * 1024));
+        var mb = Math.round(bytes % (1024 * 1024 * 1024) / (1024 * 1024));
         return gb + " GB " + mb + " MB";
     } else if (bytes > (1024 * 1024)) {
-        var mb = bytes / (1024 * 1024);
+        var mb = Math.round(bytes / (1024 * 1024));
         return mb + " MB";
     } else if (bytes > 1024) {
-        var kb = bytes / 1024;
+        var kb = Math.round(bytes / 1024);
         return kb + " MB";
     } else {
         return bytes + " B";

@@ -1,30 +1,29 @@
 package com.dyingbleed.corgi.web.utils;
 
-import java.sql.*;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
 /**
- * JDBC 工具类
- *
- * Created by 李震 on 2018/5/14.
+ * Created by 李震 on 2018/7/3.
  */
 public class JDBCUtils {
 
     /**
-     * 测试 MySQL 数据库连接
+     * 测试数据库连接
      *
      * @param url
      * @param username
      * @param password
      *
      * */
-    public static void testMySQLConnection(String url, String username, String password) throws ClassNotFoundException, SQLException {
-        Class.forName("com.mysql.jdbc.Driver");
-        try (Connection connection = DriverManager.getConnection(url, username, password); Statement statement = connection.createStatement()) {
-            statement.execute("select 1");
+    public static void testConnection(String url, String username, String password) throws ClassNotFoundException, SQLException {
+        if (url.startsWith("jdbc:mysql")) {
+            MySQLUtils.testConnection(url, username, password);
+        } else if (url.startsWith("jdbc:oracle:thin")) {
+            OracleUtils.testConnection(url, username, password);
+        } else {
+            throw new IllegalArgumentException("不支持的数据源");
         }
     }
 
@@ -39,17 +38,13 @@ public class JDBCUtils {
      *
      * */
     public static List<String> showDatabases(String url, String username, String password) throws ClassNotFoundException, SQLException {
-        List<String> databases = new LinkedList<>();
-
-        Class.forName("com.mysql.jdbc.Driver");
-        try (Connection connection = DriverManager.getConnection(url, username, password); Statement statement = connection.createStatement()) {
-            ResultSet rs = statement.executeQuery("show databases");
-            while (rs.next()) {
-                databases.add(rs.getString(1));
-            }
+        if (url.startsWith("jdbc:mysql")) {
+            return MySQLUtils.showDatabases(url, username, password);
+        } else if (url.startsWith("jdbc:oracle:thin")) {
+            return OracleUtils.showDatabases(url, username, password);
+        } else {
+            throw new IllegalArgumentException("不支持的数据源");
         }
-
-        return databases;
     }
 
     /**
@@ -64,17 +59,13 @@ public class JDBCUtils {
      *
      * */
     public static List<String> showTables(String url, String username, String password, String database) throws ClassNotFoundException, SQLException {
-        List<String> tables = new LinkedList<>();
-
-        Class.forName("com.mysql.jdbc.Driver");
-        try (Connection connection = DriverManager.getConnection(url, username, password); Statement statement = connection.createStatement()) {
-            ResultSet rs = statement.executeQuery("show tables in " + database);
-            while (rs.next()) {
-                tables.add(rs.getString(1));
-            }
+        if (url.startsWith("jdbc:mysql")) {
+            return MySQLUtils.showTables(url, username, password, database);
+        } else if (url.startsWith("jdbc:oracle:thin")) {
+            return OracleUtils.showTables(url, username, password, database);
+        } else {
+            throw new IllegalArgumentException("不支持的数据源");
         }
-
-        return tables;
     }
 
     /**
@@ -90,17 +81,13 @@ public class JDBCUtils {
      *
      * */
     public static Map<String, String> describeTable(String url, String username, String password, String database, String table) throws SQLException, ClassNotFoundException {
-        Map<String, String> columns = new LinkedHashMap<>();
-
-        Class.forName("com.mysql.jdbc.Driver");
-        try (Connection connection = DriverManager.getConnection(url, username, password); Statement statement = connection.createStatement()) {
-            ResultSet rs = statement.executeQuery("desc " + database + "." + table);
-            while (rs.next()) {
-                columns.put(rs.getString(1), rs.getString(2));
-            }
+        if (url.startsWith("jdbc:mysql")) {
+            return MySQLUtils.describeTable(url, username, password, database, table);
+        } else if (url.startsWith("jdbc:oracle:thin")) {
+            return OracleUtils.describeTable(url, username, password, database, table);
+        } else {
+            throw new IllegalArgumentException("不支持的数据源");
         }
-
-        return columns;
     }
 
 }
