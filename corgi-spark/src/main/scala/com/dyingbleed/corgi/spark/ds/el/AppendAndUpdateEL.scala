@@ -70,7 +70,7 @@ private[spark] class AppendAndUpdateEL extends DataSourceEL {
     primaryKeyColumn
   }
 
-  private def partitionStats(conn: Connection, column: String): (Int, Int, Int) = {
+  private def partitionStats(conn: Connection, column: String): (Long, Long, Long) = {
     val stat = conn.createStatement()
 
     val rs = stat.executeQuery(
@@ -83,9 +83,9 @@ private[spark] class AppendAndUpdateEL extends DataSourceEL {
     """.stripMargin)
     rs.next()
 
-    val lowerBound = rs.getInt(1)
-    val upperBound = rs.getInt(2)
-    val numPatitions = (rs.getInt(3) / 1000000) + 1
+    val lowerBound = rs.getLong(1)
+    val upperBound = rs.getLong(2)
+    val numPatitions = (rs.getLong(3) / 1000000) + 1
 
     rs.close()
     stat.close()
@@ -93,7 +93,7 @@ private[spark] class AppendAndUpdateEL extends DataSourceEL {
     (lowerBound, upperBound, numPatitions)
   }
 
-  private def getPatitionInfo(): Option[(String, Int, Int, Int)] = {
+  private def getPatitionInfo(): Option[(String, Long, Long, Long)] = {
     val conn = if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
       Class.forName("com.mysql.jdbc.Driver")
       DriverManager.getConnection(conf.sourceDbUrl, conf.sourceDbUser, conf.sourceDbPassword)
