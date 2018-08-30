@@ -1,5 +1,6 @@
 package com.dyingbleed.corgi.web.bean;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
@@ -14,6 +15,7 @@ public class ExecuteLog {
     private String batchTaskName;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date executeTime;
 
     public ExecuteLog() { super(); }
