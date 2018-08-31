@@ -11,7 +11,7 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.joda.time.LocalDateTime
-import org.joda.time.format.ISODateTimeFormat
+import org.joda.time.format.DateTimeFormat
 
 import scala.collection.JavaConverters._
 
@@ -31,7 +31,7 @@ private[spark] class Rpc @Inject()(@Named("appName") appName: String, @Named("ap
       val content = EntityUtils.toString(entity, Charsets.UTF_8)
       httpClient.close()
 
-      LocalDateTime.parse(JSON.parseObject(content).getString("executeTime"), ISODateTimeFormat.dateTime())
+      LocalDateTime.parse(JSON.parseObject(content).getString("executeTime"), DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss"))
     } else {
       httpClient.close()
       throw new RuntimeException("调用任务指标接口返回 " + statusCode)
