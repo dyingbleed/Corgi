@@ -25,11 +25,9 @@ tar -zxf corgi-web.release.tar.gz
 
 #### 配置
 
-首先，将 Hive 配置文件 hive-site.xml 拷贝到 conf 目录下
+首先，将 Hadoop 配置文件 core-site.xml、hdfs-site.xml 和 yarn-site.xml 拷贝到 conf 目录下
 
-然后，通过 MySQL 客户端，执行目录 sql/init.sql 文件，创建服务依赖数据库表
-
-最后，编辑 application.yml 文件，下面是一些关键配置：
+然后，编辑 application.yml 文件，下面是关键配置说明：
 
 - server.address  服务地址，生产环境建议修改为 0.0.0.0
 - server.port  服务端口号
@@ -37,7 +35,14 @@ tar -zxf corgi-web.release.tar.gz
 - spring.datasource.username  MySQL 数据库连接用户名
 - spring.datasource.password  MySQL 数据库连接密码
 
-其它配置，建议保持默认值
+最后，编辑 cluster.properties 文件，下面是关键配置说明：
+
+- hdfs.master.url  主集群 HDFS 地址
+- hive.master.url  主集群 Hive ThriftServer 地址
+- hive.master.username  主集群 Hive ThriftServer 用户名
+- hive.master.password  主集群 Hive ThriftServer 密码
+
+注：如果不需要主从同步数据，slave 配置可不填
 
 #### 服务启停
 
