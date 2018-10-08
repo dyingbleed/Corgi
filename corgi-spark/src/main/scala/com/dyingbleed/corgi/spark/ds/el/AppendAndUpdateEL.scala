@@ -1,17 +1,17 @@
 package com.dyingbleed.corgi.spark.ds.el
 
-import java.sql.{Connection, DriverManager}
-
 import com.dyingbleed.corgi.spark.core.{Conf, Rpc}
+import com.dyingbleed.corgi.spark.ds.el.split.SplitManager
 import com.dyingbleed.corgi.spark.ds.{DataSourceEL, DataSourceUtils}
 import com.google.inject.Inject
+import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.joda.time.LocalDateTime
 
 /**
   * Created by 李震 on 2018/6/26.
   */
-private[spark] class AppendAndUpdateEL extends DataSourceEL {
+private[spark] class AppendAndUpdateEL extends DataSourceEL with Logging {
 
   @Inject
   var spark: SparkSession = _
@@ -25,106 +25,6 @@ private[spark] class AppendAndUpdateEL extends DataSourceEL {
   private val executeTime = LocalDateTime.now()
 
   /**
-    * 判断是否可以分区
-    *
-    * - 主键
-    * - 非联合主键
-    * - 数字类型
-    *
-    * */
-  private def checkIfPartition(conn: Connection): Boolean = {
-    val dbmd = conn.getMetaData
-    val pkrs = dbmd.getPrimaryKeys(conf.sourceDb, null, conf.sourceTable)
-    val rsmd = pkrs.getMetaData
-    val columnCount = rsmd.getColumnCount
-
-    pkrs.next()
-    val primaryKeyColumn = pkrs.getString(4)
-    if (pkrs.next()) return false
-    pkrs.close()
-
-    val crs = dbmd.getColumns(conf.sourceDb, null, conf.sourceTable, primaryKeyColumn)
-    crs.next()
-    val dataType = crs.getInt(5)
-    crs.close()
-
-    dataType == 4 || // INTEGER
-      dataType == -6 || // TINYINT
-      dataType == 5 || // SMALLINT
-      dataType ==  -5 || // BIGINT
-      dataType ==  7 || // FLOAT
-      dataType ==  8 || // DOUBLE
-      dataType ==  3 // DECIMAL
-  }
-
-  private def partitionColumn(conn: Connection): String = {
-    val dbmd = conn.getMetaData
-    val pkrs = dbmd.getPrimaryKeys(conf.sourceDb, null, conf.sourceTable)
-    val rsmd = pkrs.getMetaData
-    val columnCount = rsmd.getColumnCount
-
-    pkrs.next()
-    val primaryKeyColumn = pkrs.getString(4)
-    pkrs.close()
-
-    primaryKeyColumn
-  }
-
-  private def partitionStats(conn: Connection, column: String): (Long, Long, Long) = {
-    val stat = conn.createStatement()
-
-    val rs = stat.executeQuery(
-      s"""
-         |select
-         |  min(${column}) as lowerbound,
-         |  max(${column}) as upperbound,
-         |  count(1) as count
-         |from ${conf.sourceDb}.${conf.sourceTable}
-    """.stripMargin)
-    rs.next()
-
-    val lowerBound = rs.getLong(1)
-    val upperBound = rs.getLong(2)
-    val numPatitions = (rs.getLong(3) / 1000000) + 1
-
-    rs.close()
-    stat.close()
-
-    (lowerBound, upperBound, numPatitions)
-  }
-
-  private def getPatitionInfo(): Option[(String, Long, Long, Long)] = {
-    val conn = if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
-      Class.forName("com.mysql.jdbc.Driver")
-      DriverManager.getConnection(conf.sourceDbUrl, conf.sourceDbUser, conf.sourceDbPassword)
-    } else if (conf.sourceDbUrl.startsWith("jdbc:oracle:thin")) {
-      Class.forName("oracle.jdbc.OracleDriver")
-      DriverManager.getConnection(conf.sourceDbUrl, conf.sourceDbUser, conf.sourceDbPassword)
-    } else {
-      throw new RuntimeException("不支持的数据源")
-    }
-
-    /*
-     * 1.检查是否满足分区条件
-     * */
-    if (!checkIfPartition(conn)) return None
-
-    /*
-     * 2.分区列
-     * */
-    val column = partitionColumn(conn)
-
-    /*
-     * 3.分区统计信息
-     * */
-    val stats = partitionStats(conn, column)
-
-    conn.close()
-
-    Option((column, stats._1, stats._2, stats._3))
-  }
-
-  /**
     * 加载数据源
     *
     * @return
@@ -132,53 +32,50 @@ private[spark] class AppendAndUpdateEL extends DataSourceEL {
   override def loadSourceDF: DataFrame = {
     if (!spark.catalog.tableExists(conf.sinkDb, conf.sinkTable)) {
       // 全量
-      val partitionInfo = getPatitionInfo()
-
-      val table =
-        if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
+      logInfo(s"加载全量数据 ${conf.sinkDb}.${conf.sinkTable}")
+      val splitManager = SplitManager.create(
+        spark,
+        conf.sourceDbUrl,
+        conf.sourceDbUser,
+        conf.sourceDbPassword,
+        conf.sourceDb,
+        conf.sourceTable,
+        conf.sourceTimeColumn,
+        executeTime
+      )
+      if (splitManager.canSplit) {
+        logDebug("数据可以分片")
+        splitManager.loadDF
+      } else {
+        logDebug("数据无法分片")
+        val table =
           s"""
              |(select
-             |  *, date(${conf.sourceTimeColumn}) as ods_date
+             |  *
              |from ${conf.sourceDb}.${conf.sourceTable}
-             |where ${conf.sourceTimeColumn} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
+             |and ${conf.sourceTimeColumn} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
              |) t
-          """.stripMargin
+         """.stripMargin
+        logDebug(s"执行 SQL：$table")
+
+        val reader = spark.read
+          .format("jdbc")
+          .option("url", conf.sourceDbUrl)
+          .option("dbtable", table)
+          .option("user", conf.sourceDbUser)
+          .option("password", conf.sourceDbPassword)
+
+        if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
+          reader.option("driver", "com.mysql.jdbc.Driver")
         } else if(conf.sourceDbUrl.startsWith("jdbc:oracle:thin")) {
-          s"""
-            |(SELECT
-            |	t.*,
-            |	TO_CHAR(t.${conf.sourceTimeColumn}, 'yyyy-mm-dd') as ods_date
-            |FROM ${conf.sourceDb}.${conf.sourceTable} t
-            |WHERE t.${conf.sourceTimeColumn} < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
-            |) t
-          """.stripMargin
-        } else {
-          throw new RuntimeException("不支持的数据源")
+          reader.option("driver", "oracle.jdbc.OracleDriver")
         }
 
-      val reader = spark.read
-        .format("jdbc")
-        .option("url", conf.sourceDbUrl)
-        .option("dbtable", table)
-        .option("user", conf.sourceDbUser)
-        .option("password", conf.sourceDbPassword)
-
-      if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
-        reader.option("driver", "com.mysql.jdbc.Driver")
-      } else if(conf.sourceDbUrl.startsWith("jdbc:oracle:thin")) {
-        reader.option("driver", "oracle.jdbc.OracleDriver")
+        reader.load()
       }
-
-      (if (partitionInfo.isDefined) {
-        val info = partitionInfo.get
-        reader.option("partitionColumn", info._1)
-          .option("lowerBound", info._2)
-          .option("upperBound", info._3)
-          .option("numPartitions", info._4)
-      } else reader).load()
-
     } else {
       // 增量
+      logInfo(s"加载增量数据 ${conf.sinkDb}.${conf.sinkTable}")
       val table =
         s"""
            |(select
@@ -188,6 +85,7 @@ private[spark] class AppendAndUpdateEL extends DataSourceEL {
            |and ${conf.sourceTimeColumn} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
            |) t
          """.stripMargin
+      logDebug(s"执行 SQL：$table")
 
       val reader = spark.read
         .format("jdbc")
