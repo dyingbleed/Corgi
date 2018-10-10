@@ -1,4 +1,4 @@
-package com.dyingbleed.corgi.spark.ds
+package com.dyingbleed.corgi.spark.util
 
 import org.apache.spark.sql.{DataFrame, SaveMode}
 import org.joda.time.LocalDate

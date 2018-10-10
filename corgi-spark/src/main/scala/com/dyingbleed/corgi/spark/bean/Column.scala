@@ -1,11 +1,11 @@
-package com.dyingbleed.corgi.spark.ds.el.split
+package com.dyingbleed.corgi.spark.bean
 
 import java.sql.Types
 
 /**
   * Created by 李震 on 2018/9/27.
   */
-private[split] case class Column (name: String, dataType: Int) {
+private[spark] case class Column (name: String, dataType: Int) {
 
   def isNumber: Boolean = {
     dataType == Types.INTEGER ||

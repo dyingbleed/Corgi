@@ -1,6 +1,7 @@
 package com.dyingbleed.corgi.spark.ds.el.split
 import java.sql.{Connection, DriverManager}
 
+import com.dyingbleed.corgi.spark.bean.Column
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.joda.time.LocalDateTime
 

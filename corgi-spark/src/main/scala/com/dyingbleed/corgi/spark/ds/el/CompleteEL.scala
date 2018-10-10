@@ -1,7 +1,8 @@
 package com.dyingbleed.corgi.spark.ds.el
 
 import com.dyingbleed.corgi.spark.core.Conf
-import com.dyingbleed.corgi.spark.ds.{DataSourceEL, DataSourceUtils}
+import com.dyingbleed.corgi.spark.ds.DataSourceEL
+import com.dyingbleed.corgi.spark.util.DataSourceUtils
 import com.google.inject.Inject
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}

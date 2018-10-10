@@ -1,6 +1,8 @@
-package com.dyingbleed.corgi.spark.ds.el.split
+package com.dyingbleed.corgi.spark.util
 
 import java.sql.Connection
+
+import com.dyingbleed.corgi.spark.bean.Column
 
 import scala.collection.mutable.ListBuffer
 

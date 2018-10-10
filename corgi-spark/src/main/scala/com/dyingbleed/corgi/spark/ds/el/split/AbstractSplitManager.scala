@@ -2,6 +2,8 @@ package com.dyingbleed.corgi.spark.ds.el.split
 
 import java.sql.Connection
 
+import com.dyingbleed.corgi.spark.bean.Column
+import com.dyingbleed.corgi.spark.util.JDBCUtils
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 /**
@@ -35,8 +37,8 @@ private[split] abstract class AbstractSplitManager(
 
       // 只有一个主键且为数值型
       isSinglePKNum = Option(pk.get.size == 1 && pk.get.last.isNumber)
-      // 有多个主键且为字符型
-      isPKStr = Option(pk.get.nonEmpty && pk.get.forall(col => col.isString))
+      // 有多个主键且为数值型或字符型
+      isPKStr = Option(pk.get.nonEmpty && pk.get.forall(col => col.isNumber || col.isString))
     }
 
     isSinglePKNum.getOrElse(false) || isPKStr.getOrElse(false)

@@ -2,7 +2,8 @@ package com.dyingbleed.corgi.spark.ds.el
 
 import com.dyingbleed.corgi.spark.core.{Conf, Rpc}
 import com.dyingbleed.corgi.spark.ds.el.split.SplitManager
-import com.dyingbleed.corgi.spark.ds.{DataSourceEL, DataSourceUtils}
+import com.dyingbleed.corgi.spark.ds.DataSourceEL
+import com.dyingbleed.corgi.spark.util.DataSourceUtils
 import com.google.inject.Inject
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -113,7 +114,7 @@ private[spark] class AppendAndUpdateEL extends DataSourceEL with Logging {
     if (!spark.catalog.tableExists(conf.sinkDb, conf.sinkTable)) {
       df.createOrReplaceTempView("sink")
 
-      // 创建表
+      // 创建表并插入数据
       spark.sql(
         s"""
            |create table if not exists ${conf.sinkDb}.${conf.sinkTable}
@@ -122,15 +123,6 @@ private[spark] class AppendAndUpdateEL extends DataSourceEL with Logging {
            |as select * from sink
             """.stripMargin
       )
-
-      // 插入数据
-      // 动态分区
-      spark.sql(
-        s"""
-           |insert overwrite table ${conf.sinkDb}.${conf.sinkTable}
-           |partition(ods_date)
-           |select * from sink
-            """.stripMargin)
     } else {
       // 增加分区
       spark.sql(
