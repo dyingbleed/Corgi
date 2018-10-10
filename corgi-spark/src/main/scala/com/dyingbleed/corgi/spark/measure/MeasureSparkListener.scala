@@ -1,5 +1,6 @@
 package com.dyingbleed.corgi.spark.measure
 
+import com.dyingbleed.corgi.spark.bean.Measure
 import org.apache.spark.scheduler.{SparkListener, SparkListenerJobEnd, SparkListenerStageCompleted}
 
 /**

@@ -1,5 +1,6 @@
 package com.dyingbleed.corgi.spark.ds
 
+import com.dyingbleed.corgi.spark.annotation.{MySQLIncrementalSource, OracleIncrementalSource}
 import com.dyingbleed.corgi.spark.core.{Conf, Rpc}
 import com.dyingbleed.corgi.spark.core.ODSMode._
 import com.google.inject.Inject
@@ -25,26 +26,40 @@ private[spark] class DataSource {
   var completeEL: DataSourceEL = _
 
   @Inject
-  @Named("UPDATE")
-  var updateEL: DataSourceEL = _
+  @MySQLIncrementalSource
+  var mysqlIncrementalEL: DataSourceEL = _
 
   @Inject
-  @Named("APPEND")
-  var appendEL: DataSourceEL = _
+  @OracleIncrementalSource
+  var oracleIncrementalEL: DataSourceEL = _
 
   def loadSourceDF: DataFrame = {
     (conf.mode match {
       case COMPLETE => completeEL
-      case UPDATE => updateEL
-      case APPEND => appendEL
+      case UPDATE | APPEND => {
+        if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
+          mysqlIncrementalEL
+        } else if(conf.sourceDbUrl.startsWith("jdbc:oracle:thin")) {
+          oracleIncrementalEL
+        } else {
+          throw new RuntimeException("不支持的数据源")
+        }
+      }
     }).loadSourceDF
   }
 
   def persistSinkDF(df: DataFrame): Unit = {
     (conf.mode match {
       case COMPLETE => completeEL
-      case UPDATE => updateEL
-      case APPEND => appendEL
+      case UPDATE | APPEND => {
+        if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
+          mysqlIncrementalEL
+        } else if(conf.sourceDbUrl.startsWith("jdbc:oracle:thin")) {
+          oracleIncrementalEL
+        } else {
+          throw new RuntimeException("不支持的数据源")
+        }
+      }
     }).persistSinkDF(df)
   }
 

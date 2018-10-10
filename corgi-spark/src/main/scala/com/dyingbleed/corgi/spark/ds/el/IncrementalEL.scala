@@ -12,7 +12,7 @@ import org.joda.time.LocalDateTime
 /**
   * Created by 李震 on 2018/6/26.
   */
-private[spark] class AppendAndUpdateEL extends DataSourceEL with Logging {
+private[spark] abstract class IncrementalEL extends DataSourceEL with Logging {
 
   @Inject
   var spark: SparkSession = _
@@ -23,7 +23,7 @@ private[spark] class AppendAndUpdateEL extends DataSourceEL with Logging {
   @Inject
   var rpc: Rpc = _
 
-  private val executeTime = LocalDateTime.now()
+  protected val executeTime = LocalDateTime.now()
 
   /**
     * 加载数据源
@@ -49,61 +49,24 @@ private[spark] class AppendAndUpdateEL extends DataSourceEL with Logging {
         splitManager.loadDF
       } else {
         logDebug("数据无法分片")
-        val table =
-          s"""
-             |(select
-             |  *
-             |from ${conf.sourceDb}.${conf.sourceTable}
-             |and ${conf.sourceTimeColumn} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
-             |) t
-         """.stripMargin
-        logDebug(s"执行 SQL：$table")
-
-        val reader = spark.read
-          .format("jdbc")
-          .option("url", conf.sourceDbUrl)
-          .option("dbtable", table)
-          .option("user", conf.sourceDbUser)
-          .option("password", conf.sourceDbPassword)
-
-        if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
-          reader.option("driver", "com.mysql.jdbc.Driver")
-        } else if(conf.sourceDbUrl.startsWith("jdbc:oracle:thin")) {
-          reader.option("driver", "oracle.jdbc.OracleDriver")
-        }
-
-        reader.load()
+        loadCompleteSourceDF
       }
     } else {
       // 增量
       logInfo(s"加载增量数据 ${conf.sinkDb}.${conf.sinkTable}")
-      val table =
-        s"""
-           |(select
-           |  *
-           |from ${conf.sourceDb}.${conf.sourceTable}
-           |where ${conf.sourceTimeColumn} >= '${rpc.getLastExecuteTime.toString("yyyy-MM-dd HH:mm:ss")}'
-           |and ${conf.sourceTimeColumn} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
-           |) t
-         """.stripMargin
-      logDebug(s"执行 SQL：$table")
-
-      val reader = spark.read
-        .format("jdbc")
-        .option("url", conf.sourceDbUrl)
-        .option("dbtable", table)
-        .option("user", conf.sourceDbUser)
-        .option("password", conf.sourceDbPassword)
-
-      if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
-        reader.option("driver", "com.mysql.jdbc.Driver")
-      } else if(conf.sourceDbUrl.startsWith("jdbc:oracle:thin")) {
-        reader.option("driver", "oracle.jdbc.OracleDriver")
-      }
-
-      reader.load()
+      loadIncrementalSourceDF
     }
   }
+
+  /**
+    * 加载全量源数据
+    * */
+  protected def loadCompleteSourceDF: DataFrame
+
+  /**
+    * 加载增量源数据
+    * */
+  protected def loadIncrementalSourceDF: DataFrame
 
   /**
     * 持久化数据源

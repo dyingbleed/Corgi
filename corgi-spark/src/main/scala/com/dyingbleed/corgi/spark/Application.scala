@@ -1,9 +1,9 @@
 package com.dyingbleed.corgi.spark
 
+import com.dyingbleed.corgi.spark.annotation.{EnableMeasure, MySQLIncrementalSource, OracleIncrementalSource}
 import com.dyingbleed.corgi.spark.core.Bootstrap
+import com.dyingbleed.corgi.spark.ds.el.{CompleteEL, MySQLIncrementalEL, OracleIncrementalEL}
 import com.dyingbleed.corgi.spark.ds.{DataSource, DataSourceEL}
-import com.dyingbleed.corgi.spark.ds.el.{AppendAndUpdateEL, CompleteEL}
-import com.dyingbleed.corgi.spark.measure.EnableMeasure
 import com.google.inject._
 import com.google.inject.name.Names
 
@@ -43,9 +43,15 @@ private class ApplicationModule extends AbstractModule {
 
   override def configure(): Unit = {
     bind(classOf[DataSource])
-    bind(classOf[DataSourceEL]).annotatedWith(Names.named("COMPLETE")).to(classOf[CompleteEL])
-    bind(classOf[DataSourceEL]).annotatedWith(Names.named("UPDATE")).to(classOf[AppendAndUpdateEL])
-    bind(classOf[DataSourceEL]).annotatedWith(Names.named("APPEND")).to(classOf[AppendAndUpdateEL])
+    bind(classOf[DataSourceEL])
+      .annotatedWith(Names.named("COMPLETE"))
+      .to(classOf[CompleteEL])
+    bind(classOf[DataSourceEL])
+      .annotatedWith(classOf[MySQLIncrementalSource])
+      .to(classOf[MySQLIncrementalEL])
+    bind(classOf[DataSourceEL])
+      .annotatedWith(classOf[OracleIncrementalSource])
+      .to(classOf[OracleIncrementalEL])
   }
 
 }

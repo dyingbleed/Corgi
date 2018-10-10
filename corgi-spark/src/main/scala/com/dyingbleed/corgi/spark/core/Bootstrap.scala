@@ -2,7 +2,8 @@ package com.dyingbleed.corgi.spark.core
 
 import java.util.Properties
 
-import com.dyingbleed.corgi.spark.measure.{EnableMeasure, MeasureInterceptor}
+import com.dyingbleed.corgi.spark.annotation.EnableMeasure
+import com.dyingbleed.corgi.spark.measure.MeasureInterceptor
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names
 import com.google.common.base.Preconditions._

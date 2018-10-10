@@ -6,7 +6,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.joda.time.LocalDateTime
 
 /**
-  * Oracle 分区管理器
+  * OracleIncrementalSource 分区管理器
   *
   * Created by 李震 on 2018/9/27.
   */

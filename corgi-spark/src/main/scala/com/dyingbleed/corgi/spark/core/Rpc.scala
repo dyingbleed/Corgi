@@ -1,7 +1,7 @@
 package com.dyingbleed.corgi.spark.core
 
 import com.alibaba.fastjson.JSON
-import com.dyingbleed.corgi.spark.measure.Measure
+import com.dyingbleed.corgi.spark.bean.Measure
 import com.google.common.base.Charsets
 import com.google.inject.Inject
 import javax.inject.Named

@@ -1,4 +1,4 @@
-package com.dyingbleed.corgi.spark.measure
+package com.dyingbleed.corgi.spark.bean
 
 import org.joda.time.LocalDateTime
 
