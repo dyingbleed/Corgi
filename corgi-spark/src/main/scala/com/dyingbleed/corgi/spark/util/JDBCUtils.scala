@@ -1,6 +1,6 @@
 package com.dyingbleed.corgi.spark.util
 
-import java.sql.Connection
+import java.sql.{Connection, DriverManager}
 
 import com.dyingbleed.corgi.spark.bean.Column
 
@@ -10,6 +10,17 @@ import scala.collection.mutable.ListBuffer
   * Created by 李震 on 2018/9/27.
   */
 object JDBCUtils {
+
+  def getConnection(url: String, username: String, password: String): Connection = {
+    if (url.startsWith("jdbc:mysql")) {
+      Class.forName("com.mysql.jdbc.Driver")
+    } else if(url.startsWith("jdbc:oracle:thin")) {
+      Class.forName("oracle.jdbc.OracleDriver")
+    } else {
+      throw new RuntimeException("不支持的数据源")
+    }
+    DriverManager.getConnection(url, username, password)
+  }
 
   /**
     * 获取主键信息

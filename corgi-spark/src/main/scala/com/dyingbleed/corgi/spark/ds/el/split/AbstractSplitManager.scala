@@ -70,7 +70,7 @@ private[split] abstract class AbstractSplitManager(
     *
     * @return JDBC 数据库连接
     * */
-  def getConnection: Connection
+  def getConnection: Connection = JDBCUtils.getConnection(url, username, password)
 
   /**
     * 获取 DataFrame

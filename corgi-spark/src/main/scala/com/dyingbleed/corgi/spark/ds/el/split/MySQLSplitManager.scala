@@ -1,6 +1,4 @@
 package com.dyingbleed.corgi.spark.ds.el.split
-import java.sql.{Connection, DriverManager}
-
 import com.dyingbleed.corgi.spark.bean.Column
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.joda.time.LocalDateTime
@@ -20,15 +18,6 @@ private[split] class MySQLSplitManager(
                                         timeColumn: String,
                                         executeTime: LocalDateTime
                                       ) extends AbstractSplitManager(spark, url, username, password, db, table) {
-  /**
-    * 获取 JDBC 数据库连接
-    *
-    * @return JDBC 数据库连接
-    **/
-  override def getConnection: Connection = {
-    Class.forName("com.mysql.jdbc.Driver")
-    DriverManager.getConnection(url, username, password)
-  }
 
   /**
     * 获取 DataFrame
