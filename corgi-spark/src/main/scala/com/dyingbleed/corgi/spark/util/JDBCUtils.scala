@@ -85,4 +85,32 @@ object JDBCUtils {
     (lowerBound, upperBound, count)
   }
 
+  /**
+    * 获取表基数信息
+    *
+    * @param conn 数据库连接
+    * @param db 数据库名
+    * @param table 表名
+    *
+    * @return 表基数信息
+    * */
+  def getCardinality(conn: Connection, db: String, table: String): Long = {
+    val stat = conn.createStatement()
+
+    val rs = stat.executeQuery(
+      s"""
+         |select
+         |  count(1) as count
+         |from ${db}.${table}
+    """.stripMargin)
+    rs.next()
+
+    val cardinality = rs.getLong(1)
+
+    rs.close()
+    stat.close()
+
+    cardinality
+  }
+
 }

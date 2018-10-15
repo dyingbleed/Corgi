@@ -29,14 +29,23 @@ private[split] class OracleSplitManager(
     * @return DataFrame
     **/
   override def getDF(splitBy: Column, upper: Long, lower: Long, m: Long): DataFrame = {
-    val sql = s"""
-       |(SELECT
-       |	t.*,
-       |	TO_CHAR(t.$timeColumn, 'yyyy-mm-dd') as ods_date
-       |FROM $db.$table t
-       |WHERE t.$timeColumn < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
-       |) t
+    val sql = if (timeColumn == null || timeColumn.isEmpty) {
+      s"""
+         |(SELECT
+         |	t.*
+         |FROM $db.$table t
+         |) t
           """.stripMargin
+    } else {
+      s"""
+         |(SELECT
+         |	t.*,
+         |	TO_CHAR(t.$timeColumn, 'yyyy-mm-dd') as ods_date
+         |FROM $db.$table t
+         |WHERE t.$timeColumn < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
+         |) t
+          """.stripMargin
+    }
 
     spark.read
       .format("jdbc")
@@ -69,15 +78,25 @@ private[split] class OracleSplitManager(
         splitBy.last.name
       }
 
-      val sql =s"""
-          |(SELECT
-          |	t.*,
-          |	TO_CHAR(t.$timeColumn, 'yyyy-mm-dd') as ods_date
-          |FROM $db.$table t
-          |WHERE t.$timeColumn < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
-          |AND MOD(ORA_HASH($hashExpr), $m) = $mod
-          |) t
+      val sql = if (timeColumn == null || timeColumn.isEmpty) {
+        s"""
+           |(SELECT
+           |	t.*
+           |FROM $db.$table t
+           |WHERE MOD(ORA_HASH($hashExpr), $m) = $mod
+           |) t
         """.stripMargin
+      } else {
+        s"""
+           |(SELECT
+           |	t.*,
+           |	TO_CHAR(t.$timeColumn, 'yyyy-mm-dd') as ods_date
+           |FROM $db.$table t
+           |WHERE t.$timeColumn < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
+           |AND MOD(ORA_HASH($hashExpr), $m) = $mod
+           |) t
+        """.stripMargin
+      }
 
       val df = spark.read
         .format("jdbc")

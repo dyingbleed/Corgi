@@ -8,7 +8,7 @@ class OracleIncrementalEL extends IncrementalEL {
   /**
     * 加载全量源数据
     **/
-  override protected def loadCompleteSourceDF: DataFrame = {
+  override protected def loadAllSourceDF: DataFrame = {
     val table =
       s"""
          |(SELECT

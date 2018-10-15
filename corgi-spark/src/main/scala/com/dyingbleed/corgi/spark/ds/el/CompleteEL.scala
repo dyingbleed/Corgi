@@ -2,11 +2,12 @@ package com.dyingbleed.corgi.spark.ds.el
 
 import com.dyingbleed.corgi.spark.core.Conf
 import com.dyingbleed.corgi.spark.ds.DataSourceEL
-import com.dyingbleed.corgi.spark.util.DataSourceUtils
+import com.dyingbleed.corgi.spark.ds.el.split.SplitManager
+import com.dyingbleed.corgi.spark.util.{DataSourceUtils, JDBCUtils}
 import com.google.inject.Inject
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.joda.time.LocalDate
+import org.joda.time.{LocalDate, LocalDateTime}
 
 /**
   * Created by 李震 on 2018/6/26.
@@ -25,12 +26,36 @@ private[spark] class CompleteEL extends DataSourceEL {
     * @return
     **/
   override def loadSourceDF: DataFrame = {
-    val reader = spark.read
-      .format("jdbc")
-      .option("url", conf.sourceDbUrl)
-      .option("dbtable", conf.sourceTable)
-      .option("user", conf.sourceDbUser)
-      .option("password", conf.sourceDbPassword)
+    val conn = JDBCUtils.getConnection(conf.sourceDbUrl, conf.sourceDbUser, conf.sourceDbPassword)
+    val cardinlity = JDBCUtils.getCardinality(conn, conf.sourceDb, conf.sourceTable)
+    conn.close()
+
+    val splitManager = SplitManager.create(
+      spark,
+      conf.sourceDbUrl,
+      conf.sourceDbUser,
+      conf.sourceDbPassword,
+      conf.sourceDb,
+      conf.sourceTable,
+      conf.sourceTimeColumn,
+      LocalDateTime.now()
+    )
+
+    if (cardinlity > 100000 && splitManager.canSplit) {
+      /*
+       * 大于 100000 条数据，分区
+       * */
+      splitManager.loadDF
+    } else {
+      /*
+       * 小于 100000 条数据，不进行分区
+       * */
+      val reader = spark.read
+        .format("jdbc")
+        .option("url", conf.sourceDbUrl)
+        .option("dbtable", conf.sourceTable)
+        .option("user", conf.sourceDbUser)
+        .option("password", conf.sourceDbPassword)
 
       if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
         reader.option("driver", "com.mysql.jdbc.Driver")
@@ -41,6 +66,7 @@ private[spark] class CompleteEL extends DataSourceEL {
       }
 
       reader.load()
+    }
   }
 
   /**

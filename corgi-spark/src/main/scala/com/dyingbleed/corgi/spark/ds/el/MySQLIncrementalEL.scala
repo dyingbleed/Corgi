@@ -8,7 +8,7 @@ class MySQLIncrementalEL extends IncrementalEL {
   /**
     * 加载全量源数据
     **/
-  override protected def loadCompleteSourceDF: DataFrame = {
+  override protected def loadAllSourceDF: DataFrame = {
     val sql =
       s"""
          |(select

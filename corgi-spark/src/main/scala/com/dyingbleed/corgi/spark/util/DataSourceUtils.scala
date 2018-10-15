@@ -21,7 +21,7 @@ object DataSourceUtils {
     val spark = df.sparkSession
     val location = spark.sql(s"desc formatted ${db}.${table}").filter("col_name like 'Location%'").collect().last.getString(1)
     val path = s"${location}/ods_date=${date.toString("yyyy-MM-dd")}"
-    df.coalesce(8).write.mode(SaveMode.Overwrite).parquet(path)
+    df.write.mode(SaveMode.Overwrite).parquet(path)
   }
 
 }

@@ -29,13 +29,18 @@ private[split] class MySQLSplitManager(
     * @return DataFrame
     **/
   override def getDF(splitBy: Column, upper: Long, lower: Long, m: Long): DataFrame = {
-    val sql = s"""
+    val sql = if (timeColumn == null || timeColumn.isEmpty) {
+      s"$db.$table"
+    } else {
+      s"""
          |(select
          |  *, date($timeColumn) as ods_date
          |from $db.$table
          |where $timeColumn < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
          |) t
           """.stripMargin
+    }
+
     spark.read
       .format("jdbc")
       .option("url", url)
@@ -70,7 +75,15 @@ private[split] class MySQLSplitManager(
           splitBy.last.name
         }
 
-        val sql =
+        val sql = if (timeColumn == null || timeColumn.isEmpty) {
+          s"""
+             |(select
+             |  *
+             |from $db.$table
+             |where mod(conv(md5($hashExpr), 16, 10), $m)
+             |) t
+          """.stripMargin
+        } else {
           s"""
              |(select
              |  *, date($timeColumn) as ods_date
@@ -79,6 +92,7 @@ private[split] class MySQLSplitManager(
              |and mod(conv(md5($hashExpr), 16, 10), $m)
              |) t
           """.stripMargin
+        }
 
         val df = spark.read
           .format("jdbc")

@@ -49,7 +49,7 @@ private[spark] abstract class IncrementalEL extends DataSourceEL with Logging {
         splitManager.loadDF
       } else {
         logDebug("数据无法分片")
-        loadCompleteSourceDF
+        loadAllSourceDF
       }
     } else {
       // 增量
@@ -59,9 +59,9 @@ private[spark] abstract class IncrementalEL extends DataSourceEL with Logging {
   }
 
   /**
-    * 加载全量源数据
+    * 加载全部源数据
     * */
-  protected def loadCompleteSourceDF: DataFrame
+  protected def loadAllSourceDF: DataFrame
 
   /**
     * 加载增量源数据
