@@ -1,5 +1,8 @@
 package com.dyingbleed.corgi.spark.util
 
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hive.conf.HiveConf
+import org.apache.hadoop.hive.ql.metadata.{Hive, Table}
 import org.apache.spark.sql.{DataFrame, SaveMode}
 import org.joda.time.LocalDate
 
@@ -17,11 +20,29 @@ object DataSourceUtils {
     * @param date
     *
     * */
-  def forceInsertOverwriteTablePartition(df: DataFrame, db: String, table: String, date: LocalDate): Unit = {
-    val spark = df.sparkSession
-    val location = spark.sql(s"desc formatted ${db}.${table}").filter("col_name like 'Location%'").collect().last.getString(1)
-    val path = s"${location}/ods_date=${date.toString("yyyy-MM-dd")}"
+  def forceInsertOverwriteTablePartition(df: DataFrame, db: String, table: String, date: LocalDate): Unit = withHive(hive => {
+    val tableMeta = hive.getTable(db, table)
+    val location = tableMeta.getDataLocation
+    val partitionColumnName = getPartColName(tableMeta)
+
+    val path = s"$location/$partitionColumnName=${date.toString("yyyy-MM-dd")}"
     df.write.mode(SaveMode.Overwrite).parquet(path)
+  })
+
+  private[this] def withHive(f: Hive => Unit): Unit = {
+    val conf = new Configuration()
+    conf.set("hive.metastore.uris", System.getProperty("hive.metastore.uris"))
+    val hiveConf = new HiveConf(conf, classOf[HiveConf])
+    val hive = Hive.get(hiveConf)
+
+    f(hive)
+  }
+
+  private[this] def getPartColName(tableMeta: Table): String = {
+    val originColName = tableMeta.getPartCols.get(0).getName
+    val sparkColName = tableMeta.getParameters.get("spark.sql.sources.schema.partCol.0")
+
+    if (sparkColName != null) sparkColName else originColName
   }
 
 }
