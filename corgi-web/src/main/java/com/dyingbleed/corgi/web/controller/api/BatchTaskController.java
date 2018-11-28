@@ -49,18 +49,6 @@ public class BatchTaskController {
     }
 
     /**
-     * 修改批量任务同步
-     *
-     * @param id 批量任务 ID
-     * @param isSync 批量任务是否同步
-     *
-     * */
-    @RequestMapping(value = "/sync/{id}", method = RequestMethod.POST)
-    public void updateBatchTaskSync(@PathVariable("id") Long id, @RequestParam("sync") Boolean isSync) {
-        this.batchTaskService.updateBatchTaskSync(id, isSync);
-    }
-
-    /**
      * 修改批量任务
      *
      * @param task 批量任务

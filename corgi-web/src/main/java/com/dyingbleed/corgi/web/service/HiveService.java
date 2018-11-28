@@ -35,15 +35,6 @@ public class HiveService {
     @Value("${hive.master.password}")
     private String hiveMasterPassword;
 
-    @Value("${hive.slave.url}")
-    private String hiveSlaveUrl;
-
-    @Value("${hive.slave.username}")
-    private String hiveSlaveUsername;
-
-    @Value("${hive.slave.password}")
-    private String hiveSlavePassword;
-
     @Autowired
     private BatchTaskService batchTaskService;
 

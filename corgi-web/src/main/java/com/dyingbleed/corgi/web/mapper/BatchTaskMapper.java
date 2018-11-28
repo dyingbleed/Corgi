@@ -80,18 +80,6 @@ public interface BatchTaskMapper {
     void updateBatchTask(@Param("task") BatchTask task);
 
     /**
-     * 修改批量任务同步
-     *
-     * @param id 批量任务 ID
-     * @param isSync 批量任务是否同步
-     *
-     * */
-    @Update("update batch " +
-            "set is_sync=#{isSync} " +
-            "where id=#{id}")
-    void updateBatchTaskSync(@Param("id") Long id, @Param("isSync") Boolean isSync);
-
-    /**
      * 查询所有批量任务
      *
      * @return 批量任务列表
@@ -104,8 +92,7 @@ public interface BatchTaskMapper {
             @Result(property = "sourceTable", column = "source_table"),
             @Result(property = "mode", column = "mode"),
             @Result(property = "sinkDb", column = "sink_db"),
-            @Result(property = "sinkTable", column = "sink_table"),
-            @Result(property = "isSync", column = "is_sync")
+            @Result(property = "sinkTable", column = "sink_table")
     })
     @Select("select " +
             "  id, " +
@@ -114,8 +101,7 @@ public interface BatchTaskMapper {
             "  source_table, " +
             "  mode, " +
             "  sink_db, " +
-            "  sink_table, " +
-            "  is_sync " +
+            "  sink_table " +
             "from batch")
     List<BatchTask> queryAllBatchTask();
 
@@ -136,8 +122,7 @@ public interface BatchTaskMapper {
             @Result(property = "mode", column = "mode"),
             @Result(property = "timeColumn", column = "time_column"),
             @Result(property = "sinkDb", column = "sink_db"),
-            @Result(property = "sinkTable", column = "sink_table"),
-            @Result(property = "isSync", column = "is_sync")
+            @Result(property = "sinkTable", column = "sink_table")
     })
     @Select("select " +
             "  id, " +
@@ -148,8 +133,7 @@ public interface BatchTaskMapper {
             "  mode, " +
             "  time_column, " +
             "  sink_db, " +
-            "  sink_table, " +
-            "  is_sync " +
+            "  sink_table " +
             "from batch " +
             "where id=#{id}")
     BatchTask queryBatchTaskById(@Param("id") Long id);
@@ -174,8 +158,7 @@ public interface BatchTaskMapper {
             @Result(property = "mode", column = "mode"),
             @Result(property = "timeColumn", column = "time_column"),
             @Result(property = "sinkDb", column = "sink_db"),
-            @Result(property = "sinkTable", column = "sink_table"),
-            @Result(property = "isSync", column = "is_sync")
+            @Result(property = "sinkTable", column = "sink_table")
     })
     @Select("select " +
             "  b.id, " +
@@ -189,8 +172,7 @@ public interface BatchTaskMapper {
             "  b.mode, " +
             "  b.time_column, " +
             "  b.sink_db, " +
-            "  b.sink_table, " +
-            "  b.is_sync " +
+            "  b.sink_table " +
             "from batch b " +
             "left join datasource d " +
             "on b.datasource_id = d.id " +

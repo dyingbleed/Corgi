@@ -1,6 +1,5 @@
 package com.dyingbleed.corgi.web.mapper;
 
-import com.dyingbleed.corgi.web.bean.ExecuteLog;
 import com.dyingbleed.corgi.web.bean.Measure;
 import com.dyingbleed.corgi.web.bean.MeasureStat;
 import org.apache.ibatis.annotations.*;
@@ -70,38 +69,5 @@ public interface MeasureMapper {
             "from measure " +
             "where submission_time >= curdate()")
     List<Measure> queryTodayMeasureDetail();
-
-    @Insert("insert into execute_log " +
-            "(" +
-            "  batch_task_name, " +
-            "  execute_time" +
-            ") values (" +
-            "  #{l.batchTaskName}, " +
-            "  #{l.executeTime}" +
-            ")")
-    void insertExecuteLog(@Param("l") ExecuteLog l);
-
-    @Results(value = {
-            @Result(property = "id", column = "id"),
-            @Result(property = "batchTaskName", column = "batch_task_name"),
-            @Result(property = "executeTime", column = "execute_time")
-    })
-    @Select("select " +
-            "  l.id, " +
-            "  l.batch_task_name, " +
-            "  l.execute_time  " +
-            "from execute_log l " +
-            "join ( " +
-            "  select " +
-            "    l.batch_task_name, " +
-            "    max(l.execute_time) as execute_time " +
-            "  from execute_log l " +
-            "  where l.batch_task_name = #{name} " +
-            "  and l.execute_time < curdate() " +
-            "  group by l.batch_task_name " +
-            ") f  " +
-            "on l.batch_task_name = f.batch_task_name " +
-            "and l.execute_time = f.execute_time")
-    ExecuteLog queryLastExecuteLogByName(@Param("name") String name);
 
 }
