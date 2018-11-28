@@ -42,15 +42,15 @@ $(function () {
      *
      * */
     function search(ds, keyword) {
-        app.batchTaskArray = _.filter(app.batchTaskArray, function(i) {
+        app.batchTaskArray = _.filter(batchTaskArray, function(i) {
             var p = true;
 
             if (ds !== '') {
-                p = p && i.sourceDb === ds;
+                p = p && _.lowerCase(i.sourceDb) === _.lowerCase(ds);
             }
 
             if (keyword != null && _.trim(keyword) !== '') {
-                p = p && _.includes(i.sourceTable, keyword)
+                p = p && _.includes(_.lowerCase(i.sourceTable), _.lowerCase(keyword))
             }
 
             return p;
