@@ -34,7 +34,11 @@ class Application {
     val sourceDF = dataSource.loadSourceDF
 
     // 保存数据
-    dataSource.persistSinkDF(sourceDF)
+    if (Bootstrap.debug) {
+      sourceDF.explain()
+    } else {
+      dataSource.persistSinkDF(sourceDF)
+    }
   }
 
 }

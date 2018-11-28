@@ -28,7 +28,7 @@ private[spark] class Bootstrap(args: Array[String]) {
     System.setProperty("hive.metastore.uris", appConf.hiveMetastoreUri)
 
     // 初识化 SparkSession
-    val spark = if (appName.startsWith("test") || appName.endsWith("test")) {
+    val spark = if (Bootstrap.debug) {
       val spark = SparkSession.builder()
         .master("local")
         .appName(appName)
@@ -101,5 +101,10 @@ private[spark] class Bootstrap(args: Array[String]) {
 object Bootstrap {
 
   def apply(args: Array[String]): Bootstrap = new Bootstrap(args)
+
+  def debug: Boolean = {
+    val debug = System.getenv("CORGI_DEBUG")
+    debug != null && debug.equals("true")
+  }
 
 }
