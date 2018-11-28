@@ -38,7 +38,7 @@ class MySQLIncrementalEL extends IncrementalEL {
          |(select
          |  *
          |from ${conf.sourceDb}.${conf.sourceTable}
-         |where ${conf.sourceTimeColumn} >= '${rpc.getLastExecuteTime.toString("yyyy-MM-dd HH:mm:ss")}'
+         |where ${conf.sourceTimeColumn} > '${getLastExecuteTime.toString("yyyy-MM-dd HH:mm:ss")}'
          |and ${conf.sourceTimeColumn} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
          |) t
          """.stripMargin

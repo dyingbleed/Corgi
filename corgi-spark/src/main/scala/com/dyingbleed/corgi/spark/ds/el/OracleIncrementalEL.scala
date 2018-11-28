@@ -38,7 +38,7 @@ class OracleIncrementalEL extends IncrementalEL {
          |(SELECT
          |  *
          |FROM ${conf.sourceDb}.${conf.sourceTable}
-         |WHERE ${conf.sourceTimeColumn} >= TO_DATE('${rpc.getLastExecuteTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
+         |WHERE ${conf.sourceTimeColumn} > TO_DATE('${getLastExecuteTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
          |AND ${conf.sourceTimeColumn} < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
          |) t
          """.stripMargin

@@ -1,5 +1,7 @@
 package com.dyingbleed.corgi.spark.ds.el
 
+import java.sql.{Date, Timestamp}
+
 import com.dyingbleed.corgi.spark.core.{Conf, Rpc}
 import com.dyingbleed.corgi.spark.ds.el.split.SplitManager
 import com.dyingbleed.corgi.spark.ds.DataSourceEL
@@ -96,7 +98,28 @@ private[spark] abstract class IncrementalEL extends DataSourceEL with Logging {
 
       DataSourceUtils.forceInsertOverwriteTablePartition(df, conf.sinkDb, conf.sinkTable, executeTime.toLocalDate)
     }
-
-    rpc.saveExecuteTime(executeTime) // 保存执行时间戳
   }
+
+  protected def getLastExecuteTime: LocalDateTime = {
+    val sql =
+      s"""
+        |select
+        |  max(t.${conf.sourceTimeColumn}) as last_execute_time
+        |from ${conf.sinkDb}.${conf.sinkTable} t
+        |where ods_date = '${executeTime.minusDays(1).toString("yyyy-MM-dd")}'
+      """.stripMargin
+    logDebug(s"执行 SQL: $sql")
+
+    val lastExecuteTime = spark.sql(sql).collect()(0).get(0)
+    lastExecuteTime match {
+      case exeuteDate: Date =>
+        LocalDateTime.fromDateFields(exeuteDate)
+      case executeTimestamp: Timestamp =>
+        LocalDateTime.fromDateFields(executeTimestamp)
+      case _ =>
+        logError(s"获取最近一次执行时间失败，不支持的时间类型 ${lastExecuteTime.getClass.getName}")
+        executeTime.minusDays(1).withTime(0, 0, 0, 0) // 昨天零点零分零秒
+    }
+  }
+
 }
