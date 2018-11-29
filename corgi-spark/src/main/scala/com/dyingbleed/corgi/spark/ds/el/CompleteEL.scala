@@ -1,9 +1,10 @@
 package com.dyingbleed.corgi.spark.ds.el
 
+import com.dyingbleed.corgi.spark.bean.Table
 import com.dyingbleed.corgi.spark.core.Conf
 import com.dyingbleed.corgi.spark.ds.DataSourceEL
 import com.dyingbleed.corgi.spark.ds.el.split.SplitManager
-import com.dyingbleed.corgi.spark.util.{DataSourceUtils, JDBCUtils}
+import com.dyingbleed.corgi.spark.util.DataSourceUtils
 import com.google.inject.Inject
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
@@ -26,20 +27,9 @@ private[spark] class CompleteEL extends DataSourceEL {
     * @return
     **/
   override def loadSourceDF: DataFrame = {
-    val conn = JDBCUtils.getConnection(conf.sourceDbUrl, conf.sourceDbUser, conf.sourceDbPassword)
-    val cardinlity = JDBCUtils.getCardinality(conn, conf.sourceDb, conf.sourceTable)
-    conn.close()
-
-    val splitManager = SplitManager.create(
-      spark,
-      conf.sourceDbUrl,
-      conf.sourceDbUser,
-      conf.sourceDbPassword,
-      conf.sourceDb,
-      conf.sourceTable,
-      conf.sourceTimeColumn,
-      LocalDateTime.now()
-    )
+    val tableMeta = Table(conf.sourceDb, conf.sourceTable, conf.sourceDbUrl, conf.sourceDbUser, conf.sourceDbPassword, Option(conf.sourceTimeColumn))
+    val cardinlity = tableMeta.cardinality()
+    val splitManager = SplitManager(spark, tableMeta, LocalDateTime.now())
 
     if (cardinlity > 100000 && splitManager.canSplit) {
       /*

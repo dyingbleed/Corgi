@@ -2,9 +2,10 @@ package com.dyingbleed.corgi.spark.ds.el
 
 import java.sql.{Date, Timestamp}
 
+import com.dyingbleed.corgi.spark.bean.Table
 import com.dyingbleed.corgi.spark.core.{Conf, Rpc}
-import com.dyingbleed.corgi.spark.ds.el.split.SplitManager
 import com.dyingbleed.corgi.spark.ds.DataSourceEL
+import com.dyingbleed.corgi.spark.ds.el.split.SplitManager
 import com.dyingbleed.corgi.spark.util.DataSourceUtils
 import com.google.inject.Inject
 import org.apache.spark.internal.Logging
@@ -25,7 +26,7 @@ private[spark] abstract class IncrementalEL extends DataSourceEL with Logging {
   @Inject
   var rpc: Rpc = _
 
-  protected val executeTime = LocalDateTime.now()
+  protected val executeTime: LocalDateTime = LocalDateTime.now()
 
   /**
     * 加载数据源
@@ -36,16 +37,8 @@ private[spark] abstract class IncrementalEL extends DataSourceEL with Logging {
     if (!spark.catalog.tableExists(conf.sinkDb, conf.sinkTable)) {
       // 全量
       logInfo(s"加载全量数据 ${conf.sinkDb}.${conf.sinkTable}")
-      val splitManager = SplitManager.create(
-        spark,
-        conf.sourceDbUrl,
-        conf.sourceDbUser,
-        conf.sourceDbPassword,
-        conf.sourceDb,
-        conf.sourceTable,
-        conf.sourceTimeColumn,
-        executeTime
-      )
+      val tableMeta = Table(conf.sourceDb, conf.sourceTable, conf.sourceDbUrl, conf.sourceDbUser, conf.sourceDbPassword, Option(conf.sourceTimeColumn))
+      val splitManager = SplitManager(spark, tableMeta, executeTime)
       if (splitManager.canSplit) {
         logDebug("数据可以分片")
         splitManager.loadDF
@@ -117,7 +110,7 @@ private[spark] abstract class IncrementalEL extends DataSourceEL with Logging {
       case executeTimestamp: Timestamp =>
         LocalDateTime.fromDateFields(executeTimestamp)
       case _ =>
-        logError(s"获取最近一次执行时间失败，不支持的时间类型 ${lastExecuteTime}")
+        logError(s"获取最近一次执行时间失败，不支持的时间类型 $lastExecuteTime")
         executeTime.minusDays(1).withTime(0, 0, 0, 0) // 昨天零点零分零秒
     }
   }

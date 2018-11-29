@@ -1,8 +1,8 @@
 package com.dyingbleed.corgi.spark.util
 
-import java.sql.{Connection, DriverManager}
+import java.sql.{Connection, DriverManager, ResultSet}
 
-import com.dyingbleed.corgi.spark.bean.Column
+import com.dyingbleed.corgi.spark.bean.{Column, ColumnStat}
 
 import scala.collection.mutable.ListBuffer
 
@@ -36,7 +36,6 @@ object JDBCUtils {
 
     val dbmd = conn.getMetaData
     val pkrs = dbmd.getPrimaryKeys(db, null, table)
-    val rsmd = pkrs.getMetaData
 
     while (pkrs.next()) {
       val primaryKeyColumn = pkrs.getString(4)
@@ -53,6 +52,16 @@ object JDBCUtils {
     pks
   }
 
+  private def getOne[T](conn: Connection, sql: String, rsHandler: ResultSet => T): T = {
+    val stat = conn.createStatement()
+    val rs = stat.executeQuery(sql)
+    rs.next()
+    val r = rsHandler(rs)
+    rs.close()
+    stat.close()
+    r
+  }
+
   /**
     * 获取列统计信息
     *
@@ -62,27 +71,58 @@ object JDBCUtils {
     *
     * @return 列统计信息
     * */
-  def getColumnStats(conn: Connection, db: String, table: String, column: String): (Long, Long, Long) = {
-    val stat = conn.createStatement()
+  def getColumnStat[MAX, MIN](conn: Connection, db: String, table: String, column: String, maxClz: Class[MAX], minClz: Class[MIN]): ColumnStat[MAX, MIN] = {
+    val sql = s"""
+         |select
+         |  max($column) as max,
+         |  min($column) as min,
+         |  count(1) as count
+         |from $db.$table
+    """.stripMargin
+    getOne(conn, sql, rs => {
+      val max = rs.getObject[MAX](1, maxClz)
+      val min = rs.getObject[MIN](2, minClz)
+      val count = rs.getLong(3)
+      ColumnStat(max, min, count)
+    })
+  }
 
-    val rs = stat.executeQuery(
+  /**
+    * 获取最大值
+    *
+    * @param conn 数据库连接
+    * @param db 数据库名
+    * @param table 表名
+    *
+    * @return 表基数信息
+    * */
+  def getColumnMax[MAX](conn: Connection, db: String, table: String, column: String, clz: Class[MAX]): MAX = {
+    val sql =
       s"""
          |select
-         |  min(${column}) as lowerbound,
-         |  max(${column}) as upperbound,
-         |  count(1) as count
-         |from ${db}.${table}
-    """.stripMargin)
-    rs.next()
+         |  min($column) as max
+         |from $db.$table
+    """.stripMargin
+    getOne(conn, sql, rs => rs.getObject(1, clz))
+  }
 
-    val lowerBound = rs.getLong(1)
-    val upperBound = rs.getLong(2)
-    val count = rs.getLong(3)
-
-    rs.close()
-    stat.close()
-
-    (lowerBound, upperBound, count)
+  /**
+    * 获取最小值
+    *
+    * @param conn 数据库连接
+    * @param db 数据库名
+    * @param table 表名
+    *
+    * @return 表基数信息
+    * */
+  def getColumnMin[MIN](conn: Connection, db: String, table: String, column: String, clz: Class[MIN]): MIN = {
+    val sql =
+      s"""
+         |select
+         |  min($column) as min
+         |from $db.$table
+    """.stripMargin
+    getOne(conn, sql, rs => rs.getObject(1, clz))
   }
 
   /**
@@ -95,22 +135,13 @@ object JDBCUtils {
     * @return 表基数信息
     * */
   def getCardinality(conn: Connection, db: String, table: String): Long = {
-    val stat = conn.createStatement()
-
-    val rs = stat.executeQuery(
+    val sql =
       s"""
          |select
          |  count(1) as count
-         |from ${db}.${table}
-    """.stripMargin)
-    rs.next()
-
-    val cardinality = rs.getLong(1)
-
-    rs.close()
-    stat.close()
-
-    cardinality
+         |from $db.$table
+    """.stripMargin
+    getOne(conn, sql, rs => rs.getLong(1))
   }
 
 }

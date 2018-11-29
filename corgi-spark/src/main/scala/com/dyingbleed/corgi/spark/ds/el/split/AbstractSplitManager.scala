@@ -1,25 +1,12 @@
 package com.dyingbleed.corgi.spark.ds.el.split
 
-import java.sql.Connection
-
-import com.dyingbleed.corgi.spark.bean.Column
-import com.dyingbleed.corgi.spark.util.JDBCUtils
+import com.dyingbleed.corgi.spark.bean.{Column, Table}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 /**
   * Created by 李震 on 2018/9/27.
   */
-private[split] abstract class AbstractSplitManager(
-                                                    spark: SparkSession,
-                                                    url: String,
-                                                    username: String,
-                                                    password: String,
-                                                    db: String,
-                                                    table: String
-                                                  ) extends SplitManager {
-  private val conn: Connection = getConnection
-
-  private var pk: Option[Seq[Column]] = None // 主键信息
+private[split] abstract class AbstractSplitManager(spark: SparkSession, table: Table) extends SplitManager {
 
   private var isSinglePKNum: Option[Boolean] = None // 表是否为单一数值型主键
   private var isPKStr: Option[Boolean] = None // 表是否为字符型主键
@@ -31,10 +18,7 @@ private[split] abstract class AbstractSplitManager(
     **/
   override def canSplit: Boolean = {
     if (isSinglePKNum.isEmpty || isPKStr.isEmpty) {
-      if (pk.isEmpty) {
-        pk = Option(JDBCUtils.getPrimaryKey(conn, db, table)) // 获取主键信息
-      }
-
+      val pk = table.pk
       // 只有一个主键且为数值型
       isSinglePKNum = Option(pk.get.size == 1 && pk.get.last.isNumber)
       // 有多个主键且为数值型或字符型
@@ -53,10 +37,11 @@ private[split] abstract class AbstractSplitManager(
     val parallellism = spark.conf.get("spark.sql.shuffle.partitions", "200").toLong
 
     if (canSplit) {
+      val pk = table.pk
       if (isSinglePKNum.get) {
         val pkColumnName = pk.get.last.name
-        val stats = JDBCUtils.getColumnStats(conn, db, table, pkColumnName)
-        return getDF(pk.get.last, stats._2, stats._1, Math.min((stats._3 / 10000) + 1, parallellism))
+        val stats = table.stat[Long, Long](pkColumnName, classOf[Long], classOf[Long])
+        return getDF(pk.get.last, stats.max, stats.min, Math.min((stats.cardinality / 10000) + 1, parallellism))
       } else if (isPKStr.get) {
         return getDF(pk.get, parallellism)
       }
@@ -64,13 +49,6 @@ private[split] abstract class AbstractSplitManager(
 
     null
   }
-
-  /**
-    * 获取 JDBC 数据库连接
-    *
-    * @return JDBC 数据库连接
-    * */
-  def getConnection: Connection = JDBCUtils.getConnection(url, username, password)
 
   /**
     * 获取 DataFrame

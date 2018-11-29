@@ -1,5 +1,5 @@
 package com.dyingbleed.corgi.spark.ds.el.split
-import com.dyingbleed.corgi.spark.bean.Column
+import com.dyingbleed.corgi.spark.bean.{Column, Table}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.joda.time.LocalDateTime
 
@@ -8,16 +8,7 @@ import org.joda.time.LocalDateTime
   *
   * Created by 李震 on 2018/9/27.
   */
-private[split] class OracleSplitManager(
-                                         spark: SparkSession,
-                                         url: String,
-                                         username: String,
-                                         password: String,
-                                         db: String,
-                                         table: String,
-                                         timeColumn: String,
-                                         executeTime: LocalDateTime
-                                       ) extends AbstractSplitManager(spark, url, username, password, db, table) {
+private[split] class OracleSplitManager(spark: SparkSession, table: Table, executeTime: LocalDateTime) extends AbstractSplitManager(spark, table) {
 
   /**
     * 获取 DataFrame
@@ -29,30 +20,30 @@ private[split] class OracleSplitManager(
     * @return DataFrame
     **/
   override def getDF(splitBy: Column, upper: Long, lower: Long, m: Long): DataFrame = {
-    val sql = if (timeColumn == null || timeColumn.isEmpty) {
+    val sql = if (table.ts.isEmpty) {
       s"""
          |(SELECT
          |	t.*
-         |FROM $db.$table t
+         |FROM ${table.db}.${table.table} t
          |) t
           """.stripMargin
     } else {
       s"""
          |(SELECT
          |	t.*,
-         |	TO_CHAR(t.$timeColumn, 'yyyy-mm-dd') as ods_date
-         |FROM $db.$table t
-         |WHERE t.$timeColumn < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
+         |	TO_CHAR(t.${table.ts.get}, 'yyyy-mm-dd') as ods_date
+         |FROM ${table.db}.${table.table}  t
+         |WHERE t.${table.ts.get} < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
          |) t
           """.stripMargin
     }
 
     spark.read
       .format("jdbc")
-      .option("url", url)
+      .option("url", table.url)
       .option("dbtable", sql)
-      .option("user", username)
-      .option("password", password)
+      .option("user", table.username)
+      .option("password", table.password)
       .option("driver", "oracle.jdbc.OracleDriver")
       .option("partitionColumn", splitBy.name)
       .option("upperBound", upper)
@@ -78,11 +69,11 @@ private[split] class OracleSplitManager(
         splitBy.last.name
       }
 
-      val sql = if (timeColumn == null || timeColumn.isEmpty) {
+      val sql = if (table.ts.isEmpty) {
         s"""
            |(SELECT
            |	t.*
-           |FROM $db.$table t
+           |FROM ${table.db}.${table.table} t
            |WHERE MOD(ORA_HASH($hashExpr), $m) = $mod
            |) t
         """.stripMargin
@@ -90,9 +81,9 @@ private[split] class OracleSplitManager(
         s"""
            |(SELECT
            |	t.*,
-           |	TO_CHAR(t.$timeColumn, 'yyyy-mm-dd') as ods_date
-           |FROM $db.$table t
-           |WHERE t.$timeColumn < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
+           |	TO_CHAR(t.${table.ts.get}, 'yyyy-mm-dd') as ods_date
+           |FROM ${table.db}.${table.table} t
+           |WHERE t.${table.ts.get} < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
            |AND MOD(ORA_HASH($hashExpr), $m) = $mod
            |) t
         """.stripMargin
@@ -100,10 +91,10 @@ private[split] class OracleSplitManager(
 
       val df = spark.read
         .format("jdbc")
-        .option("url", url)
+        .option("url", table.url)
         .option("dbtable", sql)
-        .option("user", username)
-        .option("password", password)
+        .option("user", table.username)
+        .option("password", table.password)
         .option("driver", "oracle.jdbc.OracleDriver")
         .load()
       if (unionDF == null) {

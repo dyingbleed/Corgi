@@ -1,5 +1,5 @@
 package com.dyingbleed.corgi.spark.ds.el.split
-import com.dyingbleed.corgi.spark.bean.Column
+import com.dyingbleed.corgi.spark.bean.{Column, Table}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.joda.time.LocalDateTime
 
@@ -8,16 +8,7 @@ import org.joda.time.LocalDateTime
   *
   * Created by 李震 on 2018/9/27.
   */
-private[split] class MySQLSplitManager(
-                                        spark: SparkSession,
-                                        url: String,
-                                        username: String,
-                                        password: String,
-                                        db: String,
-                                        table: String,
-                                        timeColumn: String,
-                                        executeTime: LocalDateTime
-                                      ) extends AbstractSplitManager(spark, url, username, password, db, table) {
+private[split] class MySQLSplitManager(spark: SparkSession, table: Table, executeTime: LocalDateTime) extends AbstractSplitManager(spark, table) {
 
   /**
     * 获取 DataFrame
@@ -29,24 +20,24 @@ private[split] class MySQLSplitManager(
     * @return DataFrame
     **/
   override def getDF(splitBy: Column, upper: Long, lower: Long, m: Long): DataFrame = {
-    val sql = if (timeColumn == null || timeColumn.isEmpty) {
-      s"$db.$table"
+    val sql = if (table.ts.isEmpty) {
+      s"${table.db}.${table.table}"
     } else {
       s"""
          |(select
-         |  *, date($timeColumn) as ods_date
-         |from $db.$table
-         |where $timeColumn < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
+         |  *, date(${table.ts.get}) as ods_date
+         |from ${table.db}.${table.table}
+         |where ${table.ts.get} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
          |) t
           """.stripMargin
     }
 
     spark.read
       .format("jdbc")
-      .option("url", url)
+      .option("url", table.url)
       .option("dbtable", sql)
-      .option("user", username)
-      .option("password", password)
+      .option("user", table.username)
+      .option("password", table.password)
       .option("driver", "com.mysql.jdbc.Driver")
       .option("partitionColumn", splitBy.name)
       .option("upperBound", upper)
@@ -72,20 +63,20 @@ private[split] class MySQLSplitManager(
         splitBy.last.name
       }
 
-      val sql = if (timeColumn == null || timeColumn.isEmpty) {
+      val sql = if (table.ts.isEmpty) {
         s"""
            |(select
            |  *
-           |from $db.$table
+           |from ${table.db}.${table.table}
            |where mod(conv(md5($hashExpr), 16, 10), $m)
            |) t
           """.stripMargin
       } else {
         s"""
            |(select
-           |  *, date($timeColumn) as ods_date
-           |from $db.$table
-           |where $timeColumn < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
+           |  *, date(${table.ts.get}) as ods_date
+           |from ${table.db}.${table.table}
+           |where ${table.ts.get} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
            |and mod(conv(md5($hashExpr), 16, 10), $m)
            |) t
           """.stripMargin
@@ -93,10 +84,10 @@ private[split] class MySQLSplitManager(
 
       val df = spark.read
         .format("jdbc")
-        .option("url", url)
+        .option("url", table.url)
         .option("dbtable", sql)
-        .option("user", username)
-        .option("password", password)
+        .option("user", table.username)
+        .option("password", table.password)
         .option("driver", "com.mysql.jdbc.Driver")
         .load()
       if (unionDF == null) {
