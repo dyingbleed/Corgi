@@ -56,7 +56,7 @@ private[split] abstract class AbstractSplitManager(
       if (isSinglePKNum.get) {
         val pkColumnName = pk.get.last.name
         val stats = JDBCUtils.getColumnStats(conn, db, table, pkColumnName)
-        return getDF(pk.get.last, stats._1, stats._2, Math.min((stats._3 / 10000) + 1, parallellism))
+        return getDF(pk.get.last, stats._2, stats._1, Math.min((stats._3 / 10000) + 1, parallellism))
       } else if (isPKStr.get) {
         return getDF(pk.get, parallellism)
       }
