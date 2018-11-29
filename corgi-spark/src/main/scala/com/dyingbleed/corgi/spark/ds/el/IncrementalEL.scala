@@ -117,7 +117,7 @@ private[spark] abstract class IncrementalEL extends DataSourceEL with Logging {
       case executeTimestamp: Timestamp =>
         LocalDateTime.fromDateFields(executeTimestamp)
       case _ =>
-        logError(s"获取最近一次执行时间失败，不支持的时间类型 ${lastExecuteTime.getClass.getName}")
+        logError(s"获取最近一次执行时间失败，不支持的时间类型 ${lastExecuteTime}")
         executeTime.minusDays(1).withTime(0, 0, 0, 0) // 昨天零点零分零秒
     }
   }
