@@ -79,8 +79,7 @@ private[spark] abstract class IncrementalEL extends DataSourceEL with Logging {
            |using PARQUET
            |partitioned by (ods_date)
            |as select * from sink
-            """.stripMargin
-      )
+            """.stripMargin)
     } else {
       // 增加分区
       spark.sql(

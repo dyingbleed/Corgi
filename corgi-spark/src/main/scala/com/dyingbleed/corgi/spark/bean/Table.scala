@@ -4,6 +4,8 @@ import java.sql.Connection
 
 import com.dyingbleed.corgi.spark.util.JDBCUtils
 
+import scala.util.{Failure, Success, Try}
+
 /**
   * Created by 李震 on 2018/11/29.
   */
@@ -37,17 +39,23 @@ case class Table (
     }
   }
 
-  /**
-    * 数据库连接
-    * */
-  lazy val conn: Connection = JDBCUtils.getConnection(url, username, password)
+  private[this] def withConnection[R](url: String, username: String, password: String, query: Connection => R): R = {
+    Try(JDBCUtils.getConnection(url, username, password)) match {
+      case Success(conn) => {
+        val r = query(conn)
+        conn.close()
+        r
+      }
+      case Failure(e) => throw e
+    }
+  }
 
   /**
     * 主键
     * */
-  lazy val pk: Option[Seq[Column]] = {
+  lazy val pk: Option[Seq[Column]] = withConnection(url, username, password, conn => {
     Option(JDBCUtils.getPrimaryKey(conn, db, table))
-  }
+  })
 
   /* *********
    * 统计方法 *
@@ -55,29 +63,29 @@ case class Table (
   /**
     * 统计指标
     * */
-  def stat[MAX, MIN](columnName: String, maxClz: Class[MAX], minClz: Class[MIN]): ColumnStat[MAX, MIN] = {
+  def stat[MAX, MIN](columnName: String, maxClz: Class[MAX], minClz: Class[MIN]): ColumnStat[MAX, MIN] = withConnection(url, username, password, conn => {
     JDBCUtils.getColumnStat(conn, db, table, columnName, maxClz, minClz)
-  }
+  })
 
   /**
     * 最大值
     * */
-  def max[MAX](columnName: String, clz: Class[MAX]): MAX = {
+  def max[MAX](columnName: String, clz: Class[MAX]): MAX = withConnection(url, username, password, conn => {
     JDBCUtils.getColumnMax(conn, db, table, columnName, clz)
-  }
+  })
 
   /**
     * 最小值
     * */
-  def min[MIN](columnName: String, clz: Class[MIN]): MIN = {
+  def min[MIN](columnName: String, clz: Class[MIN]): MIN = withConnection(url, username, password, conn => {
     JDBCUtils.getColumnMin(conn, db, table, columnName, clz)
-  }
+  })
 
   /**
     * 基数
     * */
-  def cardinality(): Long = {
+  def cardinality(): Long = withConnection(url, username, password, conn => {
     JDBCUtils.getCardinality(conn, db, table)
-  }
+  })
 
 }

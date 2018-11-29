@@ -40,7 +40,7 @@ private[split] abstract class AbstractSplitManager(spark: SparkSession, table: T
       val pk = table.pk
       if (isSinglePKNum.get) {
         val pkColumnName = pk.get.last.name
-        val stats = table.stat[Long, Long](pkColumnName, classOf[Long], classOf[Long])
+        val stats = table.stat(pkColumnName, classOf[Long], classOf[Long])
         return getDF(pk.get.last, stats.max, stats.min, Math.min((stats.cardinality / 10000) + 1, parallellism))
       } else if (isPKStr.get) {
         return getDF(pk.get, parallellism)
