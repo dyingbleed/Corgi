@@ -66,49 +66,44 @@ private[split] class MySQLSplitManager(
     var unionDF: DataFrame = null
 
     for (mod <- 0l until m) {
-      val hashExpr = splitBy.map(_.name).mkString(", ")
-
-      for (mod <- 0l until m) {
-        val hashExpr = if (splitBy.size > 1) {
-          splitBy.foldLeft("''")((x, y) => s"CONCAT($x, ${y.name})")
-        } else {
-          splitBy.last.name
-        }
-
-        val sql = if (timeColumn == null || timeColumn.isEmpty) {
-          s"""
-             |(select
-             |  *
-             |from $db.$table
-             |where mod(conv(md5($hashExpr), 16, 10), $m)
-             |) t
-          """.stripMargin
-        } else {
-          s"""
-             |(select
-             |  *, date($timeColumn) as ods_date
-             |from $db.$table
-             |where $timeColumn < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
-             |and mod(conv(md5($hashExpr), 16, 10), $m)
-             |) t
-          """.stripMargin
-        }
-
-        val df = spark.read
-          .format("jdbc")
-          .option("url", url)
-          .option("dbtable", sql)
-          .option("user", username)
-          .option("password", password)
-          .option("driver", "oracle.jdbc.OracleDriver")
-          .load()
-        if (unionDF == null) {
-          unionDF = df
-        } else {
-          unionDF = unionDF.union(df)
-        }
+      val hashExpr = if (splitBy.size > 1) {
+        splitBy.foldLeft("''")((x, y) => s"CONCAT($x, ${y.name})")
+      } else {
+        splitBy.last.name
       }
 
+      val sql = if (timeColumn == null || timeColumn.isEmpty) {
+        s"""
+           |(select
+           |  *
+           |from $db.$table
+           |where mod(conv(md5($hashExpr), 16, 10), $m)
+           |) t
+          """.stripMargin
+      } else {
+        s"""
+           |(select
+           |  *, date($timeColumn) as ods_date
+           |from $db.$table
+           |where $timeColumn < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
+           |and mod(conv(md5($hashExpr), 16, 10), $m)
+           |) t
+          """.stripMargin
+      }
+
+      val df = spark.read
+        .format("jdbc")
+        .option("url", url)
+        .option("dbtable", sql)
+        .option("user", username)
+        .option("password", password)
+        .option("driver", "com.mysql.jdbc.Driver")
+        .load()
+      if (unionDF == null) {
+        unionDF = df
+      } else {
+        unionDF = unionDF.union(df)
+      }
     }
 
     unionDF
