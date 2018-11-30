@@ -34,34 +34,35 @@ private[spark] abstract class IncrementalEL extends DataSourceEL with Logging {
     * @return
     **/
   override def loadSourceDF: DataFrame = {
+    val tableMeta = Table(conf.sourceDb, conf.sourceTable, conf.sourceDbUrl, conf.sourceDbUser, conf.sourceDbPassword, Option(conf.sourceTimeColumn))
+
     if (!spark.catalog.tableExists(conf.sinkDb, conf.sinkTable)) {
       // 全量
       logInfo(s"加载全量数据 ${conf.sinkDb}.${conf.sinkTable}")
-      val tableMeta = Table(conf.sourceDb, conf.sourceTable, conf.sourceDbUrl, conf.sourceDbUser, conf.sourceDbPassword, Option(conf.sourceTimeColumn))
       val splitManager = SplitManager(spark, tableMeta, executeTime)
       if (splitManager.canSplit) {
         logDebug("数据可以分片")
         splitManager.loadDF
       } else {
         logDebug("数据无法分片")
-        loadAllSourceDF
+        loadAllSourceDF(tableMeta)
       }
     } else {
       // 增量
       logInfo(s"加载增量数据 ${conf.sinkDb}.${conf.sinkTable}")
-      loadIncrementalSourceDF
+      loadIncrementalSourceDF(tableMeta)
     }
   }
 
   /**
     * 加载全部源数据
     * */
-  protected def loadAllSourceDF: DataFrame
+  protected def loadAllSourceDF(tableMeta: Table): DataFrame
 
   /**
     * 加载增量源数据
     * */
-  protected def loadIncrementalSourceDF: DataFrame
+  protected def loadIncrementalSourceDF(tableMeta: Table): DataFrame
 
   /**
     * 持久化数据源

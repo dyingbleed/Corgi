@@ -29,7 +29,7 @@ trait SplitManager {
 
 }
 
-object SplitManager extends {
+object SplitManager {
 
   def apply(spark: SparkSession, table: Table, executeTime: LocalDateTime): SplitManager = {
     table.vendor match {

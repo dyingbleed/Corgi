@@ -1,5 +1,6 @@
 package com.dyingbleed.corgi.spark.ds.el.split
 import com.dyingbleed.corgi.spark.bean.{Column, Table}
+import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.joda.time.LocalDateTime
 
@@ -8,7 +9,7 @@ import org.joda.time.LocalDateTime
   *
   * Created by 李震 on 2018/9/27.
   */
-private[split] class MySQLSplitManager(spark: SparkSession, table: Table, executeTime: LocalDateTime) extends AbstractSplitManager(spark, table) {
+private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, executeTime: LocalDateTime) extends AbstractSplitManager(spark, tableMeta)  with Logging {
 
   /**
     * 获取 DataFrame
@@ -20,24 +21,35 @@ private[split] class MySQLSplitManager(spark: SparkSession, table: Table, execut
     * @return DataFrame
     **/
   override def getDF(splitBy: Column, upper: Long, lower: Long, m: Long): DataFrame = {
-    val sql = if (table.ts.isEmpty) {
-      s"${table.db}.${table.table}"
+    val sql = if (tableMeta.tsColumnName.isEmpty) {
+      s"${tableMeta.db}.${tableMeta.table}"
     } else {
+      val selectExp = tableMeta.columns
+        .filter(c => !c.name.equals(tableMeta.tsColumnName.get))
+        .map(c => c.name)
+        .mkString(",")
+
       s"""
          |(select
-         |  *, date(${table.ts.get}) as ods_date
-         |from ${table.db}.${table.table}
-         |where ${table.ts.get} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
+         |  *, date(${tableMeta.tsColumnName.get}) as ods_date
+         |from (
+         |  select
+         |    $selectExp,
+         |    nvl(${tableMeta.tsColumnName}, '${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}') as ${tableMeta.tsColumnName}
+         |  from ${tableMeta.db}.${tableMeta.table}
+         |) s
+         |where ${tableMeta.tsColumnName.get} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
          |) t
           """.stripMargin
     }
+    logDebug(s"执行 SQL: $sql")
 
     spark.read
       .format("jdbc")
-      .option("url", table.url)
+      .option("url", tableMeta.url)
       .option("dbtable", sql)
-      .option("user", table.username)
-      .option("password", table.password)
+      .option("user", tableMeta.username)
+      .option("password", tableMeta.password)
       .option("driver", "com.mysql.jdbc.Driver")
       .option("partitionColumn", splitBy.name)
       .option("upperBound", upper)
@@ -63,31 +75,42 @@ private[split] class MySQLSplitManager(spark: SparkSession, table: Table, execut
         splitBy.last.name
       }
 
-      val sql = if (table.ts.isEmpty) {
+      val sql = if (tableMeta.tsColumnName.isEmpty) {
         s"""
            |(select
            |  *
-           |from ${table.db}.${table.table}
+           |from ${tableMeta.db}.${tableMeta.table}
            |where mod(conv(md5($hashExpr), 16, 10), $m)
            |) t
           """.stripMargin
       } else {
+        val selectExp = tableMeta.columns
+          .filter(c => !c.name.equals(tableMeta.tsColumnName.get))
+          .map(c => c.name)
+          .mkString(",")
+
         s"""
            |(select
-           |  *, date(${table.ts.get}) as ods_date
-           |from ${table.db}.${table.table}
-           |where ${table.ts.get} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
+           |  *, date(${tableMeta.tsColumnName.get}) as ods_date
+           |from (
+           |  select
+           |    $selectExp,
+           |    nvl(${tableMeta.tsColumnName}, '${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}') as ${tableMeta.tsColumnName}
+           |  from ${tableMeta.db}.${tableMeta.table}
+           |) s
+           |where ${tableMeta.tsColumnName.get} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
            |and mod(conv(md5($hashExpr), 16, 10), $m)
            |) t
           """.stripMargin
       }
+      logDebug(s"执行 SQL: $sql")
 
       val df = spark.read
         .format("jdbc")
-        .option("url", table.url)
+        .option("url", tableMeta.url)
         .option("dbtable", sql)
-        .option("user", table.username)
-        .option("password", table.password)
+        .option("user", tableMeta.username)
+        .option("password", tableMeta.password)
         .option("driver", "com.mysql.jdbc.Driver")
         .load()
       if (unionDF == null) {

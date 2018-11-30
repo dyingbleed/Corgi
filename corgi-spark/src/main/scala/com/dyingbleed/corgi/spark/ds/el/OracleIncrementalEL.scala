@@ -1,4 +1,5 @@
 package com.dyingbleed.corgi.spark.ds.el
+import com.dyingbleed.corgi.spark.bean.Table
 import org.apache.spark.sql.DataFrame
 
 /**
@@ -8,12 +9,21 @@ class OracleIncrementalEL extends IncrementalEL {
   /**
     * 加载全量源数据
     **/
-  override protected def loadAllSourceDF: DataFrame = {
+  override protected def loadAllSourceDF(tableMeta: Table): DataFrame = {
+    val selectExp = tableMeta.columns
+      .filter(c => c.name.equals(tableMeta.tsColumnName.get))
+      .map(c => c.name).mkString(",")
+
     val table =
       s"""
          |(SELECT
          |  *
-         |FROM ${conf.sourceDb}.${conf.sourceTable}
+         |FROM (
+         |  select
+         |    $selectExp,
+         |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
+         |  from ${tableMeta.db}.${tableMeta.table}
+         |) s
          |AND ${conf.sourceTimeColumn} < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
          |) t
          """.stripMargin
@@ -32,7 +42,7 @@ class OracleIncrementalEL extends IncrementalEL {
   /**
     * 加载增量源数据
     **/
-  override protected def loadIncrementalSourceDF: DataFrame = {
+  override protected def loadIncrementalSourceDF(tableMeta: Table): DataFrame = {
     val table =
       s"""
          |(SELECT

@@ -52,6 +52,31 @@ object JDBCUtils {
     pks
   }
 
+  /**
+    * 获取列信息
+    *
+    * @param conn 数据库连接
+    * @param db 数据库名
+    * @param table 表名
+    *
+    * @return 列信息
+    * */
+  def getColumns(conn: Connection, db: String, table: String): Seq[Column] = {
+    val cs = new ListBuffer[Column]
+
+    val metaData = conn.getMetaData
+    val crs = metaData.getColumns(db, null, table, null)
+
+    while (crs.next()) {
+      val cName = crs.getString(4)
+      val ctype = crs.getInt(5)
+      cs += Column(cName, ctype)
+    }
+    crs.close()
+
+    cs
+  }
+
   private def getOne[T](conn: Connection, sql: String, rsHandler: ResultSet => T): T = {
     val stat = conn.createStatement()
     val rs = stat.executeQuery(sql)
@@ -71,7 +96,7 @@ object JDBCUtils {
     *
     * @return 列统计信息
     * */
-  def getColumnStat[MAX, MIN](conn: Connection, db: String, table: String, column: String, maxClz: Class[MAX], minClz: Class[MIN]): ColumnStat[MAX, MIN] = {
+  def getColumnStat(conn: Connection, db: String, table: String, column: String): ColumnStat = {
     val sql = s"""
          |select
          |  max($column) as max,
@@ -80,8 +105,8 @@ object JDBCUtils {
          |from $db.$table
     """.stripMargin
     getOne(conn, sql, rs => {
-      val max = rs.getObject[MAX](1, maxClz)
-      val min = rs.getObject[MIN](2, minClz)
+      val max = rs.getObject(1)
+      val min = rs.getObject(2)
       val count = rs.getLong(3)
       ColumnStat(max, min, count)
     })
@@ -96,14 +121,15 @@ object JDBCUtils {
     *
     * @return 表基数信息
     * */
-  def getColumnMax[MAX](conn: Connection, db: String, table: String, column: String, clz: Class[MAX]): MAX = {
+  def getColumnMax(conn: Connection, db: String, table: String, column: String): Any = {
     val sql =
       s"""
          |select
-         |  min($column) as max
+         |  max($column) as max
          |from $db.$table
+         |where $column is not null
     """.stripMargin
-    getOne(conn, sql, rs => rs.getObject(1, clz))
+    getOne(conn, sql, rs => rs.getObject(1))
   }
 
   /**
@@ -115,14 +141,15 @@ object JDBCUtils {
     *
     * @return 表基数信息
     * */
-  def getColumnMin[MIN](conn: Connection, db: String, table: String, column: String, clz: Class[MIN]): MIN = {
+  def getColumnMin(conn: Connection, db: String, table: String, column: String): Any = {
     val sql =
       s"""
          |select
          |  min($column) as min
          |from $db.$table
+         |where $column is not null
     """.stripMargin
-    getOne(conn, sql, rs => rs.getObject(1, clz))
+    getOne(conn, sql, rs => rs.getObject(1))
   }
 
   /**

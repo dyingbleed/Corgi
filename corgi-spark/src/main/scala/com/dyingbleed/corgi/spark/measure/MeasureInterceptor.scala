@@ -36,7 +36,7 @@ class MeasureInterceptor extends MethodInterceptor {
     // spark.sparkContext.removeSparkListener(listener) // 2.2.0 之前版本不支持
 
     val measure = listener.measure
-    rpc.saveMeasure(measure.copy(name = appName, submissionTime = submissionTime, completionTime = completionTime, elapsedSeconds = ((endTime - startTime) / 1000000000l))) // 保存度量数据
+    rpc.saveMeasure(measure.copy(name = appName, submissionTime = submissionTime, completionTime = completionTime, elapsedSeconds = (endTime - startTime) / 1000000000l)) // 保存度量数据
 
     ret
   }

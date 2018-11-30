@@ -19,7 +19,7 @@ private[spark] class Bootstrap(args: Array[String]) {
 
   val appName = args(0)
 
-  def bootstrap(execute: (AbstractModule) => Unit): Unit = {
+  def bootstrap(execute: AbstractModule => Unit): Unit = {
 
     // 加载应用配置
     val appConf = loadAppConf()

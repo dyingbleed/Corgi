@@ -34,7 +34,12 @@ private[spark] class Conf @Inject()(@Named("appName") appName: String, @Named("a
 
   def mode: ODSMode = ODSMode.valueOf(jobConf.getString("mode"))
 
-  def sourceTimeColumn: String = jobConf.getString("timeColumn")
+  def sourceTimeColumn: String = {
+    val timeColumn = jobConf.getString("timeColumn")
+
+    if (timeColumn.trim.length == 0) null
+    else timeColumn
+  }
 
   def sourceDbUrl: String = jobConf.getString("dataSourceUrl")
 

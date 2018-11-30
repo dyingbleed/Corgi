@@ -20,9 +20,9 @@ private[split] abstract class AbstractSplitManager(spark: SparkSession, table: T
     if (isSinglePKNum.isEmpty || isPKStr.isEmpty) {
       val pk = table.pk
       // 只有一个主键且为数值型
-      isSinglePKNum = Option(pk.get.size == 1 && pk.get.last.isNumber)
+      isSinglePKNum = Option(pk.size == 1 && pk.last.isNumber)
       // 有多个主键且为数值型或字符型
-      isPKStr = Option(pk.get.nonEmpty && pk.get.forall(col => col.isNumber || col.isString))
+      isPKStr = Option(pk.nonEmpty && pk.forall(col => col.isNumber || col.isString))
     }
 
     isSinglePKNum.getOrElse(false) || isPKStr.getOrElse(false)
@@ -39,11 +39,11 @@ private[split] abstract class AbstractSplitManager(spark: SparkSession, table: T
     if (canSplit) {
       val pk = table.pk
       if (isSinglePKNum.get) {
-        val pkColumnName = pk.get.last.name
-        val stats = table.stat(pkColumnName, classOf[Long], classOf[Long])
-        return getDF(pk.get.last, stats.max, stats.min, Math.min((stats.cardinality / 10000) + 1, parallellism))
+        val pkColumnName = pk.last.name
+        val stats = table.stat(pkColumnName)
+        return getDF(pk.last, stats.max.asInstanceOf[Long], stats.min.asInstanceOf[Long], Math.min((stats.cardinality / 10000) + 1, parallellism))
       } else if (isPKStr.get) {
-        return getDF(pk.get, parallellism)
+        return getDF(pk, parallellism)
       }
     }
 

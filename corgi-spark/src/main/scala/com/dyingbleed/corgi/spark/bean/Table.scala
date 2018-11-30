@@ -1,8 +1,10 @@
 package com.dyingbleed.corgi.spark.bean
 
-import java.sql.Connection
+import java.sql.{Connection, Date, Timestamp}
 
 import com.dyingbleed.corgi.spark.util.JDBCUtils
+import oracle.sql.{DATE, Datum, TIMESTAMP}
+import org.joda.time.LocalDateTime
 
 import scala.util.{Failure, Success, Try}
 
@@ -15,7 +17,7 @@ case class Table (
                    url: String,
                    username: String,
                    password: String,
-                   ts: Option[String] // 时间戳字段名
+                   tsColumnName: Option[String] // 时间戳字段名
                  ) {
   /*
    * 参数非空断言
@@ -53,8 +55,44 @@ case class Table (
   /**
     * 主键
     * */
-  lazy val pk: Option[Seq[Column]] = withConnection(url, username, password, conn => {
-    Option(JDBCUtils.getPrimaryKey(conn, db, table))
+  lazy val pk: Seq[Column] = withConnection(url, username, password, conn => {
+    JDBCUtils.getPrimaryKey(conn, db, table)
+  })
+
+  /**
+    * 时间戳
+    * */
+  lazy val ts: Option[Column] = {
+    tsColumnName match {
+      case Some(cn) => Option(columns.filter(c => c.name.equalsIgnoreCase(cn)).last)
+      case None => None
+    }
+  }
+
+  /**
+    * 时间戳默认值
+    *
+    * 最小值前一天的零点零分零秒
+    *
+    * */
+  lazy val tsDefaultVal: LocalDateTime = {
+    val minVal = min(tsColumnName.get)
+    val minDateTime = minVal match {
+      case t: Timestamp => new LocalDateTime(t)
+      case d: Date => new LocalDateTime(d)
+      case ot: TIMESTAMP => new LocalDateTime(ot.timestampValue())
+      case od: DATE => new LocalDateTime(od.dateValue())
+      case null => LocalDateTime.now()
+      case _ => throw new RuntimeException("不支持的日期时间类型")
+    }
+    minDateTime.minusDays(1).withTime(0, 0, 0, 0)
+  }
+
+  /**
+   * 列
+   * */
+  lazy val columns: Seq[Column] = withConnection(url, username, password, conn => {
+    JDBCUtils.getColumns(conn, db, table)
   })
 
   /* *********
@@ -63,22 +101,22 @@ case class Table (
   /**
     * 统计指标
     * */
-  def stat[MAX, MIN](columnName: String, maxClz: Class[MAX], minClz: Class[MIN]): ColumnStat[MAX, MIN] = withConnection(url, username, password, conn => {
-    JDBCUtils.getColumnStat(conn, db, table, columnName, maxClz, minClz)
+  def stat(columnName: String): ColumnStat = withConnection(url, username, password, conn => {
+    JDBCUtils.getColumnStat(conn, db, table, columnName)
   })
 
   /**
     * 最大值
     * */
-  def max[MAX](columnName: String, clz: Class[MAX]): MAX = withConnection(url, username, password, conn => {
-    JDBCUtils.getColumnMax(conn, db, table, columnName, clz)
+  def max(columnName: String): Any = withConnection(url, username, password, conn => {
+    JDBCUtils.getColumnMax(conn, db, table, columnName)
   })
 
   /**
     * 最小值
     * */
-  def min[MIN](columnName: String, clz: Class[MIN]): MIN = withConnection(url, username, password, conn => {
-    JDBCUtils.getColumnMin(conn, db, table, columnName, clz)
+  def min(columnName: String): Any = withConnection(url, username, password, conn => {
+    JDBCUtils.getColumnMin(conn, db, table, columnName)
   })
 
   /**
