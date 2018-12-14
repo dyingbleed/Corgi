@@ -21,7 +21,7 @@ class MySQLIncrementalEL extends IncrementalEL {
          |from (
          |  select
          |    $selectExr,
-         |    nvl(${tableMeta.tsColumnName.get}, '${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}') as ${tableMeta.tsColumnName.get}
+         |    ifnull(${tableMeta.tsColumnName.get}, '${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}') as ${tableMeta.tsColumnName.get}
          |  from ${tableMeta.db}.${tableMeta.table}
          |) s
          |where ${tableMeta.tsColumnName.get} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'

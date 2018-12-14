@@ -35,7 +35,7 @@ private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, ex
          |from (
          |  select
          |    $selectExp,
-         |    nvl(${tableMeta.tsColumnName}, '${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}') as ${tableMeta.tsColumnName}
+         |    ifnull(${tableMeta.tsColumnName.get}, '${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}') as ${tableMeta.tsColumnName.get}
          |  from ${tableMeta.db}.${tableMeta.table}
          |) s
          |where ${tableMeta.tsColumnName.get} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
@@ -95,7 +95,7 @@ private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, ex
            |from (
            |  select
            |    $selectExp,
-           |    nvl(${tableMeta.tsColumnName}, '${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}') as ${tableMeta.tsColumnName}
+           |    ifnull(${tableMeta.tsColumnName}, '${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}') as ${tableMeta.tsColumnName}
            |  from ${tableMeta.db}.${tableMeta.table}
            |) s
            |where ${tableMeta.tsColumnName.get} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
