@@ -41,13 +41,24 @@ private[split] abstract class AbstractSplitManager(spark: SparkSession, table: T
       if (isSinglePKNum.get) {
         val pkColumnName = pk.last.name
         val stats = table.stat(pkColumnName)
-        return getDF(pk.last, stats.max.asInstanceOf[Long], stats.min.asInstanceOf[Long], Math.min((stats.cardinality / 10000) + 1, parallellism))
+        return getDF(pk.last, cast2Long(stats.max), cast2Long(stats.min), Math.min((stats.cardinality / 10000) + 1, parallellism))
       } else if (isPKStr.get) {
         return getDF(pk, parallellism)
       }
     }
 
     null
+  }
+
+  private def cast2Long(v: Any): Long = {
+    v match {
+      case l:Long => l
+      case s:Short => s.toLong
+      case i:Int => i.toLong
+      case f:Float => f.toLong
+      case d:Double => d.toLong
+      case _ => throw new RuntimeException(s"不支持的数据类型")
+    }
   }
 
   /**
