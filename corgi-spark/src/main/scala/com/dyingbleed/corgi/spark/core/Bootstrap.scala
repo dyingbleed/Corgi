@@ -33,8 +33,9 @@ private[spark] class Bootstrap(args: Array[String]) {
         .master("local")
         .appName(appName)
         .enableHiveSupport()
-        .config("hive.exec.dynamic.partition", true.toString) // 支持 Hive 动态分区
+        .config("hive.exec.dynamic.partition", true) // 支持 Hive 动态分区
         .config("hive.exec.dynamic.partition.mode", "nonstrict")
+        .config("spark.sql.parquet.writeLegacyFormat", true)
         .getOrCreate()
 
       // 日志级别
@@ -46,8 +47,9 @@ private[spark] class Bootstrap(args: Array[String]) {
         .master("yarn")
         .appName(appName)
         .enableHiveSupport()
-        .config("hive.exec.dynamic.partition", true.toString) // 支持 Hive 动态分区
+        .config("hive.exec.dynamic.partition", true) // 支持 Hive 动态分区
         .config("hive.exec.dynamic.partition.mode", "nonstrict")
+        .config("spark.sql.parquet.writeLegacyFormat", true)
         .getOrCreate()
 
       // 日志级别
