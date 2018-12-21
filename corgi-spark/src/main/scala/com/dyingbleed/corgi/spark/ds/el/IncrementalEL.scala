@@ -11,6 +11,7 @@ import com.google.inject.Inject
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.joda.time.LocalDateTime
+import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 
 /**
   * Created by 李震 on 2018/6/26.
@@ -109,6 +110,8 @@ private[spark] abstract class IncrementalEL extends DataSourceEL with Logging {
         LocalDateTime.fromDateFields(exeuteDate)
       case executeTimestamp: Timestamp =>
         LocalDateTime.fromDateFields(executeTimestamp)
+      case executeTimeStr: String =>
+        LocalDateTime.parse(executeTimeStr, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss"))
       case _ =>
         logError(s"获取最近一次执行时间失败，不支持的时间类型 $lastExecuteTime")
         executeTime.minusDays(1).withTime(0, 0, 0, 0) // 昨天零点零分零秒
