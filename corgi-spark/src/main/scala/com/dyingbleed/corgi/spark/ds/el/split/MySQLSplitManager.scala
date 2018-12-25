@@ -35,10 +35,10 @@ private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, ex
          |from (
          |  select
          |    $selectExp,
-         |    ifnull(${tableMeta.tsColumnName.get}, '${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}') as ${tableMeta.tsColumnName.get}
+         |    ifnull(${tableMeta.tsColumnName.get}, timestamp('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}')) as ${tableMeta.tsColumnName.get}
          |  from ${tableMeta.db}.${tableMeta.table}
          |) s
-         |where ${tableMeta.tsColumnName.get} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
+         |where ${tableMeta.tsColumnName.get} < timestamp('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}')
          |) t
           """.stripMargin
     }
@@ -95,10 +95,10 @@ private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, ex
            |from (
            |  select
            |    $selectExp,
-           |    ifnull(${tableMeta.tsColumnName}, '${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}') as ${tableMeta.tsColumnName}
+           |    ifnull(${tableMeta.tsColumnName}, timestamp('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}')) as ${tableMeta.tsColumnName}
            |  from ${tableMeta.db}.${tableMeta.table}
            |) s
-           |where ${tableMeta.tsColumnName.get} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
+           |where ${tableMeta.tsColumnName.get} < timestamp('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}')
            |and mod(conv(md5($hashExpr), 16, 10), $m)
            |) t
           """.stripMargin

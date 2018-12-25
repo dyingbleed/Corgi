@@ -17,14 +17,14 @@ class MySQLIncrementalEL extends IncrementalEL {
     val sql =
       s"""
          |(select
-         |  *
+         |  *, date(${tableMeta.tsColumnName.get}) as ods_date
          |from (
          |  select
          |    $selectExr,
-         |    ifnull(${tableMeta.tsColumnName.get}, '${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}') as ${tableMeta.tsColumnName.get}
+         |    ifnull(${tableMeta.tsColumnName.get}, timestamp('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}')) as ${tableMeta.tsColumnName.get}
          |  from ${tableMeta.db}.${tableMeta.table}
          |) s
-         |where ${tableMeta.tsColumnName.get} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
+         |where ${tableMeta.tsColumnName.get} < timestamp('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}')
          |) t
          """.stripMargin
     logDebug(s"执行 SQL：$sql")
@@ -48,8 +48,8 @@ class MySQLIncrementalEL extends IncrementalEL {
          |(select
          |  *
          |from ${tableMeta.db}.${tableMeta.table}
-         |where ${tableMeta.tsColumnName.get} > '${getLastExecuteTime.toString("yyyy-MM-dd HH:mm:ss")}'
-         |and ${tableMeta.tsColumnName.get} < '${executeTime.toString("yyyy-MM-dd HH:mm:ss")}'
+         |where ${tableMeta.tsColumnName.get} > timestamp('${getLastExecuteTime.toString("yyyy-MM-dd HH:mm:ss")}')
+         |and ${tableMeta.tsColumnName.get} < timestamp('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}')
          |) t
          """.stripMargin
     logDebug(s"执行 SQL：$sql")
