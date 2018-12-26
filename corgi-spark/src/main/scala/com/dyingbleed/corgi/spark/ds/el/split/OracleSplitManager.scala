@@ -2,7 +2,7 @@ package com.dyingbleed.corgi.spark.ds.el.split
 import com.dyingbleed.corgi.spark.bean.{Column, Table}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.joda.time.LocalDateTime
+import org.joda.time.{Days, LocalDate, LocalDateTime, LocalTime}
 
 /**
   * OracleIncrementalSource 分区管理器
@@ -11,15 +11,6 @@ import org.joda.time.LocalDateTime
   */
 private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, executeTime: LocalDateTime) extends AbstractSplitManager(spark, tableMeta) with Logging {
 
-  /**
-    * 获取 DataFrame
-    *
-    * @param splitBy 分区字段
-    * @param upper   值上界
-    * @param lower   值下界
-    * @param m       并发度
-    * @return DataFrame
-    **/
   override def getDF(splitBy: Column, upper: Long, lower: Long, m: Long): DataFrame = {
     val sql = if (tableMeta.tsColumnName.isEmpty) {
       s"""
@@ -64,13 +55,6 @@ private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, e
       .load()
   }
 
-  /**
-    * 获取 DataFrame
-    *
-    * @param splitBy 分区字段
-    * @param m       并发度
-    * @return DataFrame
-    **/
   override def getDF(splitBy: Seq[Column], m: Long): DataFrame = {
     var unionDF: DataFrame = null
 
@@ -110,6 +94,57 @@ private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, e
            |) t
         """.stripMargin
       }
+      logDebug(s"执行 SQL: $sql")
+
+      val df = spark.read
+        .format("jdbc")
+        .option("url", tableMeta.url)
+        .option("dbtable", sql)
+        .option("user", tableMeta.username)
+        .option("password", tableMeta.password)
+        .option("driver", "oracle.jdbc.OracleDriver")
+        .load()
+      if (unionDF == null) {
+        unionDF = df
+      } else {
+        unionDF = unionDF.union(df)
+      }
+    }
+
+    unionDF
+  }
+
+  /**
+    * 获取 DataFrame
+    * 使用日期分区
+    *
+    * @param splitBy 分区字段
+    * @return DataFrame
+    **/
+  override protected def getDF(splitBy: Column, beginDate: LocalDate): DataFrame = {
+    var unionDF: DataFrame = null
+
+    val m = Days.daysBetween(beginDate, LocalDate.now()).getDays
+    for (d <- 0 to m) {
+      val selectExp = tableMeta.columns
+        .filter(c => !c.name.equals(tableMeta.tsColumnName.get))
+        .map(c => c.name)
+        .mkString(",")
+
+      val sql = s"""
+         |(SELECT
+         |	s.*,
+         |	TO_CHAR(s.${tableMeta.tsColumnName.get}, 'yyyy-mm-dd') as ods_date
+         |FROM (
+         |  select
+         |    $selectExp,
+         |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
+         |  from ${tableMeta.db}.${tableMeta.table}
+         |) s
+         |WHERE s.${splitBy.name} >= TO_DATE('${beginDate.plusDays(d).toDateTime(LocalTime.MIDNIGHT).toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
+         |AND s.${splitBy.name} < TO_DATE('${beginDate.plusDays(d + 1).toDateTime(LocalTime.MIDNIGHT).toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
+         |) t
+        """.stripMargin
       logDebug(s"执行 SQL: $sql")
 
       val df = spark.read

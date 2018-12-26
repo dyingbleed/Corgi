@@ -2,6 +2,7 @@ package com.dyingbleed.corgi.spark.ds.el.split
 
 import com.dyingbleed.corgi.spark.bean.{Column, Table}
 import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.joda.time.LocalDate
 
 /**
   * Created by 李震 on 2018/9/27.
@@ -16,7 +17,7 @@ private[split] abstract class AbstractSplitManager(spark: SparkSession, table: T
     *
     * @return 是否可以分区
     **/
-  override def canSplit: Boolean = {
+  override final def canSplit: Boolean = {
     if (isSinglePKNum.isEmpty || isPKStr.isEmpty) {
       val pk = table.pk
       // 只有一个主键且为数值型
@@ -25,7 +26,7 @@ private[split] abstract class AbstractSplitManager(spark: SparkSession, table: T
       isPKStr = Option(pk.nonEmpty && pk.forall(col => col.isNumber || col.isString))
     }
 
-    isSinglePKNum.getOrElse(false) || isPKStr.getOrElse(false)
+    isSinglePKNum.getOrElse(false) || isPKStr.getOrElse(false) || table.tsColumnName.isDefined
   }
 
   /**
@@ -33,7 +34,7 @@ private[split] abstract class AbstractSplitManager(spark: SparkSession, table: T
     *
     * @return DataFrame
     **/
-  override def loadDF: DataFrame = {
+  override final def loadDF: DataFrame = {
     val parallellism = spark.conf.get("spark.sql.shuffle.partitions", "200").toLong
 
     if (canSplit) {
@@ -44,6 +45,8 @@ private[split] abstract class AbstractSplitManager(spark: SparkSession, table: T
         return getDF(pk.last, cast2Long(stats.max), cast2Long(stats.min), Math.min((stats.cardinality / 10000) + 1, parallellism))
       } else if (isPKStr.get) {
         return getDF(pk, parallellism)
+      } else if (table.tsColumnName.isDefined) {
+        return getDF(table.ts.get, table.tsDefaultVal.toLocalDate)
       }
     }
 
@@ -63,6 +66,7 @@ private[split] abstract class AbstractSplitManager(spark: SparkSession, table: T
 
   /**
     * 获取 DataFrame
+    * 使用 Range 分区
     *
     * @param splitBy 分区字段
     * @param upper 值上界
@@ -71,16 +75,27 @@ private[split] abstract class AbstractSplitManager(spark: SparkSession, table: T
     *
     * @return DataFrame
     * */
-  def getDF(splitBy: Column, upper: Long, lower: Long, m: Long): DataFrame
+  protected def getDF(splitBy: Column, upper: Long, lower: Long, m: Long): DataFrame
 
   /**
     * 获取 DataFrame
+    * 使用 Hash 分区
     *
     * @param splitBy 分区字段
     * @param m 并发度
     *
     * @return DataFrame
     * */
-  def getDF(splitBy: Seq[Column], m: Long): DataFrame
+  protected def getDF(splitBy: Seq[Column], m: Long): DataFrame
+
+  /**
+    * 获取 DataFrame
+    * 使用日期分区
+    *
+    * @param splitBy 分区字段
+    *
+    * @return DataFrame
+    * */
+  protected def getDF(splitBy: Column, beginDate: LocalDate): DataFrame
 
 }

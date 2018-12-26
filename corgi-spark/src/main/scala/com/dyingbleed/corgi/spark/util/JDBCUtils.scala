@@ -65,7 +65,7 @@ object JDBCUtils {
     val cs = new ListBuffer[Column]
 
     val metaData = conn.getMetaData
-    val crs = metaData.getColumns(db, null, table, null)
+    val crs = metaData.getColumns(db, db, table, null)
 
     while (crs.next()) {
       val cName = crs.getString(4)
