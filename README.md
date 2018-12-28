@@ -25,9 +25,9 @@ tar -zxf corgi-web.release.tar.gz
 
 #### 配置
 
-首先，将 Hadoop 配置文件 core-site.xml、hdfs-site.xml 和 yarn-site.xml 拷贝到 conf 目录下
+###### 数据源配置 
 
-然后，编辑 application.yml 文件，下面是关键配置说明：
+编辑 application.yml 文件，下面是关键配置说明：
 
 - server.address  服务地址，生产环境建议修改为 0.0.0.0
 - server.port  服务端口号
@@ -35,9 +35,10 @@ tar -zxf corgi-web.release.tar.gz
 - spring.datasource.username  MySQL 数据库连接用户名
 - spring.datasource.password  MySQL 数据库连接密码
 
-最后，编辑 cluster.properties 文件，下面是关键配置说明：
+###### Hive 配置
 
-- hdfs.master.url  主集群 HDFS 地址
+编辑 cluster.properties 文件，下面是关键配置说明：
+
 - hive.master.url  主集群 Hive ThriftServer 地址
 - hive.master.username  主集群 Hive ThriftServer 用户名
 - hive.master.password  主集群 Hive ThriftServer 密码
@@ -58,17 +59,23 @@ sh bin/start-corgi.sh
 sh bin/stop-corgi.sh
 ```
 
+#### 首页
+
+监控当天任务运行情况，如下图所示：
+
+![home](http://cloud.dyingbleed.com/index.php/s/mNPMez2r5r4DSr8/download)
+
 #### 数据源管理
 
-点击菜单【数据源】，进入数据源管理界面，数据源管理界面维护了需要导入的 MySQL 数据库连接信息，如下图所示：
+点击菜单【数据源】，进入数据源管理界面，数据源管理界面维护了需要导入的数据库连接信息，当前支持 MySQL 和 Oracle 数据源。如下图所示：
 
-![datasource](http://oahz6ih7r.bkt.clouddn.com/corgi_datasource.png)
+![datasource](http://cloud.dyingbleed.com/index.php/s/hEIFwsBD09vDZmQ/download)
 
 #### 批量任务管理
 
 点击菜单【批量任务】，进入批量任务管理界面，批量任务管理界面维护了 corgi-spark 任务的配置信息，如下图所示：
 
-![batch](http://oahz6ih7r.bkt.clouddn.com/corgi_batch.png)
+![batch](http://cloud.dyingbleed.com/index.php/s/FCzPeWBzPiSv7M6/download)
 
 配置说明：
 
@@ -105,7 +112,6 @@ mvn clean package -DskipTests
 ```
 spark-submit \
 --master yarn \
---package com.google.inject:guice:4.1.0,com.alibaba:fastjson:1.2.3,mysql:mysql-connector-java:5.1.40 \
 --class com.dyingbleed.corgi.spark.Application 
 --jar spark-web.jar <批量任务名称>
 ```
