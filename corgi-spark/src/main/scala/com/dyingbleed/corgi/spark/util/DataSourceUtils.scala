@@ -12,7 +12,66 @@ import org.joda.time.LocalDate
 object DataSourceUtils {
 
   /**
-    * 强制插入覆盖到表分区
+    * 创建并插入 Hive 表
+    * @param df
+    * @param dbName 数据库名
+    * @param tableName 表名
+    * @param partitionColumns 分区字段
+    * */
+  def createAndInsertHiveTable(df: DataFrame, dbName: String, tableName: String, partitionColumns: Array[String]): Unit = {
+    df.createOrReplaceTempView("sink")
+
+    // 创建表
+    df.sparkSession.sql(
+      s"""
+         |CREATE TABLE IF NOT EXISTS $dbName.$tableName
+         |USING PARQUET
+         |PARTITIONED BY (${partitionColumns.mkString(",")})
+         |AS SELECT * FROM sink
+            """.stripMargin)
+  }
+
+  /**
+    * 创建 Hive 表
+    * @param df
+    * @param dbName 数据库名
+    * @param tableName 表名
+    * @param partitionColumns 分区字段
+    * */
+  def createHiveTable(df: DataFrame, dbName: String, tableName: String, partitionColumns: Array[String]): Unit = {
+    df.createOrReplaceTempView("sink")
+
+    // 创建表
+    df.sparkSession.sql(
+      s"""
+         |CREATE TABLE IF NOT EXISTS $dbName.$tableName
+         |USING PARQUET
+         |PARTITIONED BY (${partitionColumns.mkString(",")})
+         |AS SELECT * FROM sink WHERE 1=0
+            """.stripMargin)
+  }
+
+  /**
+    * 向 Hive 表插入数据
+    * @param df
+    * @param dbName 数据库名
+    * @param tableName 表名
+    * @param partitionColumns 分区字段
+    * */
+  def insertHiveTable(df: DataFrame, dbName: String, tableName: String, partitionColumns: Array[String]): Unit = {
+    df.createOrReplaceTempView("sink")
+
+    // 插入数据
+    df.sparkSession.sql(
+      s"""
+         |INSERT INTO TABLE $dbName.$tableName
+         |PARTITION(${partitionColumns.mkString(",")})
+         |SELECT * FROM sink
+            """.stripMargin)
+  }
+
+  /**
+    * 强制插入覆盖到表
     *
     * @param df
     * @param db

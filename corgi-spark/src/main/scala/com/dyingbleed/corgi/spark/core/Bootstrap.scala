@@ -1,37 +1,33 @@
 package com.dyingbleed.corgi.spark.core
 
-import java.util.Properties
-
 import com.dyingbleed.corgi.spark.annotation.EnableMeasure
+import com.dyingbleed.corgi.spark.ds.el.{MySQLCompleteEL, MySQLIncrementalEL, OracleCompleteEL, OracleIncrementalEL}
+import com.dyingbleed.corgi.spark.ds.{DataSource, DataSourceEL}
 import com.dyingbleed.corgi.spark.measure.MeasureInterceptor
 import com.google.inject.AbstractModule
-import com.google.inject.name.Names
-import com.google.common.base.Preconditions._
 import com.google.inject.matcher.Matchers
+import com.google.inject.name.Names
 import org.apache.spark.sql.SparkSession
+import org.joda.time.LocalDateTime
 
 /**
   * Created by 李震 on 2018/1/9.
   */
-case class AppConf(hiveMetastoreUri: String, apiServer: String)
-
 private[spark] class Bootstrap(args: Array[String]) {
 
-  val appName = args(0)
+  // 加载应用配置
+  val conf: Conf = new Conf(args).init()
 
   def bootstrap(execute: AbstractModule => Unit): Unit = {
 
-    // 加载应用配置
-    val appConf = loadAppConf()
-
     // 配置系统属性
-    System.setProperty("hive.metastore.uris", appConf.hiveMetastoreUri)
+    System.setProperty("hive.metastore.uris", conf.hiveMetastoreUris)
 
     // 初识化 SparkSession
     val spark = if (Bootstrap.debug) {
       val spark = SparkSession.builder()
         .master("local")
-        .appName(appName)
+        .appName(conf.appName)
         .enableHiveSupport()
         .config("hive.exec.dynamic.partition", true) // 支持 Hive 动态分区
         .config("hive.exec.dynamic.partition.mode", "nonstrict")
@@ -45,7 +41,7 @@ private[spark] class Bootstrap(args: Array[String]) {
     } else {
       val spark = SparkSession.builder()
         .master("yarn")
-        .appName(appName)
+        .appName(conf.appName)
         .enableHiveSupport()
         .config("hive.exec.dynamic.partition", true) // 支持 Hive 动态分区
         .config("hive.exec.dynamic.partition.mode", "nonstrict")
@@ -63,9 +59,26 @@ private[spark] class Bootstrap(args: Array[String]) {
 
       override def configure(): Unit = {
         bind(classOf[SparkSession]).toInstance(spark)
-        bind(classOf[String]).annotatedWith(Names.named("appName")).toInstance(appName)
-        bind(classOf[String]).annotatedWith(Names.named("apiServer")).toInstance(appConf.apiServer) // API 服务地址
-        bind(classOf[Conf]) // 配置
+        bind(classOf[String]).annotatedWith(Names.named("appName")).toInstance(conf.appName)
+        bind(classOf[String]).annotatedWith(Names.named("apiServer")).toInstance(conf.apiServer)
+        bind(classOf[LocalDateTime]).annotatedWith(Names.named("executeTime")).toInstance(LocalDateTime.now())
+        bind(classOf[Conf]).toInstance(conf) // 配置
+
+        bind(classOf[DataSource])
+        val elImplClass = if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
+          conf.mode match {
+            case ODSMode.COMPLETE => classOf[MySQLCompleteEL]
+            case ODSMode.UPDATE | ODSMode.APPEND => classOf[MySQLIncrementalEL]
+          }
+        } else if (conf.sourceDbUrl.startsWith("jdbc:oracle:thin")) {
+          conf.mode match {
+            case ODSMode.COMPLETE => classOf[OracleCompleteEL]
+            case ODSMode.UPDATE | ODSMode.APPEND => classOf[OracleIncrementalEL]
+          }
+        } else {
+          throw new RuntimeException("不支持的数据源")
+        }
+        bind(classOf[DataSourceEL]).to(elImplClass)
 
         val measureInterceptor = new MeasureInterceptor
         requestInjection(measureInterceptor)
@@ -81,21 +94,6 @@ private[spark] class Bootstrap(args: Array[String]) {
     } finally {
       spark.close()
     }
-
-  }
-
-  private def loadAppConf(): AppConf = {
-    val properties = new Properties()
-    val propertiesIn = classOf[Bootstrap].getClassLoader.getResourceAsStream("spark.properties")
-    properties.load(propertiesIn)
-    propertiesIn.close()
-
-    val hiveMetastoreUri = properties.getProperty("hive.metastore.uris")
-    checkNotNull(hiveMetastoreUri)
-    val apiServer = properties.getProperty("api.server")
-    checkNotNull(apiServer)
-
-    AppConf(hiveMetastoreUri, apiServer)
   }
 
 }

@@ -1,11 +1,9 @@
 package com.dyingbleed.corgi.spark
 
-import com.dyingbleed.corgi.spark.annotation.{EnableMeasure, MySQLIncrementalSource, OracleIncrementalSource}
+import com.dyingbleed.corgi.spark.annotation.EnableMeasure
 import com.dyingbleed.corgi.spark.core.Bootstrap
-import com.dyingbleed.corgi.spark.ds.el.{CompleteEL, MySQLIncrementalEL, OracleIncrementalEL}
-import com.dyingbleed.corgi.spark.ds.{DataSource, DataSourceEL}
+import com.dyingbleed.corgi.spark.ds.DataSource
 import com.google.inject._
-import com.google.inject.name.Names
 
 /**
   * Created by 李震 on 2018/3/1.
@@ -17,7 +15,7 @@ object Application {
   }
 
   def execute(module: AbstractModule): Unit = {
-    val injector = Guice.createInjector(module, new ApplicationModule)
+    val injector = Guice.createInjector(module)
     injector.getInstance(classOf[Application]).run()
   }
 
@@ -39,23 +37,6 @@ class Application {
     } else {
       dataSource.persistSinkDF(sourceDF)
     }
-  }
-
-}
-
-private class ApplicationModule extends AbstractModule {
-
-  override def configure(): Unit = {
-    bind(classOf[DataSource])
-    bind(classOf[DataSourceEL])
-      .annotatedWith(Names.named("COMPLETE"))
-      .to(classOf[CompleteEL])
-    bind(classOf[DataSourceEL])
-      .annotatedWith(classOf[MySQLIncrementalSource])
-      .to(classOf[MySQLIncrementalEL])
-    bind(classOf[DataSourceEL])
-      .annotatedWith(classOf[OracleIncrementalSource])
-      .to(classOf[OracleIncrementalEL])
   }
 
 }

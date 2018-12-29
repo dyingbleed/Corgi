@@ -5,21 +5,14 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.joda.time.{Days, LocalDate, LocalDateTime, LocalTime}
 
 /**
-  * OracleIncrementalSource 分区管理器
+  * OracleSource 分区管理器
   *
   * Created by 李震 on 2018/9/27.
   */
 private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, executeTime: LocalDateTime) extends AbstractSplitManager(spark, tableMeta) with Logging {
 
   override def getDF(splitBy: Column, upper: Long, lower: Long, m: Long): DataFrame = {
-    val sql = if (tableMeta.tsColumnName.isEmpty) {
-      s"""
-         |(SELECT
-         |	t.*
-         |FROM ${tableMeta.db}.${tableMeta.table} t
-         |) t
-          """.stripMargin
-    } else {
+    val sql = if (tableMeta.tsColumnName.isEmpty) s"${tableMeta.db}.${tableMeta.table}" else {
       val selectExp = tableMeta.columns
         .filter(c => !c.name.equals(tableMeta.tsColumnName.get))
         .map(c => c.name)
@@ -27,13 +20,12 @@ private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, e
 
       s"""
          |(SELECT
-         |	s.*,
-         |	TO_CHAR(s.${tableMeta.tsColumnName.get}, 'yyyy-mm-dd') as ods_date
+         |	s.*
          |FROM (
-         |  select
+         |  SELECT
          |    $selectExp,
          |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
-         |  from ${tableMeta.db}.${tableMeta.table}
+         |  FROM ${tableMeta.db}.${tableMeta.table}
          |) s
          |WHERE s.${tableMeta.tsColumnName.get} < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
          |) t
@@ -47,7 +39,7 @@ private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, e
       .option("dbtable", sql)
       .option("user", tableMeta.username)
       .option("password", tableMeta.password)
-      .option("driver", "oracle.jdbc.OracleDriver")
+      .option("driver", tableMeta.driver)
       .option("partitionColumn", splitBy.name)
       .option("upperBound", upper)
       .option("lowerBound", lower)
@@ -81,13 +73,12 @@ private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, e
 
         s"""
            |(SELECT
-           |	s.*,
-           |	TO_CHAR(s.${tableMeta.tsColumnName.get}, 'yyyy-mm-dd') as ods_date
+           |	s.*
            |FROM (
-           |  select
+           |  SELECT
            |    $selectExp,
            |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
-           |  from ${tableMeta.db}.${tableMeta.table}
+           |  FROM ${tableMeta.db}.${tableMeta.table}
            |) s
            |WHERE s.${tableMeta.tsColumnName.get} < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
            |AND MOD(ORA_HASH($hashExpr), $m) = $mod
@@ -102,7 +93,7 @@ private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, e
         .option("dbtable", sql)
         .option("user", tableMeta.username)
         .option("password", tableMeta.password)
-        .option("driver", "oracle.jdbc.OracleDriver")
+        .option("driver", tableMeta.driver)
         .load()
       if (unionDF == null) {
         unionDF = df
@@ -133,13 +124,12 @@ private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, e
 
       val sql = s"""
          |(SELECT
-         |	s.*,
-         |	TO_CHAR(s.${tableMeta.tsColumnName.get}, 'yyyy-mm-dd') as ods_date
+         |	s.*
          |FROM (
-         |  select
+         |  SELECT
          |    $selectExp,
          |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
-         |  from ${tableMeta.db}.${tableMeta.table}
+         |  FROM ${tableMeta.db}.${tableMeta.table}
          |) s
          |WHERE s.${splitBy.name} >= TO_DATE('${beginDate.plusDays(d).toDateTime(LocalTime.MIDNIGHT).toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
          |AND s.${splitBy.name} < TO_DATE('${beginDate.plusDays(d + 1).toDateTime(LocalTime.MIDNIGHT).toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
@@ -153,7 +143,7 @@ private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, e
         .option("dbtable", sql)
         .option("user", tableMeta.username)
         .option("password", tableMeta.password)
-        .option("driver", "oracle.jdbc.OracleDriver")
+        .option("driver", tableMeta.driver)
         .load()
       if (unionDF == null) {
         unionDF = df

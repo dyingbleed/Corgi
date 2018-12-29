@@ -3,7 +3,6 @@ package com.dyingbleed.corgi.spark.bean
 import java.sql.{Connection, Date, Timestamp}
 
 import com.dyingbleed.corgi.spark.util.JDBCUtils
-import oracle.sql.{DATE, Datum, TIMESTAMP}
 import org.joda.time.LocalDateTime
 
 import scala.util.{Failure, Success, Try}
@@ -38,6 +37,16 @@ case class Table (
       "oracle"
     } else {
       throw new RuntimeException("不支持的数据源")
+    }
+  }
+
+  /**
+    * 驱动类路径
+    * */
+  lazy val driver: String = {
+    vendor match {
+      case "mysql" => "com.mysql.jdbc.Driver"
+      case "oracle" => "oracle.jdbc.OracleDriver"
     }
   }
 
@@ -80,8 +89,6 @@ case class Table (
     val minDateTime = minVal match {
       case t: Timestamp => new LocalDateTime(t)
       case d: Date => new LocalDateTime(d)
-      case ot: TIMESTAMP => new LocalDateTime(ot.timestampValue())
-      case od: DATE => new LocalDateTime(od.dateValue())
       case null => LocalDateTime.now()
       case _ => throw new RuntimeException("不支持的日期时间类型")
     }

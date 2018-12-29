@@ -98,11 +98,11 @@ object JDBCUtils {
     * */
   def getColumnStat(conn: Connection, db: String, table: String, column: String): ColumnStat = {
     val sql = s"""
-         |select
-         |  max($column) as max,
-         |  min($column) as min,
-         |  count(1) as count
-         |from $db.$table
+         |SELECT
+         |  MAX($column) AS max,
+         |  MIN($column) AS min,
+         |  COUNT(1) AS count
+         |FROM $db.$table
     """.stripMargin
     getOne(conn, sql, rs => {
       val max = rs.getObject(1)
@@ -124,10 +124,10 @@ object JDBCUtils {
   def getColumnMax(conn: Connection, db: String, table: String, column: String): Any = {
     val sql =
       s"""
-         |select
-         |  max($column) as max
-         |from $db.$table
-         |where $column is not null
+         |SELECT
+         |  MAX($column) AS max
+         |FROM $db.$table
+         |WHERE $column IS NOT NULL
     """.stripMargin
     getOne(conn, sql, rs => rs.getObject(1))
   }
@@ -144,10 +144,10 @@ object JDBCUtils {
   def getColumnMin(conn: Connection, db: String, table: String, column: String): Any = {
     val sql =
       s"""
-         |select
-         |  min($column) as min
-         |from $db.$table
-         |where $column is not null
+         |SELECT
+         |  MIN($column) AS min
+         |FROM $db.$table
+         |WHERE $column IS NOT NULL
     """.stripMargin
     getOne(conn, sql, rs => rs.getObject(1))
   }
@@ -164,9 +164,9 @@ object JDBCUtils {
   def getCardinality(conn: Connection, db: String, table: String): Long = {
     val sql =
       s"""
-         |select
-         |  count(1) as count
-         |from $db.$table
+         |SELECT
+         |  COUNT(1) AS count
+         |FROM $db.$table
     """.stripMargin
     getOne(conn, sql, rs => rs.getLong(1))
   }
