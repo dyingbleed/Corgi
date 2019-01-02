@@ -3,6 +3,7 @@ package com.dyingbleed.corgi.spark.ds.el
 import java.sql.{Date, Timestamp}
 
 import com.dyingbleed.corgi.spark.bean.Table
+import com.dyingbleed.corgi.spark.core.Constants
 import com.dyingbleed.corgi.spark.ds.DataSourceEL
 import com.dyingbleed.corgi.spark.ds.el.split.SplitManager
 import org.apache.spark.internal.Logging
@@ -58,7 +59,7 @@ private[spark] abstract class IncrementalEL extends DataSourceEL with Logging {
            |SELECT
            |  MAX(t.${conf.sourceTimeColumn}) AS last_execute_time
            |FROM ${conf.sinkDb}.${conf.sinkTable} t
-           |WHERE ods_date = '${executeTime.minusDays(1).toString("yyyy-MM-dd")}'
+           |WHERE ${Constants.DATE_PARTITION} = '${executeTime.minusDays(1).toString(Constants.DATE_FORMAT)}'
       """.stripMargin
       logDebug(s"执行 SQL: $sql")
 
@@ -69,7 +70,7 @@ private[spark] abstract class IncrementalEL extends DataSourceEL with Logging {
         case executeTimestamp: Timestamp =>
           LocalDateTime.fromDateFields(executeTimestamp)
         case executeTimeStr: String =>
-          LocalDateTime.parse(executeTimeStr, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss"))
+          LocalDateTime.parse(executeTimeStr, DateTimeFormat.forPattern(Constants.DATETIME_FORMAT))
         case _ =>
           logError(s"获取最近一次执行时间失败，不支持的时间类型 $lastExecuteTime")
           executeTime.minusDays(1).withTime(0, 0, 0, 0) // 昨天零点零分零秒

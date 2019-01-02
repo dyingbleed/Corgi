@@ -16,7 +16,7 @@ import org.joda.time.LocalDateTime
 private[spark] class Bootstrap(args: Array[String]) {
 
   // 加载应用配置
-  val conf: Conf = new Conf(args).init()
+  val conf: Conf = Conf(args)
 
   def bootstrap(execute: AbstractModule => Unit): Unit = {
 

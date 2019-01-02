@@ -1,7 +1,7 @@
 package com.dyingbleed.corgi.spark.ds
 
 import com.dyingbleed.corgi.spark.bean.Table
-import com.dyingbleed.corgi.spark.core.{Conf, ODSMode}
+import com.dyingbleed.corgi.spark.core.{Conf, Constants, ODSMode}
 import com.dyingbleed.corgi.spark.util.DataSourceUtils
 import com.google.inject.Inject
 import com.google.inject.name.Named
@@ -60,10 +60,14 @@ trait DataSourceEL {
     if (!spark.catalog.tableExists(conf.sinkDb, conf.sinkTable)) {
       val dfWithDatePartition = conf.mode match {
         case ODSMode.COMPLETE => {
-          df.withColumn("ods", lit(executeTime.toString("yyyy-MM-dd")))
+          df.withColumn(Constants.DATE_PARTITION, lit(executeTime.toString(Constants.DATE_FORMAT)))
         }
         case ODSMode.UPDATE | ODSMode.APPEND => {
-          df.withColumn("ods_date", date_format(col(tableMeta.tsColumnName.get), "yyyy-MM-dd"))
+          if (conf.ignoreHistory) {
+            df.withColumn(Constants.DATE_PARTITION, lit(executeTime.toString(Constants.DATE_FORMAT)))
+          } else {
+            df.withColumn(Constants.DATE_PARTITION, date_format(col(tableMeta.tsColumnName.get), Constants.DATE_FORMAT))
+          }
         }
       }
 
@@ -72,9 +76,9 @@ trait DataSourceEL {
       val columns = spark.catalog.listColumns(conf.sinkDb, conf.sinkTable)
         .collect()
         .map(c => c.name)
-        .filter(cn => !"ods_date".equalsIgnoreCase(cn))
+        .filter(cn => !Constants.DATE_PARTITION.equalsIgnoreCase(cn))
         .map(cn => col(cn))
-      val dfWithDatePartition = df.select(columns:_*).withColumn("ods_date", lit(executeTime.toString("yyyy-MM-dd")))
+      val dfWithDatePartition = df.select(columns:_*).withColumn(Constants.DATE_PARTITION, lit(executeTime.toString(Constants.DATE_FORMAT)))
 
       DataSourceUtils.insertHiveTable(dfWithDatePartition, conf.sinkDb, conf.sinkTable, conf.partitionColumns)
     }

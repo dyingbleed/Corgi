@@ -1,5 +1,6 @@
 package com.dyingbleed.corgi.spark.ds.el.split
 import com.dyingbleed.corgi.spark.bean.{Column, Table}
+import com.dyingbleed.corgi.spark.core.Constants
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.joda.time.{Days, LocalDate, LocalDateTime, LocalTime}
@@ -24,10 +25,10 @@ private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, ex
          |FROM (
          |  SELECT
          |    $selectExp,
-         |    IFNULL(${tableMeta.tsColumnName.get}, TIMESTAMP('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}')) AS ${tableMeta.tsColumnName.get}
+         |    IFNULL(${tableMeta.tsColumnName.get}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName.get}
          |  FROM ${tableMeta.db}.${tableMeta.table}
          |) s
-         |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}')
+         |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeTime.toString(Constants.DATETIME_FORMAT)}')
          |) t
           """.stripMargin
     }
@@ -77,10 +78,10 @@ private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, ex
            |FROM (
            |  SELECT
            |    $selectExp,
-           |    IFNULL(${tableMeta.tsColumnName}, TIMESTAMP('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}')) AS ${tableMeta.tsColumnName}
+           |    IFNULL(${tableMeta.tsColumnName}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName}
            |  FROM ${tableMeta.db}.${tableMeta.table}
            |) s
-           |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}')
+           |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeTime.toString(Constants.DATETIME_FORMAT)}')
            |AND MOD(CONV(MD5($hashExpr), 16, 10), $m)
            |) t
           """.stripMargin
@@ -128,11 +129,11 @@ private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, ex
          |FROM (
          |  SELECT
          |    $selectExp,
-         |    IFNULL(${tableMeta.tsColumnName}, TIMESTAMP('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}')) AS ${tableMeta.tsColumnName}
+         |    IFNULL(${tableMeta.tsColumnName}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName}
          |  FROM ${tableMeta.db}.${tableMeta.table}
          |) s
-         |WHERE ${splitBy.name} >= TIMESTAMP('${beginDate.plusDays(d).toDateTime(LocalTime.MIDNIGHT).toString("yyyy-MM-dd HH:mm:ss")}')
-         |AND ${splitBy.name} < TIMESTAMP('${beginDate.plusDays(d + 1).toDateTime(LocalTime.MIDNIGHT).toString("yyyy-MM-dd HH:mm:ss")}')
+         |WHERE ${splitBy.name} >= TIMESTAMP('${beginDate.plusDays(d).toDateTime(LocalTime.MIDNIGHT).toString(Constants.DATETIME_FORMAT)}')
+         |AND ${splitBy.name} < TIMESTAMP('${beginDate.plusDays(d + 1).toDateTime(LocalTime.MIDNIGHT).toString(Constants.DATETIME_FORMAT)}')
          |) t
           """.stripMargin
       logDebug(s"执行 SQL: $sql")

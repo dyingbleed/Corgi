@@ -1,5 +1,6 @@
 package com.dyingbleed.corgi.spark.ds.el.split
 import com.dyingbleed.corgi.spark.bean.{Column, Table}
+import com.dyingbleed.corgi.spark.core.Constants
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.joda.time.{Days, LocalDate, LocalDateTime, LocalTime}
@@ -24,10 +25,10 @@ private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, e
          |FROM (
          |  SELECT
          |    $selectExp,
-         |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
+         |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
          |  FROM ${tableMeta.db}.${tableMeta.table}
          |) s
-         |WHERE s.${tableMeta.tsColumnName.get} < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
+         |WHERE s.${tableMeta.tsColumnName.get} < TO_DATE('${executeTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
          |) t
           """.stripMargin
     }
@@ -77,10 +78,10 @@ private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, e
            |FROM (
            |  SELECT
            |    $selectExp,
-           |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
+           |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
            |  FROM ${tableMeta.db}.${tableMeta.table}
            |) s
-           |WHERE s.${tableMeta.tsColumnName.get} < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
+           |WHERE s.${tableMeta.tsColumnName.get} < TO_DATE('${executeTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
            |AND MOD(ORA_HASH($hashExpr), $m) = $mod
            |) t
         """.stripMargin
@@ -128,11 +129,11 @@ private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, e
          |FROM (
          |  SELECT
          |    $selectExp,
-         |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
+         |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
          |  FROM ${tableMeta.db}.${tableMeta.table}
          |) s
-         |WHERE s.${splitBy.name} >= TO_DATE('${beginDate.plusDays(d).toDateTime(LocalTime.MIDNIGHT).toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
-         |AND s.${splitBy.name} < TO_DATE('${beginDate.plusDays(d + 1).toDateTime(LocalTime.MIDNIGHT).toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
+         |WHERE s.${splitBy.name} >= TO_DATE('${beginDate.plusDays(d).toDateTime(LocalTime.MIDNIGHT).toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+         |AND s.${splitBy.name} < TO_DATE('${beginDate.plusDays(d + 1).toDateTime(LocalTime.MIDNIGHT).toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
          |) t
         """.stripMargin
       logDebug(s"执行 SQL: $sql")

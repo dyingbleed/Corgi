@@ -9,21 +9,30 @@ import org.apache.commons.cli.{GnuParser, Options}
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
+import org.joda.time.LocalTime
+import org.joda.time.format.DateTimeFormat
 
 /**
   * Created by 李震 on 2018/3/1.
   */
-private[spark] class Conf(args: Array[String]) {
+private[spark] final class Conf private (args: Array[String]) {
 
   /* ***************
    * Classpath 配置 *
    * ***************/
+  
   private[this] var _apiServer: String = _
 
   private[this] var _hiveMetastoreUris: String = _
 
+  /**
+    * Corgi Web 服务地址
+    * */
   def apiServer: String = _apiServer
 
+  /**
+    * Hive 元数据服务地址
+    * */
   def hiveMetastoreUris: String = _hiveMetastoreUris
 
   /* *********
@@ -90,55 +99,82 @@ private[spark] class Conf(args: Array[String]) {
   /* *********
    * 本地配置 *
    * *********/
+  
   private[this] var _appName: String = _
 
   private[this] var _ignoreHistory: Boolean = _
 
   private[this] var _partitionColumns: Array[String] = _
+  
+  private[this] var _executeTime: LocalTime = _ 
 
+  /**
+    * 应用名
+    * */
   def appName: String = _appName
 
+  /**
+    * 是否忽略历史
+    * */
   def ignoreHistory: Boolean = _ignoreHistory
 
+  /**
+    * 分区字段
+    * */
   def partitionColumns: Array[String] = _partitionColumns
 
-  /* *********
-   * 公共方法 *
-   * *********/
+  /**
+    * 自定义执行时间
+    * */
+  def executeTime: LocalTime = _executeTime
 
-  def init(): Conf = {
-    loadArgsConf()
-    loadClasspathJobConf()
-    loadRemoteAppConf()
+  /* *****
+   * 方法 *
+   * *****/
+
+  private def init(): Conf = {
+    initArgsConf()
+    initClasspathJobConf()
+    initRemoteAppConf()
 
     this
   }
 
-  private def loadArgsConf(): Unit = {
+  private def initArgsConf(): Unit = {
     val options = new Options
 
     // 忽略历史数据
-    options.addOption("ig", false, "Ignore history data")
+    options.addOption(Constants.CONF_IGNORE_HISTORY, false, "Ignore history data")
     // 分区字段
-    options.addOption("p", true, "Hive table partition columns")
+    options.addOption(Constants.CONF_PARTITION_COLUMNS, true, "Hive table partition columns")
+    // 执行时间
+    options.addOption(Constants.CONF_EXECUTE_TIME, true, "Customize execute time")
 
     val optionParser = new GnuParser
     val commandLine = optionParser.parse(options, args)
 
     _appName = commandLine.getArgs.last
 
-    _ignoreHistory = commandLine.hasOption("ig")
+    _ignoreHistory = commandLine.hasOption(Constants.CONF_IGNORE_HISTORY)
 
     _partitionColumns = {
-      if (commandLine.hasOption("p")) {
-        Array("ods_date") ++ commandLine.getOptionValue("p", "").split(",")
+      if (commandLine.hasOption(Constants.CONF_PARTITION_COLUMNS)) {
+        Array(Constants.DATE_PARTITION) ++ commandLine.getOptionValue(Constants.CONF_PARTITION_COLUMNS, "").split(",")
       } else {
-        Array("ods_date")
+        Array(Constants.DATE_PARTITION)
+      }
+    }
+    
+    _executeTime = {
+      if (commandLine.hasOption(Constants.CONF_PARTITION_COLUMNS)) {
+        LocalTime.parse(commandLine.getOptionValue(Constants.CONF_PARTITION_COLUMNS), DateTimeFormat.forPattern(Constants.TIME_FORMAT))
+      } else {
+        null
       }
     }
   }
 
-  private def loadClasspathJobConf(): Unit = {
+  private def initClasspathJobConf(): Unit = {
     val properties = new Properties()
     val propertiesIn = classOf[Conf].getClassLoader.getResourceAsStream("spark.properties")
     properties.load(propertiesIn)
@@ -153,7 +189,7 @@ private[spark] class Conf(args: Array[String]) {
     _hiveMetastoreUris = hiveMetastoreUris
   }
 
-  private def loadRemoteAppConf(): Unit = {
+  private def initRemoteAppConf(): Unit = {
     val httpClient = HttpClients.createDefault()
     val httpGet = new HttpGet("http://" + _apiServer + "/api/conf?name=" + _appName)
     val httpResponse = httpClient.execute(httpGet)
@@ -170,4 +206,14 @@ private[spark] class Conf(args: Array[String]) {
       throw new RuntimeException("调用批处理任务接口返回 " + statusCode)
     }
   }
+}
+
+object Conf {
+
+  def apply(args: Array[String]): Conf = {
+    val conf = new Conf(args)
+    conf.init()
+    conf
+  }
+
 }

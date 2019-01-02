@@ -1,5 +1,6 @@
 package com.dyingbleed.corgi.spark.ds.el
 import com.dyingbleed.corgi.spark.bean.Table
+import com.dyingbleed.corgi.spark.core.Constants
 
 /**
   * Created by 李震 on 2018/10/10.
@@ -14,9 +15,9 @@ private[spark] class OracleIncrementalEL extends IncrementalEL {
     s"""
        |(SELECT
        |  $selectExp,
-       |  NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
+       |  NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
        |FROM ${tableMeta.db}.${tableMeta.table}
-       |WHERE ${tableMeta.tsColumnName.get} < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
+       |WHERE ${tableMeta.tsColumnName.get} < TO_DATE('${executeTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
        |) t
        """.stripMargin
   }
@@ -26,8 +27,8 @@ private[spark] class OracleIncrementalEL extends IncrementalEL {
        |(SELECT
        |  *
        |FROM ${conf.sourceDb}.${conf.sourceTable}
-       |WHERE ${conf.sourceTimeColumn} > TO_DATE('${getLastExecuteTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
-       |AND ${conf.sourceTimeColumn} < TO_DATE('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}', 'yyyy-mm-dd hh24:mi:ss')
+       |WHERE ${conf.sourceTimeColumn} > TO_DATE('${getLastExecuteTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+       |AND ${conf.sourceTimeColumn} < TO_DATE('${executeTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
        |) t
        """.stripMargin
   }

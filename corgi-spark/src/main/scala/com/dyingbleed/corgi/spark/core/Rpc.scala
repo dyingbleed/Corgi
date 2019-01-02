@@ -21,8 +21,8 @@ private[spark] class Rpc @Inject()(@Named("appName") appName: String, @Named("ap
     val httpPut = new HttpPut("http://" + apiServer + "/api/measure")
     val params = List(
       new BasicNameValuePair("name", measure.name),
-      new BasicNameValuePair("submissionTime", measure.submissionTime.toString("yyyy-MM-dd HH:mm:ss")),
-      new BasicNameValuePair("completionTime", measure.completionTime.toString("yyyy-MM-dd HH:mm:ss")),
+      new BasicNameValuePair("submissionTime", measure.submissionTime.toString(Constants.DATETIME_FORMAT)),
+      new BasicNameValuePair("completionTime", measure.completionTime.toString(Constants.DATETIME_FORMAT)),
       new BasicNameValuePair("elapsedSeconds", measure.elapsedSeconds.toString),
       new BasicNameValuePair("inputRows", measure.inputRows.toString),
       new BasicNameValuePair("inputData", measure.inputData.toString),

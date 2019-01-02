@@ -1,5 +1,6 @@
 package com.dyingbleed.corgi.spark.ds.el
 import com.dyingbleed.corgi.spark.bean.Table
+import com.dyingbleed.corgi.spark.core.Constants
 
 /**
   * Created by 李震 on 2018/10/10.
@@ -14,9 +15,9 @@ private[spark] class MySQLIncrementalEL extends IncrementalEL {
     s"""
        |(SELECT
        |  $selectExr,
-       |  IFNULL(${tableMeta.tsColumnName.get}, TIMESTAMP('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}')) AS ${tableMeta.tsColumnName.get}
+       |  IFNULL(${tableMeta.tsColumnName.get}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName.get}
        |FROM ${tableMeta.db}.${tableMeta.table}
-       |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}')
+       |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeTime.toString(Constants.DATETIME_FORMAT)}')
        |) t
        """.stripMargin
   }
@@ -26,8 +27,8 @@ private[spark] class MySQLIncrementalEL extends IncrementalEL {
        |(SELECT
        |  *
        |FROM ${tableMeta.db}.${tableMeta.table}
-       |WHERE ${tableMeta.tsColumnName.get} > TIMESTAMP('${getLastExecuteTime.toString("yyyy-MM-dd HH:mm:ss")}')
-       |AND ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}')
+       |WHERE ${tableMeta.tsColumnName.get} > TIMESTAMP('${getLastExecuteTime.toString(Constants.DATETIME_FORMAT)}')
+       |AND ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeTime.toString(Constants.DATETIME_FORMAT)}')
        |) t
        """.stripMargin
   }

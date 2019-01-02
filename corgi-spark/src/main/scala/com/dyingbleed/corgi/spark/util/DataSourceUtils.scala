@@ -1,5 +1,6 @@
 package com.dyingbleed.corgi.spark.util
 
+import com.dyingbleed.corgi.spark.core.Constants
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hive.conf.HiveConf
 import org.apache.hadoop.hive.ql.metadata.{Hive, Table}
@@ -84,7 +85,7 @@ object DataSourceUtils {
     val location = tableMeta.getDataLocation
     val partitionColumnName = getPartColName(tableMeta)
 
-    val path = s"$location/$partitionColumnName=${date.toString("yyyy-MM-dd")}"
+    val path = s"$location/$partitionColumnName=${date.toString(Constants.DATE_FORMAT)}"
     df.write.mode(SaveMode.Overwrite).parquet(path)
   })
 
