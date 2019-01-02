@@ -1,66 +1,35 @@
 package com.dyingbleed.corgi.spark.ds.el
 import com.dyingbleed.corgi.spark.bean.Table
-import org.apache.spark.sql.DataFrame
+import com.dyingbleed.corgi.spark.core.Constants
 
 /**
   * Created by 李震 on 2018/10/10.
   */
-class MySQLIncrementalEL extends IncrementalEL {
-  /**
-    * 加载全量源数据
-    **/
-  override protected def loadAllSourceDF(tableMeta: Table): DataFrame = {
+private[spark] class MySQLIncrementalEL extends IncrementalEL {
+
+  override protected def historySQL(tableMeta: Table): String = {
     val selectExr = tableMeta.columns
       .filter(c => c.name.equals(tableMeta.tsColumnName.get))
       .map(c => c.name).mkString(",")
 
-    val sql =
-      s"""
-         |(select
-         |  *, date(${tableMeta.tsColumnName.get}) as ods_date
-         |from (
-         |  select
-         |    $selectExr,
-         |    ifnull(${tableMeta.tsColumnName.get}, timestamp('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}')) as ${tableMeta.tsColumnName.get}
-         |  from ${tableMeta.db}.${tableMeta.table}
-         |) s
-         |where ${tableMeta.tsColumnName.get} < timestamp('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}')
-         |) t
-         """.stripMargin
-    logDebug(s"执行 SQL：$sql")
-
-    spark.read
-      .format("jdbc")
-      .option("url", tableMeta.url)
-      .option("dbtable", sql)
-      .option("user", tableMeta.username)
-      .option("password", tableMeta.password)
-      .option("driver", "com.mysql.jdbc.Driver")
-      .load()
+    s"""
+       |(SELECT
+       |  $selectExr,
+       |  IFNULL(${tableMeta.tsColumnName.get}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName.get}
+       |FROM ${tableMeta.db}.${tableMeta.table}
+       |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeTime.toString(Constants.DATETIME_FORMAT)}')
+       |) t
+       """.stripMargin
   }
 
-  /**
-    * 加载增量源数据
-    **/
-  override protected def loadIncrementalSourceDF(tableMeta: Table): DataFrame = {
-    val sql =
-      s"""
-         |(select
-         |  *
-         |from ${tableMeta.db}.${tableMeta.table}
-         |where ${tableMeta.tsColumnName.get} > timestamp('${getLastExecuteTime.toString("yyyy-MM-dd HH:mm:ss")}')
-         |and ${tableMeta.tsColumnName.get} < timestamp('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}')
-         |) t
-         """.stripMargin
-    logDebug(s"执行 SQL：$sql")
-
-    spark.read
-      .format("jdbc")
-      .option("url", conf.sourceDbUrl)
-      .option("dbtable", sql)
-      .option("user", conf.sourceDbUser)
-      .option("password", conf.sourceDbPassword)
-      .option("driver", "com.mysql.jdbc.Driver")
-      .load()
+  override protected def incrementalSQL(tableMeta: Table): String = {
+    s"""
+       |(SELECT
+       |  *
+       |FROM ${tableMeta.db}.${tableMeta.table}
+       |WHERE ${tableMeta.tsColumnName.get} > TIMESTAMP('${getLastExecuteTime.toString(Constants.DATETIME_FORMAT)}')
+       |AND ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeTime.toString(Constants.DATETIME_FORMAT)}')
+       |) t
+       """.stripMargin
   }
 }

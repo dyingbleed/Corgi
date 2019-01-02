@@ -16,7 +16,7 @@
         <guice.version>4.1.0</guice.version>
         <fastjson.version>1.2.24</fastjson.version>
         <mysql.connector.version>5.1.40</mysql.connector.version>
-        <oracle.driver.version>10.2.0.3.0</oracle.driver.version>
+        <oracle.driver.version>11.2.0.4</oracle.driver.version>
     </properties>
 
     <dependencies>
@@ -47,8 +47,10 @@
         <!-- oracle -->
         <dependency>
             <groupId>com.oracle</groupId>
-            <artifactId>ojdbc14</artifactId>
+            <artifactId>ojdbc6</artifactId>
             <version>${oracle.driver.version}</version>
+            <systemPath>${project.basedir}/../lib/ojdbc6.jar</systemPath>
+            <scope>system</scope>
         </dependency>
     </dependencies>
 

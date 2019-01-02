@@ -1,35 +1,34 @@
 package com.dyingbleed.corgi.spark.ds.el.split
 import com.dyingbleed.corgi.spark.bean.{Column, Table}
+import com.dyingbleed.corgi.spark.core.Constants
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.joda.time.{Days, LocalDate, LocalDateTime, LocalTime}
 
 /**
-  * MySQLIncrementalSource 分区管理器
+  * MySQLSource 分区管理器
   *
   * Created by 李震 on 2018/9/27.
   */
 private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, executeTime: LocalDateTime) extends AbstractSplitManager(spark, tableMeta)  with Logging {
 
   override def getDF(splitBy: Column, upper: Long, lower: Long, m: Long): DataFrame = {
-    val sql = if (tableMeta.tsColumnName.isEmpty) {
-      s"${tableMeta.db}.${tableMeta.table}"
-    } else {
+    val sql = if (tableMeta.tsColumnName.isEmpty) s"${tableMeta.db}.${tableMeta.table}" else {
       val selectExp = tableMeta.columns
         .filter(c => !c.name.equals(tableMeta.tsColumnName.get))
         .map(c => c.name)
         .mkString(",")
 
       s"""
-         |(select
-         |  *, date(${tableMeta.tsColumnName.get}) as ods_date
-         |from (
-         |  select
+         |(SELECT
+         |  *
+         |FROM (
+         |  SELECT
          |    $selectExp,
-         |    ifnull(${tableMeta.tsColumnName.get}, timestamp('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}')) as ${tableMeta.tsColumnName.get}
-         |  from ${tableMeta.db}.${tableMeta.table}
+         |    IFNULL(${tableMeta.tsColumnName.get}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName.get}
+         |  FROM ${tableMeta.db}.${tableMeta.table}
          |) s
-         |where ${tableMeta.tsColumnName.get} < timestamp('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}')
+         |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeTime.toString(Constants.DATETIME_FORMAT)}')
          |) t
           """.stripMargin
     }
@@ -41,7 +40,7 @@ private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, ex
       .option("dbtable", sql)
       .option("user", tableMeta.username)
       .option("password", tableMeta.password)
-      .option("driver", "com.mysql.jdbc.Driver")
+      .option("driver", tableMeta.driver)
       .option("partitionColumn", splitBy.name)
       .option("upperBound", upper)
       .option("lowerBound", lower)
@@ -61,10 +60,10 @@ private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, ex
 
       val sql = if (tableMeta.tsColumnName.isEmpty) {
         s"""
-           |(select
+           |(SELECT
            |  *
-           |from ${tableMeta.db}.${tableMeta.table}
-           |where mod(conv(md5($hashExpr), 16, 10), $m)
+           |FROM ${tableMeta.db}.${tableMeta.table}
+           |WHERE MOD(CONV(MD5($hashExpr), 16, 10), $m)
            |) t
           """.stripMargin
       } else {
@@ -74,16 +73,16 @@ private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, ex
           .mkString(",")
 
         s"""
-           |(select
-           |  *, date(${tableMeta.tsColumnName.get}) as ods_date
-           |from (
-           |  select
+           |(SELECT
+           |  *
+           |FROM (
+           |  SELECT
            |    $selectExp,
-           |    ifnull(${tableMeta.tsColumnName}, timestamp('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}')) as ${tableMeta.tsColumnName}
-           |  from ${tableMeta.db}.${tableMeta.table}
+           |    IFNULL(${tableMeta.tsColumnName}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName}
+           |  FROM ${tableMeta.db}.${tableMeta.table}
            |) s
-           |where ${tableMeta.tsColumnName.get} < timestamp('${executeTime.toString("yyyy-MM-dd HH:mm:ss")}')
-           |and mod(conv(md5($hashExpr), 16, 10), $m)
+           |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeTime.toString(Constants.DATETIME_FORMAT)}')
+           |AND MOD(CONV(MD5($hashExpr), 16, 10), $m)
            |) t
           """.stripMargin
       }
@@ -95,7 +94,7 @@ private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, ex
         .option("dbtable", sql)
         .option("user", tableMeta.username)
         .option("password", tableMeta.password)
-        .option("driver", "com.mysql.jdbc.Driver")
+        .option("driver", tableMeta.driver)
         .load()
       if (unionDF == null) {
         unionDF = df
@@ -125,16 +124,16 @@ private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, ex
         .mkString(",")
 
       val sql = s"""
-         |(select
-         |  *, date(${tableMeta.tsColumnName.get}) as ods_date
-         |from (
-         |  select
+         |(SELECT
+         |  *
+         |FROM (
+         |  SELECT
          |    $selectExp,
-         |    ifnull(${tableMeta.tsColumnName}, timestamp('${tableMeta.tsDefaultVal.toString("yyyy-MM-dd HH:mm:ss")}')) as ${tableMeta.tsColumnName}
-         |  from ${tableMeta.db}.${tableMeta.table}
+         |    IFNULL(${tableMeta.tsColumnName}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName}
+         |  FROM ${tableMeta.db}.${tableMeta.table}
          |) s
-         |where ${splitBy.name} >= timestamp('${beginDate.plusDays(d).toDateTime(LocalTime.MIDNIGHT).toString("yyyy-MM-dd HH:mm:ss")}')
-         |and ${splitBy.name} < timestamp('${beginDate.plusDays(d + 1).toDateTime(LocalTime.MIDNIGHT).toString("yyyy-MM-dd HH:mm:ss")}')
+         |WHERE ${splitBy.name} >= TIMESTAMP('${beginDate.plusDays(d).toDateTime(LocalTime.MIDNIGHT).toString(Constants.DATETIME_FORMAT)}')
+         |AND ${splitBy.name} < TIMESTAMP('${beginDate.plusDays(d + 1).toDateTime(LocalTime.MIDNIGHT).toString(Constants.DATETIME_FORMAT)}')
          |) t
           """.stripMargin
       logDebug(s"执行 SQL: $sql")
@@ -145,7 +144,7 @@ private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, ex
         .option("dbtable", sql)
         .option("user", tableMeta.username)
         .option("password", tableMeta.password)
-        .option("driver", "com.mysql.jdbc.Driver")
+        .option("driver", tableMeta.driver)
         .load()
       if (unionDF == null) {
         unionDF = df
