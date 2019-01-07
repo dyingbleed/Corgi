@@ -10,7 +10,7 @@ import org.joda.time.{Days, LocalDate, LocalDateTime, LocalTime}
   *
   * Created by 李震 on 2018/9/27.
   */
-private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, executeTime: LocalDateTime) extends AbstractSplitManager(spark, tableMeta) with Logging {
+private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, executeDateTime: LocalDateTime) extends AbstractSplitManager(spark, tableMeta) with Logging {
 
   override def getDF(splitBy: Column, upper: Long, lower: Long, m: Long): DataFrame = {
     val sql = if (tableMeta.tsColumnName.isEmpty) s"${tableMeta.db}.${tableMeta.table}" else {
@@ -28,7 +28,7 @@ private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, e
          |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
          |  FROM ${tableMeta.db}.${tableMeta.table}
          |) s
-         |WHERE s.${tableMeta.tsColumnName.get} < TO_DATE('${executeTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+         |WHERE s.${tableMeta.tsColumnName.get} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
          |) t
           """.stripMargin
     }
@@ -81,7 +81,7 @@ private[split] class OracleSplitManager(spark: SparkSession, tableMeta: Table, e
            |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
            |  FROM ${tableMeta.db}.${tableMeta.table}
            |) s
-           |WHERE s.${tableMeta.tsColumnName.get} < TO_DATE('${executeTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+           |WHERE s.${tableMeta.tsColumnName.get} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
            |AND MOD(ORA_HASH($hashExpr), $m) = $mod
            |) t
         """.stripMargin

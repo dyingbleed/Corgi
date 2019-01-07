@@ -106,7 +106,7 @@ private[spark] final class Conf private (args: Array[String]) {
 
   private[this] var _partitionColumns: Array[String] = _
   
-  private[this] var _executeTime: LocalTime = _ 
+  private[this] var _executeTime: Option[LocalTime] = _
 
   /**
     * 应用名
@@ -126,7 +126,7 @@ private[spark] final class Conf private (args: Array[String]) {
   /**
     * 自定义执行时间
     * */
-  def executeTime: LocalTime = _executeTime
+  def executeTime: Option[LocalTime] = _executeTime
 
   /* *****
    * 方法 *
@@ -144,21 +144,21 @@ private[spark] final class Conf private (args: Array[String]) {
     val options = new Options
 
     // 忽略历史数据
-    options.addOption(Constants.CONF_IGNORE_HISTORY, false, "Ignore history data")
+    options.addOption(Constants.CONF_IGNORE_HISTORY_SHORT, Constants.CONF_EXECUTE_TIME, false, "Ignore history data")
     // 分区字段
-    options.addOption(Constants.CONF_PARTITION_COLUMNS, true, "Hive table partition columns")
+    options.addOption(Constants.CONF_PARTITION_COLUMNS_SHORT, Constants.CONF_PARTITION_COLUMNS, true, "Hive table partition columns")
     // 执行时间
-    options.addOption(Constants.CONF_EXECUTE_TIME, true, "Customize execute time")
+    options.addOption(Constants.CONF_EXECUTE_TIME_SHORT, Constants.CONF_EXECUTE_TIME, true, "Customize execute time")
 
     val optionParser = new GnuParser
     val commandLine = optionParser.parse(options, args)
 
     _appName = commandLine.getArgs.last
 
-    _ignoreHistory = commandLine.hasOption(Constants.CONF_IGNORE_HISTORY)
+    _ignoreHistory = commandLine.hasOption(Constants.CONF_IGNORE_HISTORY_SHORT) || commandLine.hasOption(Constants.CONF_IGNORE_HISTORY)
 
     _partitionColumns = {
-      if (commandLine.hasOption(Constants.CONF_PARTITION_COLUMNS)) {
+      if (commandLine.hasOption(Constants.CONF_PARTITION_COLUMNS_SHORT) || commandLine.hasOption(Constants.CONF_PARTITION_COLUMNS)) {
         Array(Constants.DATE_PARTITION) ++ commandLine.getOptionValue(Constants.CONF_PARTITION_COLUMNS, "").split(",")
       } else {
         Array(Constants.DATE_PARTITION)
@@ -166,10 +166,10 @@ private[spark] final class Conf private (args: Array[String]) {
     }
     
     _executeTime = {
-      if (commandLine.hasOption(Constants.CONF_PARTITION_COLUMNS)) {
-        LocalTime.parse(commandLine.getOptionValue(Constants.CONF_PARTITION_COLUMNS), DateTimeFormat.forPattern(Constants.TIME_FORMAT))
+      if (commandLine.hasOption(Constants.CONF_EXECUTE_TIME_SHORT) || commandLine.hasOption(Constants.CONF_EXECUTE_TIME)) {
+        Option(LocalTime.parse(commandLine.getOptionValue(Constants.CONF_EXECUTE_TIME), DateTimeFormat.forPattern(Constants.TIME_FORMAT)))
       } else {
-        null
+        None
       }
     }
   }

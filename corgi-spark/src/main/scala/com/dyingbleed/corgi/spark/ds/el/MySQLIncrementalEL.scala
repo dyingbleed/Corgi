@@ -17,7 +17,7 @@ private[spark] class MySQLIncrementalEL extends IncrementalEL {
        |  $selectExr,
        |  IFNULL(${tableMeta.tsColumnName.get}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName.get}
        |FROM ${tableMeta.db}.${tableMeta.table}
-       |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeTime.toString(Constants.DATETIME_FORMAT)}')
+       |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}')
        |) t
        """.stripMargin
   }
@@ -28,7 +28,7 @@ private[spark] class MySQLIncrementalEL extends IncrementalEL {
        |  *
        |FROM ${tableMeta.db}.${tableMeta.table}
        |WHERE ${tableMeta.tsColumnName.get} > TIMESTAMP('${getLastExecuteTime.toString(Constants.DATETIME_FORMAT)}')
-       |AND ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeTime.toString(Constants.DATETIME_FORMAT)}')
+       |AND ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}')
        |) t
        """.stripMargin
   }

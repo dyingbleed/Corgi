@@ -28,8 +28,8 @@ trait DataSourceEL {
   }
 
   @Inject
-  @Named("executeTime")
-  var executeTime: LocalDateTime = _
+  @Named("executeDateTime")
+  var executeDateTime: LocalDateTime = _
 
   protected var tableMeta: Table = _
 
@@ -60,11 +60,11 @@ trait DataSourceEL {
     if (!spark.catalog.tableExists(conf.sinkDb, conf.sinkTable)) {
       val dfWithDatePartition = conf.mode match {
         case ODSMode.COMPLETE => {
-          df.withColumn(Constants.DATE_PARTITION, lit(executeTime.toString(Constants.DATE_FORMAT)))
+          df.withColumn(Constants.DATE_PARTITION, lit(executeDateTime.toString(Constants.DATE_FORMAT)))
         }
         case ODSMode.UPDATE | ODSMode.APPEND => {
           if (conf.ignoreHistory) {
-            df.withColumn(Constants.DATE_PARTITION, lit(executeTime.toString(Constants.DATE_FORMAT)))
+            df.withColumn(Constants.DATE_PARTITION, lit(executeDateTime.toString(Constants.DATE_FORMAT)))
           } else {
             df.withColumn(Constants.DATE_PARTITION, date_format(col(tableMeta.tsColumnName.get), Constants.DATE_FORMAT))
           }
@@ -78,7 +78,7 @@ trait DataSourceEL {
         .map(c => c.name)
         .filter(cn => !Constants.DATE_PARTITION.equalsIgnoreCase(cn))
         .map(cn => col(cn))
-      val dfWithDatePartition = df.select(columns:_*).withColumn(Constants.DATE_PARTITION, lit(executeTime.toString(Constants.DATE_FORMAT)))
+      val dfWithDatePartition = df.select(columns:_*).withColumn(Constants.DATE_PARTITION, lit(executeDateTime.toString(Constants.DATE_FORMAT)))
 
       DataSourceUtils.insertHiveTable(dfWithDatePartition, conf.sinkDb, conf.sinkTable, conf.partitionColumns)
     }

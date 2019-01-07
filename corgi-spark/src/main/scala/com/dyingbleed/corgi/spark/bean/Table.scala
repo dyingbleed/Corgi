@@ -89,6 +89,8 @@ case class Table (
     val minDateTime = minVal match {
       case t: Timestamp => new LocalDateTime(t)
       case d: Date => new LocalDateTime(d)
+      case ot: oracle.sql.TIMESTAMP => new LocalDateTime(ot.timestampValue())
+      case od: oracle.sql.DATE => new LocalDateTime(od.dateValue())
       case null => LocalDateTime.now()
       case _ => throw new RuntimeException("不支持的日期时间类型")
     }
