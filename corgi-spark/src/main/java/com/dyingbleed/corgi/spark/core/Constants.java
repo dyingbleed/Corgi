@@ -8,11 +8,14 @@ public interface Constants {
     /*
      * 参数配置
      * */
-    String CONF_IGNORE_HISTORY = "ig";
+    String CONF_IGNORE_HISTORY_SHORT = "i";
+    String CONF_IGNORE_HISTORY = "ignore-history";
 
-    String CONF_PARTITION_COLUMNS = "p";
+    String CONF_PARTITION_COLUMNS_SHORT = "p";
+    String CONF_PARTITION_COLUMNS = "partition-columns";
 
-    String CONF_EXECUTE_TIME = "et";
+    String CONF_EXECUTE_TIME_SHORT = "t";
+    String CONF_EXECUTE_TIME = "execute-time";
 
     /*
      * 公共变量

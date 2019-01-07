@@ -25,7 +25,7 @@ private[spark] abstract class IncrementalEL extends DataSourceEL with Logging {
     if (!spark.catalog.tableExists(conf.sinkDb, conf.sinkTable) && !conf.ignoreHistory) {
       // 全量
       logInfo(s"加载全量数据 ${conf.sinkDb}.${conf.sinkTable}")
-      val splitManager = SplitManager(spark, tableMeta, executeTime)
+      val splitManager = SplitManager(spark, tableMeta, executeDateTime)
       if (splitManager.canSplit) {
         logDebug("数据可以分片")
         splitManager.loadDF
@@ -51,29 +51,33 @@ private[spark] abstract class IncrementalEL extends DataSourceEL with Logging {
   protected def incrementalSQL(tableMeta: Table): String
 
   protected def getLastExecuteTime: LocalDateTime = {
-    if (!spark.catalog.tableExists(conf.sinkDb, conf.sinkTable)) {
-      executeTime.minusDays(1).withTime(0, 0, 0, 0) // 昨天零点零分零秒
+    if (conf.executeTime.isDefined) {
+      executeDateTime.minusDays(1)
     } else {
-      val sql =
-        s"""
-           |SELECT
-           |  MAX(t.${conf.sourceTimeColumn}) AS last_execute_time
-           |FROM ${conf.sinkDb}.${conf.sinkTable} t
-           |WHERE ${Constants.DATE_PARTITION} = '${executeTime.minusDays(1).toString(Constants.DATE_FORMAT)}'
+      if (!spark.catalog.tableExists(conf.sinkDb, conf.sinkTable)) {
+        executeDateTime.minusDays(1).withTime(0, 0, 0, 0) // 昨天零点零分零秒
+      } else {
+        val sql =
+          s"""
+             |SELECT
+             |  MAX(t.${conf.sourceTimeColumn}) AS last_execute_time
+             |FROM ${conf.sinkDb}.${conf.sinkTable} t
+             |WHERE ${Constants.DATE_PARTITION} = '${executeDateTime.minusDays(1).toString(Constants.DATE_FORMAT)}'
       """.stripMargin
-      logDebug(s"执行 SQL: $sql")
+        logDebug(s"执行 SQL: $sql")
 
-      val lastExecuteTime = spark.sql(sql).collect()(0).get(0)
-      lastExecuteTime match {
-        case exeuteDate: Date =>
-          LocalDateTime.fromDateFields(exeuteDate)
-        case executeTimestamp: Timestamp =>
-          LocalDateTime.fromDateFields(executeTimestamp)
-        case executeTimeStr: String =>
-          LocalDateTime.parse(executeTimeStr, DateTimeFormat.forPattern(Constants.DATETIME_FORMAT))
-        case _ =>
-          logError(s"获取最近一次执行时间失败，不支持的时间类型 $lastExecuteTime")
-          executeTime.minusDays(1).withTime(0, 0, 0, 0) // 昨天零点零分零秒
+        val lastExecuteTime = spark.sql(sql).collect()(0).get(0)
+        lastExecuteTime match {
+          case d: Date =>
+            LocalDateTime.fromDateFields(d)
+          case t: Timestamp =>
+            LocalDateTime.fromDateFields(t)
+          case s: String =>
+            LocalDateTime.parse(s, DateTimeFormat.forPattern(Constants.DATETIME_FORMAT))
+          case _ =>
+            logError(s"获取最近一次执行时间失败，不支持的时间类型 $lastExecuteTime")
+            executeDateTime.minusDays(1).withTime(0, 0, 0, 0) // 昨天零点零分零秒
+        }
       }
     }
   }

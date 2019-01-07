@@ -17,7 +17,7 @@ private[spark] class OracleIncrementalEL extends IncrementalEL {
        |  $selectExp,
        |  NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
        |FROM ${tableMeta.db}.${tableMeta.table}
-       |WHERE ${tableMeta.tsColumnName.get} < TO_DATE('${executeTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+       |WHERE ${tableMeta.tsColumnName.get} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
        |) t
        """.stripMargin
   }
@@ -28,7 +28,7 @@ private[spark] class OracleIncrementalEL extends IncrementalEL {
        |  *
        |FROM ${conf.sourceDb}.${conf.sourceTable}
        |WHERE ${conf.sourceTimeColumn} > TO_DATE('${getLastExecuteTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
-       |AND ${conf.sourceTimeColumn} < TO_DATE('${executeTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+       |AND ${conf.sourceTimeColumn} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
        |) t
        """.stripMargin
   }

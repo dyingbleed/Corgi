@@ -31,10 +31,10 @@ trait SplitManager {
 
 object SplitManager {
 
-  def apply(spark: SparkSession, table: Table, executeTime: LocalDateTime): SplitManager = {
+  def apply(spark: SparkSession, table: Table, executeDateTime: LocalDateTime): SplitManager = {
     table.vendor match {
-      case "mysql" => new MySQLSplitManager(spark, table, executeTime)
-      case "oracle" => new OracleSplitManager(spark, table, executeTime)
+      case "mysql" => new MySQLSplitManager(spark, table, executeDateTime)
+      case "oracle" => new OracleSplitManager(spark, table, executeDateTime)
     }
   }
 

@@ -10,7 +10,7 @@ import org.joda.time.{Days, LocalDate, LocalDateTime, LocalTime}
   *
   * Created by 李震 on 2018/9/27.
   */
-private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, executeTime: LocalDateTime) extends AbstractSplitManager(spark, tableMeta)  with Logging {
+private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, executeDateTime: LocalDateTime) extends AbstractSplitManager(spark, tableMeta)  with Logging {
 
   override def getDF(splitBy: Column, upper: Long, lower: Long, m: Long): DataFrame = {
     val sql = if (tableMeta.tsColumnName.isEmpty) s"${tableMeta.db}.${tableMeta.table}" else {
@@ -28,7 +28,7 @@ private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, ex
          |    IFNULL(${tableMeta.tsColumnName.get}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName.get}
          |  FROM ${tableMeta.db}.${tableMeta.table}
          |) s
-         |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeTime.toString(Constants.DATETIME_FORMAT)}')
+         |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}')
          |) t
           """.stripMargin
     }
@@ -81,7 +81,7 @@ private[split] class MySQLSplitManager(spark: SparkSession, tableMeta: Table, ex
            |    IFNULL(${tableMeta.tsColumnName}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName}
            |  FROM ${tableMeta.db}.${tableMeta.table}
            |) s
-           |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeTime.toString(Constants.DATETIME_FORMAT)}')
+           |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}')
            |AND MOD(CONV(MD5($hashExpr), 16, 10), $m)
            |) t
           """.stripMargin

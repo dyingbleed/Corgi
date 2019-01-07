@@ -8,7 +8,7 @@ import com.google.inject.AbstractModule
 import com.google.inject.matcher.Matchers
 import com.google.inject.name.Names
 import org.apache.spark.sql.SparkSession
-import org.joda.time.LocalDateTime
+import org.joda.time.{LocalDate, LocalDateTime}
 
 /**
   * Created by 李震 on 2018/1/9.
@@ -61,7 +61,15 @@ private[spark] class Bootstrap(args: Array[String]) {
         bind(classOf[SparkSession]).toInstance(spark)
         bind(classOf[String]).annotatedWith(Names.named("appName")).toInstance(conf.appName)
         bind(classOf[String]).annotatedWith(Names.named("apiServer")).toInstance(conf.apiServer)
-        bind(classOf[LocalDateTime]).annotatedWith(Names.named("executeTime")).toInstance(LocalDateTime.now())
+
+        // 执行日期时间
+        val executeDateTime = if (conf.executeTime.isDefined) {
+          LocalDate.now().toLocalDateTime(conf.executeTime.get)
+        } else {
+          LocalDateTime.now()
+        }
+        bind(classOf[LocalDateTime]).annotatedWith(Names.named("executeDateTime")).toInstance(executeDateTime)
+
         bind(classOf[Conf]).toInstance(conf) // 配置
 
         bind(classOf[DataSource])
