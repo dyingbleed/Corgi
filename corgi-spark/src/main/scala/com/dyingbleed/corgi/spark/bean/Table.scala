@@ -2,6 +2,8 @@ package com.dyingbleed.corgi.spark.bean
 
 import java.sql.{Connection, Date, Timestamp}
 
+import com.dyingbleed.corgi.spark.core.DBMSVendor
+import com.dyingbleed.corgi.spark.core.DBMSVendor._
 import com.dyingbleed.corgi.spark.util.JDBCUtils
 import org.joda.time.LocalDateTime
 
@@ -30,11 +32,11 @@ case class Table (
   /**
     * 数据库厂商
     * */
-  lazy val vendor: String = {
+  lazy val vendor: DBMSVendor = {
     if (url.startsWith("jdbc:mysql")) {
-      "mysql"
+      MYSQL
     } else if (url.startsWith("jdbc:oracle:thin")) {
-      "oracle"
+      ORACLE
     } else {
       throw new RuntimeException("不支持的数据源")
     }
@@ -45,8 +47,8 @@ case class Table (
     * */
   lazy val driver: String = {
     vendor match {
-      case "mysql" => "com.mysql.jdbc.Driver"
-      case "oracle" => "oracle.jdbc.OracleDriver"
+      case MYSQL => "com.mysql.jdbc.Driver"
+      case ORACLE => "oracle.jdbc.OracleDriver"
     }
   }
 
@@ -86,14 +88,24 @@ case class Table (
     * */
   lazy val tsDefaultVal: LocalDateTime = {
     val minVal = min(tsColumnName.get)
-    val minDateTime = minVal match {
-      case t: Timestamp => new LocalDateTime(t)
-      case d: Date => new LocalDateTime(d)
-      case ot: oracle.sql.TIMESTAMP => new LocalDateTime(ot.timestampValue())
-      case od: oracle.sql.DATE => new LocalDateTime(od.dateValue())
-      case null => LocalDateTime.now()
-      case _ => throw new RuntimeException("不支持的日期时间类型")
+
+    val minDateTime = vendor match {
+      case MYSQL => {
+        minVal match {
+          case t: Timestamp => new LocalDateTime(t)
+          case d: Date => new LocalDateTime(d)
+          case _ => LocalDateTime.now()
+        }
+      }
+      case ORACLE => {
+        minVal match {
+          case ot: oracle.sql.TIMESTAMP => new LocalDateTime(ot.timestampValue())
+          case od: oracle.sql.DATE => new LocalDateTime(od.dateValue())
+          case _ => LocalDateTime.now()
+        }
+      }
     }
+
     minDateTime.minusDays(1).withTime(0, 0, 0, 0)
   }
 
@@ -104,13 +116,20 @@ case class Table (
     JDBCUtils.getColumns(conn, db, table)
   })
 
+  /**
+    * 基数
+    * */
+  lazy val cardinality: Long = withConnection(url, username, password, conn => {
+    JDBCUtils.getCardinality(conn, db, table)
+  })
+
   /* *********
-   * 统计方法 *
+   * 公共方法 *
    * *********/
   /**
     * 统计指标
     * */
-  def stat(columnName: String): ColumnStat = withConnection(url, username, password, conn => {
+  def stats(columnName: String): ColumnStat = withConnection(url, username, password, conn => {
     JDBCUtils.getColumnStat(conn, db, table, columnName)
   })
 
@@ -129,10 +148,18 @@ case class Table (
   })
 
   /**
-    * 基数
+    * 字段值集合
     * */
-  def cardinality(): Long = withConnection(url, username, password, conn => {
-    JDBCUtils.getCardinality(conn, db, table)
+  def distinct(columnName: String): Set[Any] = withConnection(url, username, password, conn => {
+    JDBCUtils.getDistinct(conn, db, table, columnName).toSet
+  })
+
+  /**
+    * 字段值集合
+    * */
+  def distinct(columnName: String, beginTime: LocalDateTime, endTime: LocalDateTime): Set[Any] = withConnection(url, username, password, conn => {
+    assert(tsColumnName.nonEmpty)
+    JDBCUtils.getDistinct(conn, db, table, columnName, tsColumnName.get, beginTime, endTime).toSet
   })
 
 }

@@ -3,8 +3,8 @@ package com.dyingbleed.corgi.spark.util
 import com.dyingbleed.corgi.spark.core.Constants
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hive.conf.HiveConf
-import org.apache.hadoop.hive.ql.metadata.{Hive, Table}
-import org.apache.spark.sql.{DataFrame, SaveMode}
+import org.apache.hadoop.hive.ql.metadata.Hive
+import org.apache.spark.sql.DataFrame
 import org.joda.time.LocalDate
 
 /**
@@ -57,37 +57,20 @@ object DataSourceUtils {
     * @param df
     * @param dbName 数据库名
     * @param tableName 表名
+    * @param date 日期
     * @param partitionColumns 分区字段
     * */
-  def insertHiveTable(df: DataFrame, dbName: String, tableName: String, partitionColumns: Array[String]): Unit = {
+  def insertHiveTable(df: DataFrame, dbName: String, tableName: String, date: LocalDate, partitionColumns: Array[String]): Unit = {
     df.createOrReplaceTempView("sink")
 
     // 插入数据
     df.sparkSession.sql(
       s"""
-         |INSERT INTO TABLE $dbName.$tableName
-         |PARTITION(${partitionColumns.mkString(",")})
+         |INSERT OVERWRITE TABLE $dbName.$tableName
+         |PARTITION(${Constants.DATE_PARTITION}='${date.toString("yyyy-MM-dd")}'${partitionColumns.filter(c => !Constants.DATE_PARTITION.equalsIgnoreCase(c)).map(c => s", $c").mkString})
          |SELECT * FROM sink
             """.stripMargin)
   }
-
-  /**
-    * 强制插入覆盖到表
-    *
-    * @param df
-    * @param db
-    * @param table
-    * @param date
-    *
-    * */
-  def forceInsertOverwriteTablePartition(df: DataFrame, db: String, table: String, date: LocalDate): Unit = withHive(hive => {
-    val tableMeta = hive.getTable(db, table)
-    val location = tableMeta.getDataLocation
-    val partitionColumnName = getPartColName(tableMeta)
-
-    val path = s"$location/$partitionColumnName=${date.toString(Constants.DATE_FORMAT)}"
-    df.write.mode(SaveMode.Overwrite).parquet(path)
-  })
 
   private[this] def withHive(f: Hive => Unit): Unit = {
     val conf = new Configuration()
@@ -96,13 +79,6 @@ object DataSourceUtils {
     val hive = Hive.get(hiveConf)
 
     f(hive)
-  }
-
-  private[this] def getPartColName(tableMeta: Table): String = {
-    val originColName = tableMeta.getPartCols.get(0).getName
-    val sparkColName = tableMeta.getParameters.get("spark.sql.sources.schema.partCol.0")
-
-    if (sparkColName != null) sparkColName else originColName
   }
 
 }

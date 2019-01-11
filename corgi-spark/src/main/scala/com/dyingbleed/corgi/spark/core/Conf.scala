@@ -108,6 +108,8 @@ private[spark] final class Conf private (args: Array[String]) {
   
   private[this] var _executeTime: Option[LocalTime] = _
 
+  private[this] var _partitionStrategy: Option[PartitionStrategy] = _
+
   /**
     * 应用名
     * */
@@ -127,6 +129,11 @@ private[spark] final class Conf private (args: Array[String]) {
     * 自定义执行时间
     * */
   def executeTime: Option[LocalTime] = _executeTime
+
+  /**
+    * 分区策略
+    * */
+  def partitionStrategy: Option[PartitionStrategy] = _partitionStrategy
 
   /* *****
    * 方法 *
@@ -149,6 +156,8 @@ private[spark] final class Conf private (args: Array[String]) {
     options.addOption(Constants.CONF_PARTITION_COLUMNS_SHORT, Constants.CONF_PARTITION_COLUMNS, true, "Hive table partition columns")
     // 执行时间
     options.addOption(Constants.CONF_EXECUTE_TIME_SHORT, Constants.CONF_EXECUTE_TIME, true, "Customize execute time")
+    // 分区策略
+    options.addOption(Constants.CONF_PARTITION_STRATEGY_SHORT, Constants.CONF_PARTITION_STRATEGY, true, "Partition strategy")
 
     val optionParser = new GnuParser
     val commandLine = optionParser.parse(options, args)
@@ -168,6 +177,14 @@ private[spark] final class Conf private (args: Array[String]) {
     _executeTime = {
       if (commandLine.hasOption(Constants.CONF_EXECUTE_TIME_SHORT) || commandLine.hasOption(Constants.CONF_EXECUTE_TIME)) {
         Option(LocalTime.parse(commandLine.getOptionValue(Constants.CONF_EXECUTE_TIME), DateTimeFormat.forPattern(Constants.TIME_FORMAT)))
+      } else {
+        None
+      }
+    }
+
+    _partitionStrategy = {
+      if (commandLine.hasOption(Constants.CONF_PARTITION_STRATEGY_SHORT) || commandLine.hasOption(Constants.CONF_PARTITION_STRATEGY)) {
+        Option(PartitionStrategy.valueOf(commandLine.getOptionValue(Constants.CONF_PARTITION_STRATEGY).toUpperCase))
       } else {
         None
       }

@@ -1,15 +1,17 @@
 package com.dyingbleed.corgi.spark.util
 
-import java.sql.{Connection, DriverManager, ResultSet}
+import java.sql.{Connection, DriverManager, ResultSet, Timestamp}
 
 import com.dyingbleed.corgi.spark.bean.{Column, ColumnStat}
+import org.apache.spark.internal.Logging
+import org.joda.time.LocalDateTime
 
 import scala.collection.mutable.ListBuffer
 
 /**
   * Created by 李震 on 2018/9/27.
   */
-object JDBCUtils {
+object JDBCUtils extends Logging {
 
   def getConnection(url: String, username: String, password: String): Connection = {
     if (url.startsWith("jdbc:mysql")) {
@@ -77,16 +79,6 @@ object JDBCUtils {
     cs
   }
 
-  private def getOne[T](conn: Connection, sql: String, rsHandler: ResultSet => T): T = {
-    val stat = conn.createStatement()
-    val rs = stat.executeQuery(sql)
-    rs.next()
-    val r = rsHandler(rs)
-    rs.close()
-    stat.close()
-    r
-  }
-
   /**
     * 获取列统计信息
     *
@@ -103,13 +95,18 @@ object JDBCUtils {
          |  MIN($column) AS min,
          |  COUNT(1) AS count
          |FROM $db.$table
-    """.stripMargin
-    getOne(conn, sql, rs => {
+      """.stripMargin
+
+    logDebug(s"Call getColumnStat begin, SQL: $sql")
+    val r = getOne(conn, sql, rs => {
       val max = rs.getObject(1)
       val min = rs.getObject(2)
       val count = rs.getLong(3)
       ColumnStat(max, min, count)
     })
+    logDebug(s"Call getColumnStat end")
+
+    r
   }
 
   /**
@@ -128,8 +125,13 @@ object JDBCUtils {
          |  MAX($column) AS max
          |FROM $db.$table
          |WHERE $column IS NOT NULL
-    """.stripMargin
-    getOne(conn, sql, rs => rs.getObject(1))
+      """.stripMargin
+
+    logDebug(s"Call getColumnMax begin, SQL: $sql")
+    val r = getOne(conn, sql, rs => rs.getObject(1))
+    logDebug(s"Call getColumnMax end")
+
+    r
   }
 
   /**
@@ -148,8 +150,13 @@ object JDBCUtils {
          |  MIN($column) AS min
          |FROM $db.$table
          |WHERE $column IS NOT NULL
-    """.stripMargin
-    getOne(conn, sql, rs => rs.getObject(1))
+      """.stripMargin
+
+    logDebug(s"Call getColumnMin begin, SQL: $sql")
+    val r = getOne(conn, sql, rs => rs.getObject(1))
+    logDebug(s"Call getColumnMin end")
+
+    r
   }
 
   /**
@@ -167,8 +174,109 @@ object JDBCUtils {
          |SELECT
          |  COUNT(1) AS count
          |FROM $db.$table
-    """.stripMargin
-    getOne(conn, sql, rs => rs.getLong(1))
+      """.stripMargin
+
+    logDebug(s"Call getCardinality begin, SQL: $sql")
+    val r = getOne(conn, sql, rs => rs.getLong(1))
+    logDebug(s"Call getCardinality end")
+
+    r
+  }
+
+  /**
+    * 获取表字段所有值
+    *
+    * @param conn 数据库连接
+    * @param db 数据库名
+    * @param table 表名
+    * @param columnName 字段名
+    *
+    * @return 表字段所有值
+    * */
+  def getDistinct(conn: Connection, db: String, table: String, columnName: String): Seq[Any] = {
+    val sql =
+      s"""
+        |SELECT
+        |  DISTINCT $columnName
+        |FROM $db.$table
+      """.stripMargin
+
+    logDebug(s"Call getCardinality begin, SQL: $sql")
+    val r = getMany(conn, sql, rs => rs.getObject(1))
+    logDebug(s"Call getCardinality end")
+
+    r
+  }
+
+  /**
+    * 获取表字段所有值
+    *
+    * @param conn 数据库连接
+    * @param db 数据库名
+    * @param table 表名
+    * @param columnName 字段名
+    * @param tsColumnName 时间戳字段名
+    * @param beginTime 开始时间
+    * @param endTime 结束时间
+    *
+    * @return 表字段所有值
+    * */
+  def getDistinct(conn: Connection, db: String, table: String, columnName: String, tsColumnName: String, beginTime: LocalDateTime, endTime: LocalDateTime): Seq[Any] = {
+    val sql =
+      s"""
+         |SELECT
+         |  DISTINCT $columnName
+         |FROM $db.$table
+         |WHERE $tsColumnName > ?
+         |AND $tsColumnName < ?
+      """.stripMargin
+
+    logDebug(s"Call getCardinality begin, SQL: $sql")
+    val stat = conn.prepareStatement(sql)
+    stat.setTimestamp(1, new Timestamp(beginTime.toDateTime.getMillis))
+    stat.setTimestamp(2, new Timestamp(endTime.toDateTime.getMillis))
+    val rs = stat.executeQuery()
+
+    val buf = new ListBuffer[Any]()
+
+    while(rs.next()) {
+      val r = rs.getObject(1)
+      buf += r
+    }
+
+    rs.close()
+    stat.close()
+
+    logDebug(s"Call getCardinality end")
+
+    buf
+  }
+
+  private def getOne[T](conn: Connection, sql: String, rsHandler: ResultSet => T): T = {
+    val stat = conn.createStatement()
+    val rs = stat.executeQuery(sql)
+    rs.next()
+    val r = rsHandler(rs)
+    rs.close()
+    stat.close()
+    r
+  }
+
+  private def getMany[T](conn: Connection, sql: String, rsHandler: ResultSet => T): Seq[T] = {
+    val stat = conn.createStatement()
+    val rs = stat.executeQuery(sql)
+
+    val buf = new ListBuffer[T]()
+
+    while(rs.next()) {
+      val r = rsHandler(rs)
+      buf += r
+    }
+
+    rs.close()
+    stat.close()
+
+    buf
   }
 
 }
