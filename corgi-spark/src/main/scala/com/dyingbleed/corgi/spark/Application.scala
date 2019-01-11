@@ -2,7 +2,7 @@ package com.dyingbleed.corgi.spark
 
 import com.dyingbleed.corgi.spark.annotation.EnableMeasure
 import com.dyingbleed.corgi.spark.core.Bootstrap
-import com.dyingbleed.corgi.spark.ds.DataSource
+import com.dyingbleed.corgi.spark.ds.EL
 import com.google.inject._
 
 /**
@@ -24,18 +24,18 @@ object Application {
 class Application {
 
   @Inject
-  var dataSource: DataSource = _
+  var el: EL = _
 
   @EnableMeasure
   def run(): Unit = {
     // 加载数据
-    val sourceDF = dataSource.loadSourceDF
+    val df = el.loadSourceDF
 
     // 保存数据
     if (Bootstrap.debug) {
-      sourceDF.explain()
+      df.explain()
     } else {
-      dataSource.persistSinkDF(sourceDF)
+      el.persistSinkDF(df)
     }
   }
 

@@ -1,8 +1,11 @@
 package com.dyingbleed.corgi.spark.core
 
-import com.dyingbleed.corgi.spark.annotation.EnableMeasure
-import com.dyingbleed.corgi.spark.ds.el.{MySQLCompleteEL, MySQLIncrementalEL, OracleCompleteEL, OracleIncrementalEL}
-import com.dyingbleed.corgi.spark.ds.{DataSource, DataSourceEL}
+import com.dyingbleed.corgi.spark.annotation.{Complete, EnableMeasure, Incremental}
+import com.dyingbleed.corgi.spark.bean.Table
+import com.dyingbleed.corgi.spark.core.DBMSVendor._
+import com.dyingbleed.corgi.spark.ds.el._
+import com.dyingbleed.corgi.spark.ds.el.split._
+import com.dyingbleed.corgi.spark.ds.{DataSource, EL}
 import com.dyingbleed.corgi.spark.measure.MeasureInterceptor
 import com.google.inject.AbstractModule
 import com.google.inject.matcher.Matchers
@@ -16,7 +19,17 @@ import org.joda.time.{LocalDate, LocalDateTime}
 private[spark] class Bootstrap(args: Array[String]) {
 
   // 加载应用配置
-  val conf: Conf = Conf(args)
+  private[this] val conf: Conf = Conf(args)
+
+  // 表元数据
+  private[this] val tableMeta: Table = Table(
+    conf.sourceDb,
+    conf.sourceTable,
+    conf.sourceDbUrl,
+    conf.sourceDbUser,
+    conf.sourceDbPassword,
+    Option(conf.sourceTimeColumn)
+  )
 
   def bootstrap(execute: AbstractModule => Unit): Unit = {
 
@@ -68,25 +81,41 @@ private[spark] class Bootstrap(args: Array[String]) {
         } else {
           LocalDateTime.now()
         }
-        bind(classOf[LocalDateTime]).annotatedWith(Names.named("executeDateTime")).toInstance(executeDateTime)
+        bind(classOf[LocalDateTime]).toInstance(executeDateTime)
 
         bind(classOf[Conf]).toInstance(conf) // 配置
 
-        bind(classOf[DataSource])
-        val elImplClass = if (conf.sourceDbUrl.startsWith("jdbc:mysql")) {
-          conf.mode match {
-            case ODSMode.COMPLETE => classOf[MySQLCompleteEL]
-            case ODSMode.UPDATE | ODSMode.APPEND => classOf[MySQLIncrementalEL]
-          }
-        } else if (conf.sourceDbUrl.startsWith("jdbc:oracle:thin")) {
-          conf.mode match {
-            case ODSMode.COMPLETE => classOf[OracleCompleteEL]
-            case ODSMode.UPDATE | ODSMode.APPEND => classOf[OracleIncrementalEL]
-          }
-        } else {
-          throw new RuntimeException("不支持的数据源")
+        bind(classOf[Table]).toInstance(tableMeta) // 表元数据
+
+        bind(classOf[EL]) // Extract-Load
+
+        // 全量数据
+        val completeDataSourceImplClass = tableMeta.vendor match {
+          case MYSQL => classOf[MySQLCompleteDataSource]
+          case ORACLE => classOf[OracleCompleteDataSource]
         }
-        bind(classOf[DataSourceEL]).to(elImplClass)
+        bind(classOf[CompleteDataSource]).to(completeDataSourceImplClass)
+
+        // 全量分片数据
+        val completeSplitDataSourceImplClass = tableMeta.vendor match {
+          case MYSQL => classOf[MySQLCompleteSplitDataSource]
+          case ORACLE => classOf[OracleCompleteSplitDataSource]
+        }
+        bind(classOf[DataSource]).annotatedWith(classOf[Complete]).to(completeSplitDataSourceImplClass)
+
+        // 增量数据
+        val incrementalDataSourceImplClass = tableMeta.vendor match {
+          case MYSQL => classOf[MySQLIncrementalDataSource]
+          case ORACLE => classOf[OracleIncrementalDataSource]
+        }
+        bind(classOf[IncrementalDataSource]).to(incrementalDataSourceImplClass)
+
+        // 增量分片数据
+        val incrementalSplitDataSourceImplClass = tableMeta.vendor match {
+          case MYSQL => classOf[MySQLIncrementalSplitDataSource]
+          case ORACLE => classOf[OracleIncrementalSplitDataSource]
+        }
+        bind(classOf[DataSource]).annotatedWith(classOf[Incremental]).to(incrementalSplitDataSourceImplClass)
 
         val measureInterceptor = new MeasureInterceptor
         requestInjection(measureInterceptor)
@@ -110,6 +139,9 @@ object Bootstrap {
 
   def apply(args: Array[String]): Bootstrap = new Bootstrap(args)
 
+  /**
+    * 是否 DEBUG 模式
+    * */
   def debug: Boolean = {
     val debug = System.getenv("CORGI_DEBUG")
     debug != null && debug.equals("true")

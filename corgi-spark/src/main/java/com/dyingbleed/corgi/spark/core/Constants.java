@@ -17,6 +17,9 @@ public interface Constants {
     String CONF_EXECUTE_TIME_SHORT = "t";
     String CONF_EXECUTE_TIME = "execute-time";
 
+    String CONF_PARTITION_STRATEGY_SHORT = "s";
+    String CONF_PARTITION_STRATEGY = "partition-strategy";
+
     /*
      * 公共变量
      * */
@@ -25,5 +28,7 @@ public interface Constants {
     String DATE_FORMAT = "yyyy-MM-dd";
     String TIME_FORMAT = "HH:mm:ss";
     String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+
+    Long DEFAULT_PARALLEL = 100L;
 
 }
