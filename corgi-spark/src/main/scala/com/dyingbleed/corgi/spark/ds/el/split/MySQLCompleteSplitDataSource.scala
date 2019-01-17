@@ -122,21 +122,11 @@ private[spark] class MySQLCompleteSplitDataSource extends CompleteSplitDataSourc
       val partitionColumnName = conf.partitionColumns(1)
 
       for (v <- tableMeta.distinct(partitionColumnName)) {
-        val selectExp = tableMeta.columns
-          .filter(c => !c.name.equals(tableMeta.tsColumnName.get))
-          .map(c => c.name)
-          .mkString(",")
-
         val sql =
           s"""
             |(SELECT
             |  *
-            |FROM (
-            |  SELECT
-            |    $selectExp,
-            |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
-            |  FROM ${tableMeta.db}.${tableMeta.table}
-            |) s
+            |FROM ${tableMeta.db}.${tableMeta.table}
             |WHERE $partitionColumnName = ${toSQLExpr(v)}
             |) t
           """.stripMargin
