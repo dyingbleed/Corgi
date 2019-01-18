@@ -1,7 +1,6 @@
 package com.dyingbleed.corgi.spark.ds.el.split
 import com.dyingbleed.corgi.spark.core.Constants
 import org.apache.spark.sql.DataFrame
-import org.joda.time.{Days, LocalDate}
 
 /**
   * Created by 李震 on 2019/1/8.
@@ -11,7 +10,7 @@ private[spark] class MySQLIncrementalSplitDataSource extends IncrementalSplitDat
   override protected def loadPKRangeSplitDF: DataFrame = {
     val sql = s"""
                  |(SELECT
-                 |  *
+                 |  ${tableMeta.toSelectExpr(tableMeta.columns)}
                  |FROM ${tableMeta.db}.${tableMeta.table}
                  |WHERE ${tableMeta.tsColumnName.get} > TIMESTAMP('${lastExecuteDateTime.toString(Constants.DATETIME_FORMAT)}')
                  |AND ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}')
@@ -34,7 +33,7 @@ private[spark] class MySQLIncrementalSplitDataSource extends IncrementalSplitDat
 
       val sql = s"""
                    |(SELECT
-                   |  *
+                   |  ${tableMeta.toSelectExpr(tableMeta.columns)}
                    |FROM ${tableMeta.db}.${tableMeta.table}
                    |WHERE MOD(CONV(MD5($hashExpr), 16, 10), ${Constants.DEFAULT_PARALLEL}) = $mod
                    |AND ${tableMeta.tsColumnName.get} > TIMESTAMP('${lastExecuteDateTime.toString(Constants.DATETIME_FORMAT)}')
@@ -59,16 +58,15 @@ private[spark] class MySQLIncrementalSplitDataSource extends IncrementalSplitDat
     val partitionColumnName = conf.partitionColumns(1)
 
     for (v <- tableMeta.distinct(partitionColumnName, lastExecuteDateTime, executeDateTime)) {
-      val sql =
-        s"""
-           |(SELECT
-           |  *
-           |FROM ${tableMeta.db}.${tableMeta.table}
-           |WHERE ${tableMeta.tsColumnName.get} > TIMESTAMP('${lastExecuteDateTime.toString(Constants.DATETIME_FORMAT)}')
-           |AND ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}')
-           |AND $partitionColumnName = ${toSQLExpr(v)}
-           |) t
-          """.stripMargin
+      val sql = s"""
+                   |(SELECT
+                   |  ${tableMeta.toSelectExpr(tableMeta.columns)}
+                   |FROM ${tableMeta.db}.${tableMeta.table}
+                   |WHERE ${tableMeta.tsColumnName.get} > TIMESTAMP('${lastExecuteDateTime.toString(Constants.DATETIME_FORMAT)}')
+                   |AND ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}')
+                   |AND $partitionColumnName = ${toSQLExpr(v)}
+                   |) t
+                  """.stripMargin
 
       val df = jdbcDF(sql)
       if (unionDF == null) {

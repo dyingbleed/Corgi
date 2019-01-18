@@ -11,24 +11,32 @@ import org.joda.time.{Days, LocalDate}
 private[spark] class MySQLCompleteSplitDataSource extends CompleteSplitDataSource {
 
   override protected def loadPKRangeSplitDF: DataFrame = {
-    val sql = if (tableMeta.tsColumnName.isEmpty) s"${tableMeta.db}.${tableMeta.table}" else {
-      val selectExp = tableMeta.columns
-        .filter(c => !c.name.equals(tableMeta.tsColumnName.get))
-        .map(c => c.name)
-        .mkString(",")
-
-      s"""
-         |(SELECT
-         |  *
-         |FROM (
-         |  SELECT
-         |    $selectExp,
-         |    IFNULL(${tableMeta.tsColumnName.get}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName.get}
-         |  FROM ${tableMeta.db}.${tableMeta.table}
-         |) s
-         |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}')
-         |) t
+    val sql = conf.mode match {
+      case COMPLETE => {
+        s"""
+           |(SELECT
+           |  ${tableMeta.toSelectExpr(tableMeta.columns)}
+           |FROM ${tableMeta.db}.${tableMeta.table}
+           |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}')
+           |) t
           """.stripMargin
+      }
+      case UPDATE | APPEND => {
+        val normalColumns = tableMeta.columns.filter(c => !c.name.equals(tableMeta.tsColumnName.get))
+
+        s"""
+           |(SELECT
+           |  *
+           |FROM (
+           |  SELECT
+           |    ${tableMeta.toSelectExpr(normalColumns)},
+           |    IFNULL(${tableMeta.tsColumnName.get}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName.get}
+           |  FROM ${tableMeta.db}.${tableMeta.table}
+           |) s
+           |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}')
+           |) t
+          """.stripMargin
+      }
     }
 
     val pkStats = tableMeta.stats(tableMeta.pk.last.name)
@@ -45,33 +53,33 @@ private[spark] class MySQLCompleteSplitDataSource extends CompleteSplitDataSourc
         tableMeta.pk.last.name
       }
 
-      val sql = if (tableMeta.tsColumnName.isEmpty) {
-        s"""
-           |(SELECT
-           |  *
-           |FROM ${tableMeta.db}.${tableMeta.table}
-           |WHERE MOD(CONV(MD5($hashExpr), 16, 10), ${Constants.DEFAULT_PARALLEL}) = $mod
-           |) t
+      val sql = conf.mode match {
+        case COMPLETE => {
+          s"""
+             |(SELECT
+             |  ${tableMeta.toSelectExpr(tableMeta.columns)}
+             |FROM ${tableMeta.db}.${tableMeta.table}
+             |WHERE MOD(CONV(MD5($hashExpr), 16, 10), ${Constants.DEFAULT_PARALLEL}) = $mod
+             |) t
           """.stripMargin
-      } else {
-        val selectExp = tableMeta.columns
-          .filter(c => !c.name.equals(tableMeta.tsColumnName.get))
-          .map(c => c.name)
-          .mkString(",")
+        }
+        case UPDATE | APPEND => {
+          val normalColumns = tableMeta.columns.filter(c => !c.name.equals(tableMeta.tsColumnName.get))
 
-        s"""
-           |(SELECT
-           |  *
-           |FROM (
-           |  SELECT
-           |    $selectExp,
-           |    IFNULL(${tableMeta.tsColumnName}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName}
-           |  FROM ${tableMeta.db}.${tableMeta.table}
-           |) s
-           |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}')
-           |AND MOD(CONV(MD5($hashExpr), 16, 10), ${Constants.DEFAULT_PARALLEL}) = $mod
-           |) t
+          s"""
+             |(SELECT
+             |  *
+             |FROM (
+             |  SELECT
+             |    ${tableMeta.toSelectExpr(normalColumns)},
+             |    IFNULL(${tableMeta.tsColumnName}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName}
+             |  FROM ${tableMeta.db}.${tableMeta.table}
+             |) s
+             |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}')
+             |AND MOD(CONV(MD5($hashExpr), 16, 10), ${Constants.DEFAULT_PARALLEL}) = $mod
+             |) t
           """.stripMargin
+        }
       }
 
       val df = jdbcDF(sql)
@@ -91,10 +99,7 @@ private[spark] class MySQLCompleteSplitDataSource extends CompleteSplitDataSourc
     if (conf.mode == UPDATE || conf.mode == APPEND) {
       val days = Days.daysBetween(tableMeta.tsDefaultVal, LocalDate.now()).getDays
       for (d <- 0 to days) {
-        val selectExp = tableMeta.columns
-          .filter(c => !c.name.equals(tableMeta.tsColumnName.get))
-          .map(c => c.name)
-          .mkString(",")
+        val normalColumns = tableMeta.columns.filter(c => !c.name.equals(tableMeta.tsColumnName.get))
 
         val sql =
           s"""
@@ -102,7 +107,7 @@ private[spark] class MySQLCompleteSplitDataSource extends CompleteSplitDataSourc
              |	s.*
              |FROM (
              |  SELECT
-             |    $selectExp,
+             |    ${tableMeta.toSelectExpr(normalColumns)},
              |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
              |  FROM ${tableMeta.db}.${tableMeta.table}
              |) s
@@ -125,7 +130,7 @@ private[spark] class MySQLCompleteSplitDataSource extends CompleteSplitDataSourc
         val sql =
           s"""
             |(SELECT
-            |  *
+            |  ${tableMeta.toSelectExpr(tableMeta.columns)}
             |FROM ${tableMeta.db}.${tableMeta.table}
             |WHERE $partitionColumnName = ${toSQLExpr(v)}
             |) t
@@ -138,6 +143,8 @@ private[spark] class MySQLCompleteSplitDataSource extends CompleteSplitDataSourc
           unionDF = unionDF.union(df)
         }
       }
+    } else {
+      throw new RuntimeException("不支持按分区字段分片")
     }
 
     unionDF

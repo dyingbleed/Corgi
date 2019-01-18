@@ -1,21 +1,20 @@
 package com.dyingbleed.corgi.spark.ds.el.split
 
 import com.dyingbleed.corgi.spark.core.Constants
-import org.apache.spark.internal.Logging
 import org.apache.spark.sql.DataFrame
 
 /**
   * Created by 李震 on 2019/1/8.
   */
-private[spark] class OracleIncrementalSplitDataSource extends IncrementalSplitDataSource with Logging {
+private[spark] class OracleIncrementalSplitDataSource extends IncrementalSplitDataSource {
 
   override protected def loadPKRangeSplitDF: DataFrame = {
     val sql = s"""
                  |(SELECT
-                 |  *
-                 |FROM ${conf.sourceDb}.${conf.sourceTable}
-                 |WHERE ${conf.sourceTimeColumn} > TO_DATE('${lastExecuteDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
-                 |AND ${conf.sourceTimeColumn} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+                 |  ${tableMeta.toSelectExpr(tableMeta.columns)}
+                 |FROM ${tableMeta.db}.${tableMeta.table}
+                 |WHERE ${tableMeta.tsColumnName.get} > TO_DATE('${lastExecuteDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+                 |AND ${tableMeta.tsColumnName.get} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
                  |) t
               """.stripMargin
 
@@ -35,11 +34,11 @@ private[spark] class OracleIncrementalSplitDataSource extends IncrementalSplitDa
 
       val sql = s"""
                    |(SELECT
-                   |	t.*
-                   |FROM ${tableMeta.db}.${tableMeta.table} t
+                   |	${tableMeta.toSelectExpr(tableMeta.columns)}
+                   |FROM ${tableMeta.db}.${tableMeta.table}
                    |WHERE MOD(ORA_HASH($hashExpr), ${Constants.DEFAULT_PARALLEL}) = $mod
-                   |AND ${conf.sourceTimeColumn} > TO_DATE('${lastExecuteDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
-                   |AND ${conf.sourceTimeColumn} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+                   |AND ${tableMeta.tsColumnName.get} > TO_DATE('${lastExecuteDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+                   |AND ${tableMeta.tsColumnName.get} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
                    |) t
                 """.stripMargin
 
@@ -60,17 +59,15 @@ private[spark] class OracleIncrementalSplitDataSource extends IncrementalSplitDa
     val partitionColumnName = conf.partitionColumns(1)
 
     for (v <- tableMeta.distinct(partitionColumnName, lastExecuteDateTime, executeDateTime)) {
-      val sql =
-        s"""
-           |(SELECT
-           |  *
-           |FROM ${tableMeta.db}.${tableMeta.table}
-           |WHERE ${tableMeta.tsColumnName.get} > TO_DATE('${lastExecuteDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
-           |AND ${tableMeta.tsColumnName.get} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
-           |AND $partitionColumnName = ${toSQLExpr(v)}
-           |) t
-          """.stripMargin
-      logInfo(s"执行 SQL: $sql")
+      val sql = s"""
+                   |(SELECT
+                   |  ${tableMeta.toSelectExpr(tableMeta.columns)}
+                   |FROM ${tableMeta.db}.${tableMeta.table}
+                   |WHERE ${tableMeta.tsColumnName.get} > TO_DATE('${lastExecuteDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+                   |AND ${tableMeta.tsColumnName.get} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+                   |AND $partitionColumnName = ${toSQLExpr(v)}
+                   |) t
+                  """.stripMargin
 
       val df = jdbcDF(sql)
       if (unionDF == null) {

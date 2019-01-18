@@ -24,4 +24,6 @@ private[spark] case class Column (name: String, dataType: Int) {
       dataType == Types.NCHAR
   }
 
+  def isDate: Boolean = dataType == Types.DATE
+
 }
