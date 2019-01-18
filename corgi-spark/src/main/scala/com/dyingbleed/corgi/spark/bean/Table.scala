@@ -162,4 +162,22 @@ case class Table (
     JDBCUtils.getDistinct(conn, db, table, columnName, tsColumnName.get, beginTime, endTime).toSet
   })
 
+  /**
+    * 将字段转换为 SQL SELECT 表达式
+    * @param columns 字段
+    * @return SQL SELECT 表达式
+    * */
+  def toSelectExpr(columns: Seq[Column]): String = {
+    vendor match {
+      case MYSQL => columns.map(c => c.name).mkString(",")
+      case ORACLE => {
+        columns.map(c => {
+          // fix bug #9
+          if (c.isDate) s"CAST(${c.name} AS TIMESTAMP) AS ${c.name}"
+          else c.name
+        }).mkString(",")
+      }
+    }
+  }
+
 }

@@ -10,10 +10,10 @@ private[spark] class OracleIncrementalDataSource extends IncrementalDataSource {
   override protected def incrementalSQL: String = {
     s"""
        |(SELECT
-       |  *
-       |FROM ${conf.sourceDb}.${conf.sourceTable}
-       |WHERE ${conf.sourceTimeColumn} > TO_DATE('${lastExecuteDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
-       |AND ${conf.sourceTimeColumn} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+       |  ${tableMeta.toSelectExpr(tableMeta.columns)}
+       |FROM ${tableMeta.db}.${tableMeta.table}
+       |WHERE ${tableMeta.tsColumnName.get} > TO_DATE('${lastExecuteDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+       |AND ${tableMeta.tsColumnName.get} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
        |) t
     """.stripMargin
   }

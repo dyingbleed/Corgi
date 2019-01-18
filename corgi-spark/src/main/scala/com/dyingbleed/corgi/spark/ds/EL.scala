@@ -6,7 +6,6 @@ import com.dyingbleed.corgi.spark.core.ODSMode._
 import com.dyingbleed.corgi.spark.core.{Conf, Constants}
 import com.dyingbleed.corgi.spark.util.DataSourceUtils
 import com.google.inject.Inject
-import org.apache.spark.internal.Logging
 import org.apache.spark.sql.functions.{col, date_format, lit}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.joda.time.LocalDateTime
@@ -14,7 +13,7 @@ import org.joda.time.LocalDateTime
 /**
   * Created by 李震 on 2018/3/2.
   */
-private[spark] class EL extends Logging {
+private[spark] class EL {
 
   @Inject
   var conf: Conf = _

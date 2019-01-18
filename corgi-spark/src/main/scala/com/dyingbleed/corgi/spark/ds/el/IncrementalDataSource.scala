@@ -1,13 +1,12 @@
 package com.dyingbleed.corgi.spark.ds.el
 
 import com.dyingbleed.corgi.spark.ds.DataSource
-import org.apache.spark.internal.Logging
 import org.apache.spark.sql.DataFrame
 
 /**
   * Created by 李震 on 2018/6/26.
   */
-private[spark] abstract class IncrementalDataSource extends DataSource with Logging {
+private[spark] abstract class IncrementalDataSource extends DataSource {
 
   /**
     * 加载数据源

@@ -13,19 +13,17 @@ private[spark] class OracleCompleteDataSource extends CompleteDataSource {
       case COMPLETE => {
         s"""
            |(SELECT
-           |  *
+           |  ${tableMeta.toSelectExpr(tableMeta.columns)}
            |FROM ${tableMeta.db}.${tableMeta.table}
            |) t
         """.stripMargin
       }
       case UPDATE | APPEND => {
-        val selectExp = tableMeta.columns
-          .filter(c => !c.name.equals(tableMeta.tsColumnName.get))
-          .map(c => c.name).mkString(",")
+        val normalColumns = tableMeta.columns.filter(c => !c.name.equals(tableMeta.tsColumnName.get))
 
         s"""
            |(SELECT
-           |  $selectExp,
+           |  ${tableMeta.toSelectExpr(normalColumns)},
            |  NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
            |FROM ${tableMeta.db}.${tableMeta.table}
            |WHERE ${tableMeta.tsColumnName.get} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')

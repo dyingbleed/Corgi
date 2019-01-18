@@ -13,19 +13,18 @@ private[spark] class MySQLCompleteDataSource extends CompleteDataSource {
       case COMPLETE => {
         s"""
            |(SELECT
-           |    *
+           |  ${tableMeta.toSelectExpr(tableMeta.columns)}
            |FROM ${tableMeta.db}.${tableMeta.table}
            |) t
         """.stripMargin
       }
       case UPDATE | APPEND => {
-        val selectExr = tableMeta.columns
+        val normalColumns = tableMeta.columns
           .filter(c => c.name.equals(tableMeta.tsColumnName.get))
-          .map(c => c.name).mkString(",")
 
         s"""
            |(SELECT
-           |  $selectExr,
+           |  ${tableMeta.toSelectExpr(normalColumns)},
            |  IFNULL(${tableMeta.tsColumnName.get}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName.get}
            |FROM ${tableMeta.db}.${tableMeta.table}
            |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}')

@@ -3,7 +3,6 @@ package com.dyingbleed.corgi.spark.util
 import java.sql.{Connection, DriverManager, ResultSet, Timestamp}
 
 import com.dyingbleed.corgi.spark.bean.{Column, ColumnStat}
-import org.apache.spark.internal.Logging
 import org.joda.time.LocalDateTime
 
 import scala.collection.mutable.ListBuffer
@@ -11,7 +10,7 @@ import scala.collection.mutable.ListBuffer
 /**
   * Created by 李震 on 2018/9/27.
   */
-object JDBCUtils extends Logging {
+object JDBCUtils {
 
   def getConnection(url: String, username: String, password: String): Connection = {
     if (url.startsWith("jdbc:mysql")) {
@@ -97,14 +96,12 @@ object JDBCUtils extends Logging {
          |FROM $db.$table
       """.stripMargin
 
-    logDebug(s"Call getColumnStat begin, SQL: $sql")
     val r = getOne(conn, sql, rs => {
       val max = rs.getObject(1)
       val min = rs.getObject(2)
       val count = rs.getLong(3)
       ColumnStat(max, min, count)
     })
-    logDebug(s"Call getColumnStat end")
 
     r
   }
@@ -127,9 +124,7 @@ object JDBCUtils extends Logging {
          |WHERE $column IS NOT NULL
       """.stripMargin
 
-    logDebug(s"Call getColumnMax begin, SQL: $sql")
     val r = getOne(conn, sql, rs => rs.getObject(1))
-    logDebug(s"Call getColumnMax end")
 
     r
   }
@@ -152,9 +147,7 @@ object JDBCUtils extends Logging {
          |WHERE $column IS NOT NULL
       """.stripMargin
 
-    logDebug(s"Call getColumnMin begin, SQL: $sql")
     val r = getOne(conn, sql, rs => rs.getObject(1))
-    logDebug(s"Call getColumnMin end")
 
     r
   }
@@ -176,9 +169,7 @@ object JDBCUtils extends Logging {
          |FROM $db.$table
       """.stripMargin
 
-    logDebug(s"Call getCardinality begin, SQL: $sql")
     val r = getOne(conn, sql, rs => rs.getLong(1))
-    logDebug(s"Call getCardinality end")
 
     r
   }
@@ -201,9 +192,7 @@ object JDBCUtils extends Logging {
         |FROM $db.$table
       """.stripMargin
 
-    logDebug(s"Call getCardinality begin, SQL: $sql")
     val r = getMany(conn, sql, rs => rs.getObject(1))
-    logDebug(s"Call getCardinality end")
 
     r
   }
@@ -231,7 +220,6 @@ object JDBCUtils extends Logging {
          |AND $tsColumnName < ?
       """.stripMargin
 
-    logDebug(s"Call getCardinality begin, SQL: $sql")
     val stat = conn.prepareStatement(sql)
     stat.setTimestamp(1, new Timestamp(beginTime.toDateTime.getMillis))
     stat.setTimestamp(2, new Timestamp(endTime.toDateTime.getMillis))
@@ -246,8 +234,6 @@ object JDBCUtils extends Logging {
 
     rs.close()
     stat.close()
-
-    logDebug(s"Call getCardinality end")
 
     buf
   }
