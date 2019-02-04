@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <title th:text="${appName}"></title>
+    <!-- CSS -->
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/4.1.0/css/bootstrap.min.css}"/>
+    <link rel="stylesheet" th:href="@{/css/login.css}" />
+    <!-- JS -->
+    <script th:src="@{/webjars/jquery/3.3.1/jquery.min.js}"></script>
+    <script th:src="@{/webjars/popper.js/1.14.1/umd/popper.js}"></script>
+    <script th:src="@{/webjars/bootstrap/4.1.0/js/bootstrap.min.js}"></script>
+</head>
+<body class="text-center">
+<form method="post" class="form-login">
+    <h1 class="h3 mb-3">Corgi 柯基</h1>
+    <input type="text" name="username" class="form-control" placeholder="用户名" required autofocus>
+    <input type="password" name="password" class="form-control" placeholder="密码">
+    <div class="checkbox mb-3">
+        <label><input type="checkbox" value="rememberMe">记住密码</label>
+    </div>
+    <button type="submit" class="btn btn-lg btn-primary btn-block">登录</button>
+    <p class="mt-5 mb-3 text-muted">Powered by 大商天狗网数据团队</p>
+</form>
+</body>
+</html>

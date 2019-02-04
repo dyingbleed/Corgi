@@ -1,5 +1,6 @@
 package com.dyingbleed.corgi.web.controller.page;
 
+import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,6 +39,7 @@ public class BatchTaskPageController {
      * 编辑批处理任务
      * */
     @GetMapping("/editor/{id}")
+    @RequiresAuthentication
     public ModelAndView editor(@PathVariable("id") Long id) {
         ModelAndView modelAndView = new ModelAndView("batch/editor");
 

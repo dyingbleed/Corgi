@@ -13,3 +13,6 @@ hdfs-site.xml
 yarn-site.xml
 hive-site.xml
 
+application.yml
+cluster.properties
+shiro.ini
