@@ -1,0 +1,23 @@
+[main]
+sessionManager = org.apache.shiro.web.session.mgt.DefaultWebSessionManager
+sessionManager.globalSessionTimeout = 86400000
+
+securityManager.sessionManager = $sessionManager
+
+authc.loginUrl = /login
+authc.successUrl = /
+
+[users]
+admin = admin,admin
+
+[roles]
+admin = *
+
+[urls]
+/webjars/** = anon
+/js/** = anon
+/css/** = anon
+/api/conf = anon
+/api/measure = anon
+/logout = logout
+/** = authc
