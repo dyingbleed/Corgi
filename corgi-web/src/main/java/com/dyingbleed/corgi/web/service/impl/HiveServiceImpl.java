@@ -2,7 +2,7 @@ package com.dyingbleed.corgi.web.service.impl;
 
 import com.dyingbleed.corgi.web.bean.Column;
 import com.dyingbleed.corgi.web.service.HiveService;
-import com.dyingbleed.corgi.web.utils.HiveUtils;
+import com.dyingbleed.corgi.web.utils.JDBCUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Hive Metadata
@@ -50,7 +49,7 @@ public class HiveServiceImpl implements HiveService {
     public List<String> showDBs() {
         List<String> databases = new LinkedList<>();
         try {
-            databases.addAll(HiveUtils.showDatabases(this.hiveMasterUrl, this.hiveMasterUsername, this.hiveMasterPassword));
+            databases.addAll(JDBCUtils.showDatabases(this.hiveMasterUrl, this.hiveMasterUsername, this.hiveMasterPassword));
         } catch (SQLException | ClassNotFoundException e) {
             logger.error("显示所有 Hive 数据库出错", e);
         }
@@ -70,7 +69,7 @@ public class HiveServiceImpl implements HiveService {
     public List<String> showTables(String db) {
         List<String> tables = new LinkedList<>();
         try {
-            tables.addAll(HiveUtils.showTables(this.hiveMasterUrl, this.hiveMasterUsername, this.hiveMasterPassword, db));
+            tables.addAll(JDBCUtils.showTables(this.hiveMasterUrl, this.hiveMasterUsername, this.hiveMasterPassword, db));
         } catch (SQLException | ClassNotFoundException e) {
             logger.error("显示所有 Hive 数据库表出错", e);
         }
@@ -87,15 +86,12 @@ public class HiveServiceImpl implements HiveService {
      * */
     @Override
     public List<Column> descTable(String db, String table) {
-        List<Column> columns = new LinkedList<>();
         try {
-            for (Map<String, String> i: HiveUtils.descTable(this.hiveMasterUrl, this.hiveMasterUsername, this.hiveMasterPassword, db, table)) {
-                columns.add(new Column(i.get("name"), i.get("type"), i.get("comment")));
-            }
-        } catch (SQLException | ClassNotFoundException e) {
-            logger.error("显示 Hive 表所有字段出错", e);
+            return JDBCUtils.descTable(this.hiveMasterUrl, this.hiveMasterUsername, this.hiveMasterPassword, db, table);
+        } catch (ClassNotFoundException | SQLException e) {
+            logger.error("显示 Hive 表列出错", e);
+            throw new RuntimeException(e);
         }
-        return columns;
     }
 
 }

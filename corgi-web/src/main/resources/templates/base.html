@@ -24,10 +24,11 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
             <div class="navbar-nav">
-                <a class="nav-item nav-link" th:classappend="${moduleName == 'home'}? 'active'" href="/">首页 <span class="sr-only">home</span></a>
+                <a class="nav-item nav-link" th:classappend="${moduleName == 'home'}? 'active'" href="/">首页 <span class="sr-only">首页</span></a>
+                <a class="nav-item nav-link" th:classappend="${moduleName == 'batch'} ?'active'" href="/batch/">任务管理</a>
+                <a class="nav-item nav-link" th:classappend="${moduleName == 'datasource'} ?'active'" href="/datasource/">数据源管理</a>
+                <a class="nav-item nav-link" th:classappend="${moduleName == 'detector'}? 'active'" href="/detector/">数据监测</a>
                 <a class="nav-item nav-link" th:classappend="${moduleName == 'metadata'}? 'active'" href="/metadata/">元数据</a>
-                <a class="nav-item nav-link" th:classappend="${moduleName == 'batch'} ?'active'" href="/batch/">ODS 任务</a>
-                <a class="nav-item nav-link" th:classappend="${moduleName == 'datasource'} ?'active'" href="/datasource/">数据源</a>
             </div>
         </div>
         <div class="navbar-text">

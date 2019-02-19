@@ -1,5 +1,6 @@
 package com.dyingbleed.corgi.web.service.impl;
 
+import com.dyingbleed.corgi.web.bean.Column;
 import com.dyingbleed.corgi.web.bean.DataSource;
 import com.dyingbleed.corgi.web.mapper.BatchTaskMapper;
 import com.dyingbleed.corgi.web.mapper.DataSourceMapper;
@@ -12,6 +13,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -189,20 +191,33 @@ public class DataSourceServiceImpl implements DataSourceService {
      * */
     @Override
     public Map<String, String> getTimeColumns(Long id, String database, String table) {
-        Map<String, String> columns = new LinkedHashMap<>();
+        Map<String, String> timeColumnMap = new LinkedHashMap<>();
 
         DataSource ds = this.queryDataSourceById(id);
         try {
-            Map<String, String> all = JDBCUtils.describeTable(ds.getUrl(), ds.getUsername(), ds.getPassword(), database, table);
-            Map<String, String> modifyTimeColumns = all.entrySet().stream()
-                    .filter(entry -> entry.getValue().toLowerCase().equals("date") || entry.getValue().toLowerCase().equals("datetime") || entry.getValue().toLowerCase().startsWith("timestamp"))
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-            columns.putAll(modifyTimeColumns);
+            List<Column> columns = JDBCUtils.descTable(ds.getUrl(), ds.getUsername(), ds.getPassword(), database, table);
+            for (Column c: columns) {
+                if (c.getDataType() == Types.DATE ||
+                        c.getDataType() == Types.TIME ||
+                        c.getDataType() == Types.TIMESTAMP) {
+                    timeColumnMap.put(c.getName(), c.getTypeName());
+                }
+            }
         } catch (SQLException | ClassNotFoundException e) {
-            e.printStackTrace();
+            logger.error("获取所有修改时间字段失败", e);
         }
 
-        return columns;
+        return timeColumnMap;
     }
 
+    @Override
+    public List<Column> descTable(Long id, String database, String table) {
+        DataSource ds = this.queryDataSourceById(id);
+        try {
+            return JDBCUtils.descTable(ds.getUrl(), ds.getUsername(), ds.getPassword(), database, table);
+        } catch (SQLException | ClassNotFoundException e) {
+            logger.error("获取所有字段失败", e);
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -1,43 +1,27 @@
 package com.dyingbleed.corgi.web.bean;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 /**
  * Created by 李震 on 2018/6/12.
  */
+@Data
+@EqualsAndHashCode(of = {"name", "dataType"})
 public class Column {
 
     private String name;
 
-    private String type;
+    private Integer dataType;
+
+    private String typeName;
 
     private String comment;
 
-    public Column(String name, String type, String comment) {
+    public Column(String name, Integer dataType, String type, String comment) {
         this.name = name;
-        this.type = type;
-        this.comment = comment;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
+        this.dataType = dataType;
+        this.typeName = type;
         this.comment = comment;
     }
 }
