@@ -12,14 +12,14 @@
         <thead>
         <tr>
             <th scope="col">字段名</th>
-            <th scope="col">字段类型</th>
+            <th scope="col">类型</th>
             <th scope="col">注释</th>
         </tr>
         </thead>
         <tbody>
         <tr v-for="i in columnArray">
             <td>{{ i.name }}</td>
-            <td>{{ i.type }}</td>
+            <td>{{ i.typeName }}</td>
             <td>{{ i.comment }}</td>
         </tr>
         </tbody>

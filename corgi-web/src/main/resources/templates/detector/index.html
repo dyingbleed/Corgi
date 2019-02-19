@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="base :: base_header(~{::title}, ~{::link}, ~{::script})">
+    <title th:text="${appName}"></title>
+    <link rel="stylesheet" th:href="@{/css/detector/index.css}"/>
+    <script th:src="@{/js/detector/index.js}"></script>
+</head>
+<body>
+<th:block th:replace="base :: navbar(${appName}, 'detector')"></th:block>
+<div id="app" class="container">
+    <table class="table table-borderless">
+        <thead>
+        <tr>
+            <th scope="col">名称</th>
+            <th scope="col">类型</th>
+            <th scope="col">描述</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="i in alertArray"  v-bind:class="levelClass(i)">
+            <td>{{ i.batchTaskName }}</td>
+            <td>{{ typeName(i.type) }}</td>
+            <td>{{ i.msg }}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

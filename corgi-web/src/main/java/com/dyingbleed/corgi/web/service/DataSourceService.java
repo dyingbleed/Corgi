@@ -1,5 +1,6 @@
 package com.dyingbleed.corgi.web.service;
 
+import com.dyingbleed.corgi.web.bean.Column;
 import com.dyingbleed.corgi.web.bean.DataSource;
 
 import java.util.List;
@@ -108,5 +109,17 @@ public interface DataSourceService {
      *
      * */
     public Map<String, String> getTimeColumns(Long id, String database, String table);
+
+    /**
+     * 显示所有字段
+     *
+     * @param id 数据源 ID
+     * @param database 数据库名
+     * @param table 表名
+     *
+     * @return 字段
+     *
+     * */
+    public List<Column> descTable(Long id, String database, String table);
 
 }

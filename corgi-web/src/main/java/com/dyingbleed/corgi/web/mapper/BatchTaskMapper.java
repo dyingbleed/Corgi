@@ -88,6 +88,7 @@ public interface BatchTaskMapper {
     @Results(value = {
             @Result(property = "id", column = "id"),
             @Result(property = "name", column = "name"),
+            @Result(property = "dataSourceId", column = "datasource_id"),
             @Result(property = "sourceDb", column = "source_db"),
             @Result(property = "sourceTable", column = "source_table"),
             @Result(property = "mode", column = "mode"),
@@ -97,6 +98,7 @@ public interface BatchTaskMapper {
     @Select("select " +
             "  id, " +
             "  name, " +
+            "  datasource_id, " +
             "  source_db, " +
             "  source_table, " +
             "  mode, " +
