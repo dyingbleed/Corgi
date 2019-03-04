@@ -17,7 +17,7 @@ class OracleCompleteSplitDataSource extends CompleteSplitDataSource {
            |(SELECT
            |	${tableMeta.toSelectExpr(tableMeta.columns)}
            |FROM ${tableMeta.db}.${tableMeta.table}
-           |WHERE s.${tableMeta.tsColumnName.get} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+           |WHERE s.${tableMeta.tsColumnName.get} < TO_TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
            |) t
           """.stripMargin
       }
@@ -30,10 +30,10 @@ class OracleCompleteSplitDataSource extends CompleteSplitDataSource {
            |FROM (
            |  SELECT
            |    ${tableMeta.toSelectExpr(normalColumns)},
-           |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
+           |    NVL(${tableMeta.tsColumnName.get}, TO_TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
            |  FROM ${tableMeta.db}.${tableMeta.table}
            |) s
-           |WHERE s.${tableMeta.tsColumnName.get} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+           |WHERE s.${tableMeta.tsColumnName.get} < TO_TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
            |) t
           """.stripMargin
       }
@@ -72,10 +72,10 @@ class OracleCompleteSplitDataSource extends CompleteSplitDataSource {
              |FROM (
              |  SELECT
              |    ${tableMeta.toSelectExpr(normalColumns)},
-             |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
+             |    NVL(${tableMeta.tsColumnName.get}, TO_TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
              |  FROM ${tableMeta.db}.${tableMeta.table}
              |) s
-             |WHERE s.${tableMeta.tsColumnName.get} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+             |WHERE s.${tableMeta.tsColumnName.get} < TO_TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
              |AND MOD(ORA_HASH($hashExpr), ${Constants.DEFAULT_PARALLEL}) = $mod
              |) t
           """.stripMargin
@@ -97,22 +97,18 @@ class OracleCompleteSplitDataSource extends CompleteSplitDataSource {
     var unionDF: DataFrame = null
 
     if (conf.mode == UPDATE || conf.mode == APPEND) {
-      val days = Days.daysBetween(tableMeta.tsDefaultVal, LocalDate.now()).getDays
-      for (d <- 0 to days) {
+      val partitionColumnName = conf.partitionColumns(1)
+
+      for (v <- tableMeta.distinct(partitionColumnName)) {
         val normalColumns = tableMeta.columns.filter(c => !c.name.equals(tableMeta.tsColumnName.get))
 
         val sql =
           s"""
              |(SELECT
-             |  *
-             |FROM (
-             |  SELECT
-             |    ${tableMeta.toSelectExpr(normalColumns)},
-             |    IFNULL(${tableMeta.tsColumnName}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName}
-             |  FROM ${tableMeta.db}.${tableMeta.table}
-             |) s
-             |WHERE ${tableMeta.tsColumnName.get} >= TIMESTAMP('${tableMeta.tsDefaultVal.plusDays(d).toString(Constants.DATETIME_FORMAT)}')
-             |AND ${tableMeta.tsColumnName.get} < TIMESTAMP('${tableMeta.tsDefaultVal.plusDays(d + 1).toString(Constants.DATETIME_FORMAT)}')
+             |  ${tableMeta.toSelectExpr(normalColumns)},
+             |  NVL(${tableMeta.tsColumnName.get}, TO_TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
+             |FROM ${tableMeta.db}.${tableMeta.table}
+             |WHERE $partitionColumnName = ${toSQLExpr(v)}
              |) t
           """.stripMargin
 
