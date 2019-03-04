@@ -12,8 +12,8 @@ private[spark] class OracleIncrementalDataSource extends IncrementalDataSource {
        |(SELECT
        |  ${tableMeta.toSelectExpr(tableMeta.columns)}
        |FROM ${tableMeta.db}.${tableMeta.table}
-       |WHERE ${tableMeta.tsColumnName.get} > TO_DATE('${lastExecuteDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
-       |AND ${tableMeta.tsColumnName.get} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+       |WHERE ${tableMeta.tsColumnName.get} > TO_TIMESTAMP('${lastExecuteDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+       |AND ${tableMeta.tsColumnName.get} < TO_TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
        |) t
     """.stripMargin
   }

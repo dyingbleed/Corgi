@@ -24,9 +24,9 @@ private[spark] class OracleCompleteDataSource extends CompleteDataSource {
         s"""
            |(SELECT
            |  ${tableMeta.toSelectExpr(normalColumns)},
-           |  NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
+           |  NVL(${tableMeta.tsColumnName.get}, TO_TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
            |FROM ${tableMeta.db}.${tableMeta.table}
-           |WHERE ${tableMeta.tsColumnName.get} < TO_DATE('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+           |WHERE ${tableMeta.tsColumnName.get} < TO_TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
            |) t
        """.stripMargin
       }
