@@ -14,6 +14,9 @@ public interface Constants {
     String CONF_PARTITION_COLUMNS_SHORT = "p";
     String CONF_PARTITION_COLUMNS = "partition-columns";
 
+    String CONF_EXECUTE_DATE_SHORT = "d";
+    String CONF_EXECUTE_DATE = "execute-date";
+
     String CONF_EXECUTE_TIME_SHORT = "t";
     String CONF_EXECUTE_TIME = "execute-time";
 

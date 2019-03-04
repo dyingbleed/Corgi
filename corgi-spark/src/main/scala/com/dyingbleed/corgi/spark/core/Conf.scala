@@ -6,10 +6,11 @@ import com.alibaba.fastjson.{JSON, JSONObject}
 import com.google.common.base.Charsets
 import com.google.common.base.Preconditions.checkNotNull
 import org.apache.commons.cli.{GnuParser, Options}
+import org.apache.commons.lang3.StringUtils
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
-import org.joda.time.LocalTime
+import org.joda.time.{LocalDate, LocalTime}
 import org.joda.time.format.DateTimeFormat
 
 /**
@@ -105,10 +106,13 @@ private[spark] final class Conf private (args: Array[String]) {
   private[this] var _ignoreHistory: Boolean = _
 
   private[this] var _partitionColumns: Array[String] = _
+
+  private[this] var _executeDate: LocalDate = _
   
   private[this] var _executeTime: Option[LocalTime] = _
 
   private[this] var _partitionStrategy: Option[PartitionStrategy] = _
+
 
   /**
     * 应用名
@@ -124,6 +128,11 @@ private[spark] final class Conf private (args: Array[String]) {
     * 分区字段
     * */
   def partitionColumns: Array[String] = _partitionColumns
+
+  /**
+    * 自定义执行日期
+    * */
+  def executeDate: LocalDate = _executeDate
 
   /**
     * 自定义执行时间
@@ -154,6 +163,8 @@ private[spark] final class Conf private (args: Array[String]) {
     options.addOption(Constants.CONF_IGNORE_HISTORY_SHORT, Constants.CONF_EXECUTE_TIME, false, "Ignore history data")
     // 分区字段
     options.addOption(Constants.CONF_PARTITION_COLUMNS_SHORT, Constants.CONF_PARTITION_COLUMNS, true, "Hive table partition columns")
+    // 执行日期
+    options.addOption(Constants.CONF_EXECUTE_DATE_SHORT, Constants.CONF_EXECUTE_DATE, true, "Customize execute date")
     // 执行时间
     options.addOption(Constants.CONF_EXECUTE_TIME_SHORT, Constants.CONF_EXECUTE_TIME, true, "Customize execute time")
     // 分区策略
@@ -171,6 +182,20 @@ private[spark] final class Conf private (args: Array[String]) {
         Array(Constants.DATE_PARTITION) ++ commandLine.getOptionValue(Constants.CONF_PARTITION_COLUMNS, "").split(",")
       } else {
         Array(Constants.DATE_PARTITION)
+      }
+    }
+
+    _executeDate = {
+      if (commandLine.hasOption(Constants.CONF_EXECUTE_DATE_SHORT) || commandLine.hasOption(Constants.CONF_EXECUTE_DATE)) {
+        val originValue = commandLine.getOptionValue(Constants.CONF_EXECUTE_DATE)
+        if (StringUtils.isNumeric(originValue) || (originValue.startsWith("-") && StringUtils.isNumeric(originValue.substring(1)))) {
+          LocalDate.now().plusDays(originValue.toInt)
+        } else {
+          LocalDate.parse(originValue, DateTimeFormat.forPattern(Constants.DATE_FORMAT))
+        }
+
+      } else {
+        LocalDate.now()
       }
     }
     
