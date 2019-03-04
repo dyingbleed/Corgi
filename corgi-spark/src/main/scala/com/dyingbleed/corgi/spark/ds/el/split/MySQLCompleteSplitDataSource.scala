@@ -72,7 +72,7 @@ private[spark] class MySQLCompleteSplitDataSource extends CompleteSplitDataSourc
              |FROM (
              |  SELECT
              |    ${tableMeta.toSelectExpr(normalColumns)},
-             |    IFNULL(${tableMeta.tsColumnName}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName}
+             |    IFNULL(${tableMeta.tsColumnName.get}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName.get}
              |  FROM ${tableMeta.db}.${tableMeta.table}
              |) s
              |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}')
@@ -97,24 +97,20 @@ private[spark] class MySQLCompleteSplitDataSource extends CompleteSplitDataSourc
     var unionDF: DataFrame = null
 
     if (conf.mode == UPDATE || conf.mode == APPEND) {
-      val days = Days.daysBetween(tableMeta.tsDefaultVal, LocalDate.now()).getDays
-      for (d <- 0 to days) {
+      val partitionColumnName = conf.partitionColumns(1)
+
+      for (v <- tableMeta.distinct(partitionColumnName)) {
         val normalColumns = tableMeta.columns.filter(c => !c.name.equals(tableMeta.tsColumnName.get))
 
         val sql =
           s"""
              |(SELECT
-             |	s.*
-             |FROM (
-             |  SELECT
-             |    ${tableMeta.toSelectExpr(normalColumns)},
-             |    NVL(${tableMeta.tsColumnName.get}, TO_DATE('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')) AS ${tableMeta.tsColumnName.get}
-             |  FROM ${tableMeta.db}.${tableMeta.table}
-             |) s
-             |WHERE s.${tableMeta.tsColumnName.get} >= TO_DATE('${tableMeta.tsDefaultVal.plusDays(d).toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
-             |AND s.${tableMeta.tsColumnName.get} < TO_DATE('${tableMeta.tsDefaultVal.plusDays(d + 1).toString(Constants.DATETIME_FORMAT)}', 'yyyy-mm-dd hh24:mi:ss')
+             |  ${tableMeta.toSelectExpr(normalColumns)},
+             |  IFNULL(${tableMeta.tsColumnName.get}, TIMESTAMP('${tableMeta.tsDefaultVal.toString(Constants.DATETIME_FORMAT)}')) AS ${tableMeta.tsColumnName.get}
+             |FROM ${tableMeta.db}.${tableMeta.table}
+             |WHERE $partitionColumnName = ${toSQLExpr(v)}
              |) t
-        """.stripMargin
+          """.stripMargin
 
         val df = jdbcDF(sql)
         if (unionDF == null) {
