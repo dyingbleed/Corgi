@@ -17,7 +17,6 @@ private[spark] class MySQLCompleteSplitDataSource extends CompleteSplitDataSourc
            |(SELECT
            |  ${tableMeta.toSelectExpr(tableMeta.columns)}
            |FROM ${tableMeta.db}.${tableMeta.table}
-           |WHERE ${tableMeta.tsColumnName.get} < TIMESTAMP('${executeDateTime.toString(Constants.DATETIME_FORMAT)}')
            |) t
           """.stripMargin
       }
