@@ -26,13 +26,15 @@ $(function () {
     function queryAllDataSource() {
         $.get('/api/datasource').done(function (data) {
             app.dataSourceArray = data;
-        }).fail(function () {
-            alert("查询失败！");
+        }).fail(function (e) {
+            alert("数据加载失败！");
         });
     }
 
     /**
      * 根据数据源 ID 删除数据源
+     *
+     * @param id
      *
      * */
     function deleteDataSourceById(id) {

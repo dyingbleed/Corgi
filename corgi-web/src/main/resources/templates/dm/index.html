@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="base :: base_header(~{::title}, ~{::link}, ~{::script})">
+    <title th:text="${appName}"></title>
+    <link rel="stylesheet" th:href="@{/css/dm/index.css}"/>
+    <script th:src="@{/js/dm/index.js}"></script>
+    <script>
+        var MODE_CODE = {
+            "UPDATE": "更新数据",
+            "COMPLETE": "全量数据",
+            "APPEND": "追加数据"
+        };
+    </script>
+</head>
+<body>
+<th:block th:replace="base :: navbar(${appName}, 'dm')"></th:block>
+<div id="app" class="container">
+    <table class="table table-borderless table-responsive">
+        <thead>
+        <tr>
+            <th scope="col" class="name-column">名称</th>
+            <th scope="col">Source</th>
+            <th scope="col">Sink</th>
+            <th scope="col" class="mode-column">模式</th>
+            <th scope="col" class="operation-column">操作</th>
+        </tr>
+        </thead>
+        <tbody v-for="i in dmTaskArray">
+        <tr>
+            <td>
+                <a :href="'/dm/editor/' + i.id">{{ i.name }}</a>
+            </td>
+            <td>{{ i.sourceDB }}.{{ i.sourceTable }}</td>
+            <td>{{ i.sinkDB }}.{{ i.sinkTable }}</td>
+            <td>{{ MODE_CODE[i.mode] }}</td>
+            <td>
+                <a href="#" class="btn btn-sm btn-primary" v-on:click="runDMTaskById(i.id)">运行</a>
+                <a href="#" class="btn btn-sm btn-danger" v-on:click="deleteDMTaskById(i.id)">删除</a>
+            </td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <a class="btn btn-light" href="/dm/editor/">新增 DM 任务</a>
+        </tfoot>
+    </table>
+</div>
+</body>
+</html>

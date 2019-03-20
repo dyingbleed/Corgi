@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `datasource` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-CREATE TABLE IF NOT EXISTS `batch` (
+CREATE TABLE IF NOT EXISTS `ods_task` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `name` varchar(32) UNIQUE NOT NULL,
   `datasource_id` bigint(20) NOT NULL,
@@ -22,12 +22,29 @@ CREATE TABLE IF NOT EXISTS `batch` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
+CREATE TABLE IF NOT EXISTS `dm_task` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(32) DEFAULT NULL,
+  `source_db` varchar(32) NOT NULL,
+  `source_table` varchar(32) NOT NULL,
+  `mode` char(8) NOT NULL,
+  `datasource_id` bigint(20) NOT NULL,
+  `sink_db` varchar(32) NOT NULL,
+  `sink_table` varchar(32) NOT NULL,
+  `where_exp` varchar(1024) DEFAULT NULL,
+  `day_offset` int(11) DEFAULT '-1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `dm_task_name_uindex` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+
+
 CREATE TABLE IF NOT EXISTS `execute_log` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `batch_task_name` varchar(32) NOT NULL,
   `execute_time` datetime NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 CREATE TABLE IF NOT EXISTS `measure` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -41,3 +58,14 @@ CREATE TABLE IF NOT EXISTS `measure` (
   `output_data` bigint(20) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `alert` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `level` tinyint(4) NOT NULL,
+  `type` varchar(64) NOT NULL,
+  `batch_task_id` bigint(20) NOT NULL,
+  `msg` varchar(1024) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `alert_unique_index` (`type`,`batch_task_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;

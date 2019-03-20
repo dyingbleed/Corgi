@@ -6,12 +6,28 @@
 
     <groupId>com.dyingbleed</groupId>
     <artifactId>corgi</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>2.0</version>
     <packaging>pom</packaging>
 
     <modules>
-        <module>corgi-spark</module>
+        <module>corgi-core</module>
         <module>corgi-web</module>
+        <module>corgi-ods</module>
+        <module>corgi-dm</module>
     </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        
+        <scala.version>2.11.8</scala.version>
+
+        <spark.version>2.3.0</spark.version>
+        <livy.version>0.5.0-incubating</livy.version>
+
+        <mysql.connector.version>5.1.40</mysql.connector.version>
+        <oracle.driver.version>10.2.0.3.0</oracle.driver.version>
+
+        <lombok.version>1.18.4</lombok.version>
+    </properties>
 
 </project>

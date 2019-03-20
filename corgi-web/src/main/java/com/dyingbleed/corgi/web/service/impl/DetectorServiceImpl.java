@@ -30,6 +30,7 @@ public class DetectorServiceImpl implements DetectorService {
     }
 
     @Override
+    @Transactional
     public void deleteAlert(String type, Long batchTaskId) {
         this.alertMapper.deleteAlert(type, batchTaskId);
     }

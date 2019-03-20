@@ -1,0 +1,15 @@
+.container {
+    margin-top: 10px;
+}
+
+.name-column {
+    min-width: 200px;
+}
+
+.mode-column {
+    min-width: 100px;
+}
+
+.operation-column {
+    min-width: 100px;
+}

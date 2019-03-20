@@ -1,6 +1,6 @@
 package com.dyingbleed.corgi.web.service.impl;
 
-import com.dyingbleed.corgi.web.bean.Column;
+import com.dyingbleed.corgi.core.bean.Column;
 import com.dyingbleed.corgi.web.service.HiveService;
 import com.dyingbleed.corgi.web.utils.JDBCUtils;
 import org.slf4j.Logger;
@@ -36,7 +36,7 @@ public class HiveServiceImpl implements HiveService {
     private String hiveMasterPassword;
 
     @Autowired
-    private BatchTaskServiceImpl batchTaskService;
+    private ODSTaskServiceImpl batchTaskService;
 
     /**
      * 显示 Hive 所有数据库

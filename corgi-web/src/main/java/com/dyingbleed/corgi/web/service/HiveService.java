@@ -1,6 +1,6 @@
 package com.dyingbleed.corgi.web.service;
 
-import com.dyingbleed.corgi.web.bean.Column;
+import com.dyingbleed.corgi.core.bean.Column;
 
 import java.util.List;
 

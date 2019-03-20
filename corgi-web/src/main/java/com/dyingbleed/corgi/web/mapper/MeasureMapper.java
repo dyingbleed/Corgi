@@ -12,7 +12,7 @@ import java.util.List;
 @Mapper
 public interface MeasureMapper {
 
-    @Insert("insert into measure " +
+    @Insert("INSERT INTO measure " +
             "(" +
             "  name, " +
             "  submission_time, " +
@@ -22,7 +22,7 @@ public interface MeasureMapper {
             "  input_data, " +
             "  output_rows, " +
             "  output_data " +
-            ") values (" +
+            ") VALUES (" +
             "  #{m.name}, " +
             "  #{m.submissionTime}, " +
             "  #{m.completionTime}, " +
@@ -38,16 +38,14 @@ public interface MeasureMapper {
             @Result(property = "taskCount", column = "task_count"),
             @Result(property = "elapsedSecondSum", column = "elapsed_second_sum")
     })
-    @Select("select " +
+    @Select("SELECT " +
             "  count(1) as task_count, " +
             "  sum(elapsed_seconds) as elapsed_second_sum " +
-            "from measure " +
-            "where submission_time >= curdate()")
+            "FROM measure " +
+            "WHERE submission_time >= curdate()")
     MeasureStat queryTodayMeasureStat();
 
     @Results(value = {
-            @Result(property = "id", column = "id"),
-            @Result(property = "name", column = "name"),
             @Result(property = "submissionTime", column = "submission_time"),
             @Result(property = "completionTime", column = "completion_time"),
             @Result(property = "elapsedSeconds", column = "elapsed_seconds"),
@@ -56,7 +54,7 @@ public interface MeasureMapper {
             @Result(property = "outputRows", column = "output_rows"),
             @Result(property = "outputData", column = "output_data"),
     })
-    @Select("select " +
+    @Select("SELECT " +
             "  id, " +
             "  name, " +
             "  submission_time, " +
@@ -66,8 +64,8 @@ public interface MeasureMapper {
             "  input_data, " +
             "  output_rows, " +
             "  output_data " +
-            "from measure " +
-            "where submission_time >= curdate()")
+            "FROM measure " +
+            "WHERE submission_time >= curdate()")
     List<Measure> queryTodayMeasureDetail();
 
 }

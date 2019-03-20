@@ -6,6 +6,7 @@ import com.dyingbleed.corgi.web.mapper.MeasureMapper;
 import com.dyingbleed.corgi.web.service.MeasureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class MeasureServiceImpl implements MeasureService {
      *
      * */
     @Override
+    @Transactional
     public void insertMeasure(Measure measure) {
         this.measureMapper.insertMeasure(measure);
     }

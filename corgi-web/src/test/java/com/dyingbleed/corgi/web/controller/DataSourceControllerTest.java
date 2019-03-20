@@ -1,6 +1,6 @@
 package com.dyingbleed.corgi.web.controller;
 
-import com.dyingbleed.corgi.web.controller.api.DataSourceController;
+import com.dyingbleed.corgi.web.controller.api.v1.DatasourceController;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Created by 李震 on 2018/5/9.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@WebMvcTest(DataSourceController.class)
+@WebMvcTest(DatasourceController.class)
 public class DataSourceControllerTest {
 
     @Autowired

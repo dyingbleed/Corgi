@@ -28,6 +28,9 @@ $(function () {
         }
     });
 
+    /**
+     * 查询所有告警
+     * */
     function queryAllAlerts() {
         $.get('/api/detector').done(function (data) {
             app.alertArray = data;
