@@ -29,5 +29,5 @@ fi
 
 # 启动服务
 mkdir -p $corgi_home/logs
-$JAVA -jar corgi-web.jar --spring.config.location=file:$corgi_home/conf/application.yml 1>>$corgi_home/logs/corgi.log 2>&1 &
+$JAVA -jar corgi-web.jar --spring.profiles.active=prod --spring.config.location=file:$corgi_home/conf/application.yml 1>>$corgi_home/logs/corgi.log 2>&1 &
 echo $! > $corgi_home/bin/corgi.pid

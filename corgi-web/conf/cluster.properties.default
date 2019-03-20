@@ -1,4 +1,0 @@
-# Hive
-hive.master.url=jdbc:hive2://127.0.0.1:10000
-hive.master.username=
-hive.master.password=

@@ -1,8 +1,13 @@
 package com.dyingbleed.corgi.web.utils;
 
-import com.dyingbleed.corgi.web.bean.Column;
+import com.dyingbleed.corgi.core.bean.Column;
+import com.dyingbleed.corgi.core.constant.DBMSVendor;
+import com.dyingbleed.corgi.core.util.JDBCUtil;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -11,23 +16,11 @@ import java.util.List;
  */
 public class JDBCUtils {
 
-    private static String getVendor(String url) {
-        if (url.startsWith("jdbc:mysql")) {
-            return "mysql";
-        } else if (url.startsWith("jdbc:oracle:thin")) {
-            return "oracle";
-        } else if (url.startsWith("jdbc:hive2")) {
-            return "hive2";
-        } else {
-            throw new RuntimeException("不支持的数据源");
-        }
-    }
-
     private static ResultSet getDatabases(String url, DatabaseMetaData dbmd) throws SQLException {
-        switch (getVendor(url)) {
-            case "mysql": return dbmd.getCatalogs();
-            case "oracle": return dbmd.getSchemas();
-            case "hive2": return dbmd.getSchemas();
+        switch (DBMSVendor.fromURL(url)) {
+            case MYSQL: return dbmd.getCatalogs();
+            case ORACLE: return dbmd.getSchemas();
+            case HIVE2: return dbmd.getSchemas();
             default: throw new RuntimeException("不支持的数据源");
         }
     }
@@ -40,13 +33,7 @@ public class JDBCUtils {
      * @param password
      */
     public static Connection getConnection(String url, String username, String password) throws ClassNotFoundException, SQLException {
-        switch (getVendor(url)) {
-            case "mysql": Class.forName("com.mysql.jdbc.Driver"); break;
-            case "oracle": Class.forName("oracle.jdbc.OracleDriver"); break;
-            case "hive2": Class.forName("org.apache.hive.jdbc.HiveDriver"); break;
-            default: throw new RuntimeException("不支持的数据源");
-        }
-        return DriverManager.getConnection(url, username, password);
+        return JDBCUtil.getConnection(url, username, password);
     }
 
     /**
@@ -129,22 +116,7 @@ public class JDBCUtils {
      *
      * */
     public static List<Column> descTable(String url, String username, String password, String db, String table) throws SQLException, ClassNotFoundException {
-        List<Column> columns = new LinkedList<>();
-
-        try (Connection conn = getConnection(url, username, password)) {
-            DatabaseMetaData dbmd = conn.getMetaData();
-            try (ResultSet rs = dbmd.getColumns(conn.getCatalog(), db, table, null)) {
-                while (rs.next()) {
-                    String columnName = rs.getString(4);
-                    int dataType = rs.getInt(5);
-                    String typeName = rs.getString(6);
-                    String comment = rs.getString(12);
-                    columns.add(new Column(columnName, dataType, typeName, comment));
-                }
-            }
-        }
-
-        return columns;
+        return JDBCUtil.getColumns(getConnection(url, username, password), db, table);
     }
 
 }

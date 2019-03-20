@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="base :: base_header(~{::title}, ~{::link}, ~{::script})">
+    <title th:text="${appName}"></title>
+    <link rel="stylesheet" th:href="@{/css/ods/editor.css}"/>
+    <script th:text="${id != null} ? |var id = ${id};| : |var id = null;|"></script>
+    <script th:src="@{/js/ods/editor.js}"></script>
+</head>
+<body>
+<th:block th:replace="base :: navbar(${appName}, 'ods')"></th:block>
+<div id="app" class="container">
+    <form v-on:submit.prevent="insertOrUpdateODSTask(odsTask)">
+        <div class="form-group">
+            <label for="name">名称</label>
+            <input type="text" class="form-control" id="name" required v-model="odsTask.name">
+        </div>
+        <div class="form-group">
+            <label for="datasourceId">数据源</label>
+            <select class="form-control" id="datasourceId" required v-model="odsTask.datasourceId">
+                <option v-for="i in datasourceArray" :value="i.id">{{ i.name }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="sourceDb">Source 数据库</label>
+            <select class="form-control" id="sourceDb" required :disabled="!odsTask.datasourceId" v-model="odsTask.sourceDb">
+                <option v-for="i in sourceDBArray" :value="i">{{ i }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="sourceTable">Source 表</label>
+            <select class="form-control" id="sourceTable" required :disabled="!odsTask.sourceDb" v-model="odsTask.sourceTable">
+                <option v-for="i in sourceTableArray" :value="i">{{ i }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="mode">模式</label>
+            <select class="form-control" id="mode" required v-model="odsTask.mode">
+                <option value="UPDATE">更新数据</option>
+                <option value="COMPLETE">全量数据</option>
+                <option value="APPEND">追加数据</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="timeColumn">时间列</label>
+            <select class="form-control" id="timeColumn" required :disabled="odsTask.mode != 'UPDATE' && odsTask.mode != 'APPEND'" v-model="odsTask.timeColumn">
+                <option v-for="(v, k) in timeColumn" :value="k">{{ k }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="sinkDb">Sink 数据库</label>
+            <select class="form-control" id="sinkDb" required v-model="odsTask.sinkDb">
+                <option v-for="i in sinkDBArray" :value="i">{{ i }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="sinkTable">Sink 表</label>
+            <input type="text" class="form-control" id="sinkTable" required v-model="odsTask.sinkTable">
+        </div>
+        <button type="submit" class="btn btn-primary">保存</button>
+    </form>
+</div>
+</body>
+</html>

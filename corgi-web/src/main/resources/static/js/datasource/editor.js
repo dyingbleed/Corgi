@@ -10,11 +10,7 @@ $(function () {
         },
         methods: {
             insertOrUpdateDataSource: function () {
-                if (_.isNull(id)) {
-                    insertDataSource(app.dataSource);
-                } else {
-                    updateDataSource(app.dataSource);
-                }
+                insertOrUpdateDatasource(app.dataSource);
             },
             testDataSourceConnection: function () {
                 $.get('/api/datasource/test', app. dataSource).done(function (data) {
@@ -24,23 +20,8 @@ $(function () {
         }
     });
 
-    function insertDataSource(ds) {
-        $.ajax('/api/datasource', {
-            method: 'PUT',
-            data: app. dataSource
-        }).done(function () {
-            alert("保存成功！");
-            window.location.href = '/datasource/';
-        }).fail(function () {
-            alert("保存失败！");
-        });
-    }
-
-    function updateDataSource(ds) {
-        $.ajax('/api/datasource', {
-            method: 'POST',
-            data: app. dataSource
-        }).done(function () {
+    function insertOrUpdateDatasource(ds) {
+        $.post('/api/datasource', ds).done(function () {
             alert("保存成功！");
             window.location.href = '/datasource/';
         }).fail(function () {
@@ -57,5 +38,7 @@ $(function () {
         });
     }
 
-    if (!_.isNull(id)) queryDataSourceById(id);
+    if (!_.isNull(id)) {
+        queryDataSourceById(id);
+    }
 });

@@ -1,3 +1,11 @@
 .container {
     margin-top: 10px;
 }
+
+.name-column {
+    min-width: 200px;
+}
+
+.type-column {
+    min-width: 150px;
+}lizhen-

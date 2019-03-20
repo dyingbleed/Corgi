@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="base :: base_header(~{::title}, ~{::link}, ~{::script})">
+    <title th:text="${appName}"></title>
+    <link rel="stylesheet" th:href="@{/css/dm/editor.css}"/>
+    <script th:text="${id != null} ? |var id = ${id};| : |var id = null;|"></script>
+    <script th:src="@{/js/dm/editor.js}"></script>
+</head>
+<body>
+<th:block th:replace="base :: navbar(${appName}, 'dm')"></th:block>
+<div id="app" class="container">
+    <form v-on:submit.prevent="insertOrUpdateDMTask(dmTask)">
+        <div class="form-group">
+            <label for="name">名称</label>
+            <input type="text" class="form-control" id="name" required v-model="dmTask.name">
+        </div>
+        <div class="form-group">
+            <label for="sourceDB">Source 数据库</label>
+            <select class="form-control" id="sourceDB" required v-model="dmTask.sourceDB">
+                <option v-for="i in sourceDBArray" :value="i">{{ i }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="sourceTable">Source 表</label>
+            <select class="form-control" id="sourceTable" required :disabled="!dmTask.sourceDB" v-model="dmTask.sourceTable">
+                <option v-for="i in sourceTableArray" :value="i">{{ i }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="datasourceId">数据源</label>
+            <select class="form-control" id="datasourceId" required v-model="dmTask.datasourceId">
+                <option v-for="i in datasourceArray" :value="i.id">{{ i.name }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="sinkDB">Sink 数据库</label>
+            <select class="form-control" id="sinkDB" required :disabled="!dmTask.datasourceId" v-model="dmTask.sinkDB">
+                <option v-for="i in sinkDBArray" :value="i">{{ i }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="sinkTable">Sink 表</label>
+            <select class="form-control" id="sinkTable" required :disabled="!dmTask.sinkDB" v-model="dmTask.sinkTable">
+                <option v-for="i in sinkTableArray" :value="i">{{ i }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="dayOffset">日期偏移</label>
+            <input type="number" class="form-control" id="dayOffset" v-model="dmTask.dayOffset">
+            <small id="dayOffsetHelp" class="form-text text-muted">日期：{{ dayOffsetHelp }}</small>
+        </div>
+        <div class="form-group">
+            <label for="whereExp">WHERE 表达式</label>
+            <textarea class="form-control" id="whereExp" v-model="dmTask.whereExp" rows="4"></textarea>
+            <small id="whereExpHelp" class="form-text text-muted">日期分区支持 <i>date</i> 函数，示例：<code type="sql">market_date=date('yyyy-MM-dd')</code> </small>
+        </div>
+        <div class="form-group">
+            <label for="mode">模式</label>
+            <select class="form-control" id="mode" required v-model="dmTask.mode">
+                <option value=""></option>
+                <option value="UPDATE">更新数据</option>
+                <option value="COMPLETE">全量数据</option>
+                <option value="APPEND">追加数据</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">保存</button>
+    </form>
+</div>
+</body>
+</html>

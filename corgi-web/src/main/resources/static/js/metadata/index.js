@@ -28,7 +28,7 @@ $(function () {
      * 查询所有批量任务
      * */
     function queryAllBatchTask() {
-        $.get('/api/batch').done(function (data) {
+        $.get('/api/ods').done(function (data) {
             app.batchTaskArray = data;
         }).fail(function () {
             alert("查询失败！");

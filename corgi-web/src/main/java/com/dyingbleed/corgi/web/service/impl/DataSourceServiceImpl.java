@@ -1,16 +1,18 @@
 package com.dyingbleed.corgi.web.service.impl;
 
-import com.dyingbleed.corgi.web.bean.Column;
-import com.dyingbleed.corgi.web.bean.DataSource;
-import com.dyingbleed.corgi.web.mapper.BatchTaskMapper;
-import com.dyingbleed.corgi.web.mapper.DataSourceMapper;
-import com.dyingbleed.corgi.web.service.DataSourceService;
+import com.dyingbleed.corgi.core.bean.Column;
+import com.dyingbleed.corgi.web.bean.Datasource;
+import com.dyingbleed.corgi.web.mapper.DMTaskMapper;
+import com.dyingbleed.corgi.web.mapper.DatasourceMapper;
+import com.dyingbleed.corgi.web.mapper.ODSTaskMapper;
+import com.dyingbleed.corgi.web.service.DatasourceService;
 import com.dyingbleed.corgi.web.utils.JDBCUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.SQLException;
 import java.sql.Types;
@@ -18,7 +20,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 数据源
@@ -26,29 +27,18 @@ import java.util.stream.Collectors;
  * Created by 李震 on 2018/5/9.
  */
 @Service
-public class DataSourceServiceImpl implements DataSourceService {
+public class DataSourceServiceImpl implements DatasourceService {
 
     private static Logger logger = LoggerFactory.getLogger(DataSourceServiceImpl.class);
 
     @Autowired
-    private DataSourceMapper dataSourceMapper;
+    private DatasourceMapper datasourceMapper;
 
     @Autowired
-    private BatchTaskMapper batchTaskMapper;
+    private ODSTaskMapper odsTaskMapper;
 
-    /**
-     * 新增数据源
-     *
-     * @param ds 数据源
-     *
-     * @return 数据源
-     *
-     * */
-    @Override
-    public DataSource insertDataSource(DataSource ds) {
-        this.dataSourceMapper.insertDataSource(ds);
-        return ds;
-    }
+    @Autowired
+    private DMTaskMapper dmTaskMapper;
 
     /**
      * 根据 ID 删除数据源
@@ -57,9 +47,11 @@ public class DataSourceServiceImpl implements DataSourceService {
      *
      * */
     @Override
-    public void deleteDataSourceById(Long id) {
-        this.dataSourceMapper.deleteDataSourceById(id); // 删除 datasource
-        this.batchTaskMapper.deleteBatchTaskByDataSourceId(id); // 删除 datasource 关联的 batch_task
+    @Transactional
+    public void deleteDatasourceById(Long id) {
+        this.datasourceMapper.deleteDatasourceById(id); // 删除 datasource
+        this.odsTaskMapper.deleteODSTaskByDatasourceId(id); // 删除 datasource 关联的 ods_task
+        this.dmTaskMapper.deleteDMTaskByDatasourceId(id); // 删除 datasource 关联的 dm_task
     }
 
     /**
@@ -71,9 +63,13 @@ public class DataSourceServiceImpl implements DataSourceService {
      *
      * */
     @Override
-    public DataSource updateDataSource(DataSource ds) {
-        this.dataSourceMapper.updateDataSource(ds);
-        return ds;
+    @Transactional
+    public void insertOrUpdateDatasource(Datasource ds) {
+        if (ds.getId() == null) {
+            this.datasourceMapper.insertDatasource(ds);
+        } else {
+            this.datasourceMapper.updateDatasource(ds);
+        }
     }
 
     /**
@@ -83,8 +79,8 @@ public class DataSourceServiceImpl implements DataSourceService {
      *
      * */
     @Override
-    public List<DataSource> queryAllDataSource() {
-        return this.dataSourceMapper.queryAllDataSource();
+    public List<Datasource> queryAllDatasource() {
+        return this.datasourceMapper.queryAllDatasource();
     }
 
     /**
@@ -96,8 +92,8 @@ public class DataSourceServiceImpl implements DataSourceService {
      *
      * */
     @Override
-    public DataSource queryDataSourceById(Long id) {
-        return this.dataSourceMapper.queryDataSourceById(id);
+    public Datasource queryDatasourceById(Long id) {
+        return this.datasourceMapper.queryDatasourceById(id);
     }
 
     /**
@@ -109,8 +105,8 @@ public class DataSourceServiceImpl implements DataSourceService {
      *
      * */
     @Override
-    public DataSource queryDataSourceByName(String name) {
-        return this.dataSourceMapper.queryDataSourceByName(name);
+    public Datasource queryDatasourceByName(String name) {
+        return this.datasourceMapper.queryDatasourceByName(name);
     }
 
     /**
@@ -122,7 +118,7 @@ public class DataSourceServiceImpl implements DataSourceService {
      *
      * */
     @Override
-    public String testConnection(DataSource ds) {
+    public String testConnection(Datasource ds) {
         String message = "success";
         try {
             JDBCUtils.testConnection(ds.getUrl(), ds.getUsername(), ds.getPassword());
@@ -145,7 +141,7 @@ public class DataSourceServiceImpl implements DataSourceService {
     public List<String> showDBs(Long id) {
         LinkedList<String> databases = new LinkedList<>();
 
-        DataSource ds = this.queryDataSourceById(id);
+        Datasource ds = this.queryDatasourceById(id);
         try {
             databases.addAll(JDBCUtils.showDatabases(ds.getUrl(), ds.getUsername(), ds.getPassword()));
         } catch (ClassNotFoundException | SQLException  e) {
@@ -169,7 +165,7 @@ public class DataSourceServiceImpl implements DataSourceService {
     public List<String> showTables(Long id, String database) {
         LinkedList<String> tables = new LinkedList<>();
 
-        DataSource ds = this.queryDataSourceById(id);
+        Datasource ds = this.queryDatasourceById(id);
         try {
             tables.addAll(JDBCUtils.showTables(ds.getUrl(), ds.getUsername(), ds.getPassword(), database));
         } catch (ClassNotFoundException | SQLException e) {
@@ -193,13 +189,13 @@ public class DataSourceServiceImpl implements DataSourceService {
     public Map<String, String> getTimeColumns(Long id, String database, String table) {
         Map<String, String> timeColumnMap = new LinkedHashMap<>();
 
-        DataSource ds = this.queryDataSourceById(id);
+        Datasource ds = this.queryDatasourceById(id);
         try {
             List<Column> columns = JDBCUtils.descTable(ds.getUrl(), ds.getUsername(), ds.getPassword(), database, table);
             for (Column c: columns) {
-                if (c.getDataType() == Types.DATE ||
-                        c.getDataType() == Types.TIME ||
-                        c.getDataType() == Types.TIMESTAMP) {
+                if (c.getType() == Types.DATE ||
+                        c.getType() == Types.TIME ||
+                        c.getType() == Types.TIMESTAMP) {
                     timeColumnMap.put(c.getName(), c.getTypeName());
                 }
             }
@@ -212,7 +208,7 @@ public class DataSourceServiceImpl implements DataSourceService {
 
     @Override
     public List<Column> descTable(Long id, String database, String table) {
-        DataSource ds = this.queryDataSourceById(id);
+        Datasource ds = this.queryDatasourceById(id);
         try {
             return JDBCUtils.descTable(ds.getUrl(), ds.getUsername(), ds.getPassword(), database, table);
         } catch (SQLException | ClassNotFoundException e) {

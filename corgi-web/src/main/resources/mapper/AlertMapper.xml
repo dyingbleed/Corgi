@@ -39,7 +39,7 @@
         SELECT
           a.id, a.level, a.type, a.batch_task_id, b.name AS batch_task_name, a.msg
         FROM alert a
-        LEFT JOIN batch b
+        LEFT JOIN ods_task b
         ON a.batch_task_id = b.id
         where a.type=#{type} AND a.batch_task_id=#{batchTaskId}
     </select>
@@ -48,7 +48,7 @@
         SELECT
           a.id, a.level, a.type, a.batch_task_id, b.name AS batch_task_name, a.msg
         FROM alert a
-        LEFT JOIN batch b
+        LEFT JOIN ods_task b
         ON a.batch_task_id = b.id
     </select>
 

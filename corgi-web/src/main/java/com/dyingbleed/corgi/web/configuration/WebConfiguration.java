@@ -7,6 +7,7 @@ import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 /**
  * Created by 李震 on 2019/2/2.
@@ -15,6 +16,7 @@ import org.springframework.context.annotation.Configuration;
 public class WebConfiguration {
 
     @Bean
+    @Profile("prod")
     public ServletListenerRegistrationBean servletListenerRegistrationBean() {
         ServletListenerRegistrationBean bean = new ServletListenerRegistrationBean();
 
@@ -25,9 +27,11 @@ public class WebConfiguration {
     }
 
     @Bean
+    @Profile("prod")
     public FilterRegistrationBean filterRegistrationBean() {
         FilterRegistrationBean bean = new FilterRegistrationBean();
 
+        // Shiro
         ShiroFilter shiroFilter = new ShiroFilter();
         bean.setFilter(shiroFilter);
         bean.addUrlPatterns("/*");
@@ -36,6 +40,7 @@ public class WebConfiguration {
     }
 
     @Bean
+    @Profile("prod")
     public ServletContextInitializer servletContextInitializer() {
         return servletContext -> servletContext.setInitParameter("shiroConfigLocations", "file:" + System.getenv("CORGI_HOME") + "/conf/shiro.ini");
     }

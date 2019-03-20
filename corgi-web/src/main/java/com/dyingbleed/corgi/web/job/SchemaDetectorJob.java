@@ -1,21 +1,17 @@
 package com.dyingbleed.corgi.web.job;
 
+import com.dyingbleed.corgi.core.bean.Column;
+import com.dyingbleed.corgi.core.bean.ODSTask;
 import com.dyingbleed.corgi.web.Constants;
 import com.dyingbleed.corgi.web.bean.Alert;
-import com.dyingbleed.corgi.web.bean.BatchTask;
-import com.dyingbleed.corgi.web.bean.Column;
-import com.dyingbleed.corgi.web.service.BatchTaskService;
-import com.dyingbleed.corgi.web.service.DataSourceService;
+import com.dyingbleed.corgi.web.service.DatasourceService;
 import com.dyingbleed.corgi.web.service.DetectorService;
 import com.dyingbleed.corgi.web.service.HiveService;
-import com.dyingbleed.corgi.web.utils.JDBCUtils;
-import com.google.common.collect.Sets;
-import org.apache.commons.collections.CollectionUtils;
+import com.dyingbleed.corgi.web.service.ODSTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,10 +23,10 @@ import java.util.stream.Collectors;
 public class SchemaDetectorJob {
 
     @Autowired
-    private BatchTaskService batchTaskService;
+    private ODSTaskService odsTaskService;
 
     @Autowired
-    private DataSourceService dataSourceService;
+    private DatasourceService dataSourceService;
 
     @Autowired
     private HiveService hiveService;
@@ -40,12 +36,12 @@ public class SchemaDetectorJob {
 
     @Scheduled(fixedDelay = 1000 * 60 * 5)
     public void detect() {
-        List<BatchTask> batchTasks = this.batchTaskService.queryAllBatchTask();
-        BatchTask batchTask = batchTasks.get(new Random().nextInt(batchTasks.size()));
+        List<ODSTask> odsTasks = this.odsTaskService.queryAllODSTask();
+        ODSTask odsTask = odsTasks.get(new Random().nextInt(odsTasks.size()));
 
-        final List<Column> sourceColumns = dataSourceService.descTable(batchTask.getDataSourceId(), batchTask.getSourceDb(), batchTask.getSourceTable());
+        final List<Column> sourceColumns = dataSourceService.descTable(odsTask.getDatasourceId(), odsTask.getSourceDb(), odsTask.getSourceTable());
         final List<Column> sinkColumns = hiveService
-                .descTable(batchTask.getSinkDb(), batchTask.getSinkTable())
+                .descTable(odsTask.getSinkDb(), odsTask.getSinkTable())
                 .stream()
                 .filter(c -> !c.getName().equalsIgnoreCase("ods_date"))
                 .collect(Collectors.toList());
@@ -81,7 +77,7 @@ public class SchemaDetectorJob {
                 msg = "❌";
             }
             alert.setType(Constants.ALERT_TYPE_SCHEMA_NOT_MATCH);
-            alert.setBatchTaskId(batchTask.getId());
+            alert.setBatchTaskId(odsTask.getId());
 
 
             if (sourceDiffColumns.size() != 0) {
@@ -99,7 +95,7 @@ public class SchemaDetectorJob {
 
             this.detectorService.saveOrUpdateAlert(alert);
         } else {
-            this.detectorService.deleteAlert(Constants.ALERT_TYPE_SCHEMA_NOT_MATCH, batchTask.getId());
+            this.detectorService.deleteAlert(Constants.ALERT_TYPE_SCHEMA_NOT_MATCH, odsTask.getId());
         }
     }
 
@@ -111,14 +107,14 @@ public class SchemaDetectorJob {
      *
      * */
     // 整数类型
-    private final static Set<Integer> INTEGER_TYPE_SET = Sets.newHashSet(
+    private final static Set<Integer> INTEGER_TYPE_SET = newHashSet(
             Types.TINYINT,
             Types.SMALLINT,
             Types.INTEGER,
             Types.BIGINT
     );
     // 实数类型
-    private final static Set<Integer> REAL_TYPE_SET = Sets.newHashSet(
+    private final static Set<Integer> REAL_TYPE_SET = newHashSet(
             Types.NUMERIC,
             Types.REAL,
             Types.DECIMAL,
@@ -127,7 +123,7 @@ public class SchemaDetectorJob {
             Types.DOUBLE
     );
     // 字符类型
-    private final static Set<Integer> STRING_TYPE_SET = Sets.newHashSet(
+    private final static Set<Integer> STRING_TYPE_SET = newHashSet(
             Types.CHAR,
             Types.VARCHAR,
             Types.NVARCHAR,
@@ -135,28 +131,37 @@ public class SchemaDetectorJob {
             Types.LONGNVARCHAR
     );
     // 日期类型
-    private final static Set<Integer> DATE_TYPE_SET = Sets.newHashSet(
+    private final static Set<Integer> DATE_TYPE_SET = newHashSet(
             Types.DATE,
             Types.TIMESTAMP,
             Types.TIMESTAMP_WITH_TIMEZONE
     );
+    // 布尔类型
+    private final static Set<Integer> BIN_TYPE_SET = newHashSet(
+            Types.BINARY,
+            Types.BIT,
+            Types.BOOLEAN,
+            Types.VARBINARY
+    );
+
+    private static <E> HashSet<E> newHashSet(E... elements) {
+        HashSet<E> set = new HashSet<>(elements.length);
+        Collections.addAll(set, elements);
+        return set;
+    }
 
     private boolean columnEqual(Column sourceColumn, Column sinkColumn) {
         boolean isNameEqual = sourceColumn.getName().equalsIgnoreCase(sinkColumn.getName());
 
-        boolean isDataTypeEqual = false;
-        if (sourceColumn.getDataType() == sinkColumn.getDataType()) {
+        boolean isDataTypeEqual;
+        if (sourceColumn.getType() == sinkColumn.getType()) {
             isDataTypeEqual = true;
         } else {
-            if (INTEGER_TYPE_SET.contains(sourceColumn.getDataType()) && INTEGER_TYPE_SET.contains(sinkColumn.getDataType())) {
-                isDataTypeEqual = true;
-            } else if (REAL_TYPE_SET.contains(sourceColumn.getDataType()) && REAL_TYPE_SET.contains(sinkColumn.getDataType())) {
-                isDataTypeEqual = true;
-            } else if (STRING_TYPE_SET.contains(sourceColumn.getDataType()) && STRING_TYPE_SET.contains(sinkColumn.getDataType())) {
-                isDataTypeEqual = true;
-            } else if (DATE_TYPE_SET.contains(sourceColumn.getDataType()) && DATE_TYPE_SET.contains(sinkColumn.getDataType())) {
-                isDataTypeEqual = true;
-            }
+            isDataTypeEqual = (INTEGER_TYPE_SET.contains(sourceColumn.getType()) && INTEGER_TYPE_SET.contains(sinkColumn.getType())) ||
+                    (REAL_TYPE_SET.contains(sourceColumn.getType()) && REAL_TYPE_SET.contains(sinkColumn.getType())) ||
+                    (STRING_TYPE_SET.contains(sourceColumn.getType()) && STRING_TYPE_SET.contains(sinkColumn.getType())) ||
+                    (DATE_TYPE_SET.contains(sourceColumn.getType()) && DATE_TYPE_SET.contains(sinkColumn.getType())) ||
+                    (BIN_TYPE_SET.contains(sourceColumn.getType()) && BIN_TYPE_SET.contains(sinkColumn.getType()));
         }
 
         return isNameEqual && isDataTypeEqual;
