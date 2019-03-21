@@ -38,10 +38,12 @@ CREATE TABLE IF NOT EXISTS `dm_task` (
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 
 
-CREATE TABLE IF NOT EXISTS `execute_log` (
+CREATE TABLE IF NOT EXISTS `dm_task_log` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `batch_task_name` varchar(32) NOT NULL,
-  `execute_time` datetime NOT NULL,
+  `task_id` bigint(20) NOT NULL,
+  `state` char(8) DEFAULT 'success',
+  `content` varchar(1024) DEFAULT NULL,
+  `ts` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

@@ -130,6 +130,11 @@
             <artifactId>hive-jdbc</artifactId>
             <version>${hive.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.livy</groupId>
+            <artifactId>livy-client-http</artifactId>
+            <version>${livy.version}</version>
+        </dependency>
 
         <!-- Webjars -->
         <dependency>
@@ -170,6 +175,11 @@
         <dependency>
             <groupId>com.dyingbleed</groupId>
             <artifactId>corgi-core</artifactId>
+            <version>${version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.dyingbleed</groupId>
+            <artifactId>corgi-dm</artifactId>
             <version>${version}</version>
         </dependency>
 

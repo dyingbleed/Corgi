@@ -1,22 +1,49 @@
 package com.dyingbleed.corgi.web.service.impl;
 
 import com.dyingbleed.corgi.core.bean.DMTask;
+import com.dyingbleed.corgi.dm.LivyJob;
+import com.dyingbleed.corgi.web.bean.DMTaskLog;
+import com.dyingbleed.corgi.web.mapper.DMTaskLogMapper;
 import com.dyingbleed.corgi.web.mapper.DMTaskMapper;
 import com.dyingbleed.corgi.web.service.DMTaskService;
+import org.apache.livy.JobHandle;
+import org.apache.livy.LivyClient;
+import org.apache.livy.LivyClientBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by 李震 on 2019/3/11.
  */
 @Service
+@PropertySource({"file:${CORGI_HOME}/conf/application.yml", "file:${CORGI_HOME}/conf/cluster.properties"})
 public class DMTaskServiceImpl implements DMTaskService {
+
+    private static final Logger logger = LoggerFactory.getLogger(DMTaskServiceImpl.class);
 
     @Autowired
     private DMTaskMapper dmTaskMapper;
+
+    @Autowired
+    private DMTaskLogMapper dmTaskLogMapper;
+
+    @Value("${livy.url}")
+    private String livyUrl;
+
+    @Value("${corgi.dm.path}")
+    private String appPath;
 
     @Override
     @Transactional
@@ -48,5 +75,40 @@ public class DMTaskServiceImpl implements DMTaskService {
     public DMTask queryDMTaskByName(String name) {
         return this.dmTaskMapper.queryDMTaskByName(name);
     }
+
+    @Override
+    public void runDMTaskById(Long id) {
+        DMTask dmTask = queryDMTaskById(id);
+        assert dmTask != null;
+
+        LivyClient livyClient = null;
+        try {
+            livyClient = new LivyClientBuilder()
+                    .setURI(new URI(this.livyUrl))
+                    .build();
+
+            File appFile = new File(appPath);
+            assert appFile.exists();
+            livyClient.uploadJar(appFile);
+
+            livyClient.submit(new LivyJob(new String[]{dmTask.getName()})).get();
+        } catch (IOException | URISyntaxException | InterruptedException | ExecutionException e) {
+            this.dmTaskLogMapper.insertDMTaskLog(DMTaskLog.failedLog(id, e)); // 记录失败日志
+
+            throw new RuntimeException(e);
+        } finally {
+            if (livyClient != null) {
+                livyClient.stop(true);
+            }
+        }
+
+        this.dmTaskLogMapper.insertDMTaskLog(DMTaskLog.successLog(id)); // 记录成功日志
+    }
+
+    @Override
+    public List<DMTaskLog> queryDMTaskLogByTaskId(Long taskId) {
+        return this.dmTaskLogMapper.queryDMTaskLogByTaskId(taskId);
+    }
+
 
 }

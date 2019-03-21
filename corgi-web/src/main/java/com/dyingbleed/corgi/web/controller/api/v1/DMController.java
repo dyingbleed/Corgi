@@ -1,6 +1,7 @@
 package com.dyingbleed.corgi.web.controller.api.v1;
 
 import com.dyingbleed.corgi.core.bean.DMTask;
+import com.dyingbleed.corgi.web.bean.DMTaskLog;
 import com.dyingbleed.corgi.web.service.DMTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -39,7 +40,12 @@ public class DMController {
 
     @PostMapping("/run/{id}")
     public void runDMTaskById(@PathVariable("id") Long id) {
+        this.dmTaskService.runDMTaskById(id);
+    }
 
+    @GetMapping("/log/{task_id}")
+    public List<DMTaskLog> queryDMTaskLogByTaskId(@PathVariable("task_id") Long taskId) {
+        return this.dmTaskService.queryDMTaskLogByTaskId(taskId);
     }
 
 }

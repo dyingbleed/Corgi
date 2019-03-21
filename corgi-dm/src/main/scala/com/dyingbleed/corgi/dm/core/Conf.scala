@@ -86,6 +86,7 @@ class Conf private[Conf] (args: Array[String]) {
   }
 
   private[Conf] def init(): Unit = {
+    initArgsConf()
     initClasspathConf()
     initRemoteConf()
   }
