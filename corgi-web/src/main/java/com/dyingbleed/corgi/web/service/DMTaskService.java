@@ -1,6 +1,7 @@
 package com.dyingbleed.corgi.web.service;
 
 import com.dyingbleed.corgi.core.bean.DMTask;
+import com.dyingbleed.corgi.web.bean.DMTaskLog;
 
 import java.util.List;
 
@@ -18,5 +19,9 @@ public interface DMTaskService {
     public DMTask queryDMTaskById(Long id);
 
     public DMTask queryDMTaskByName(String name);
+
+    public void runDMTaskById(Long id);
+
+    public List<DMTaskLog> queryDMTaskLogByTaskId(Long taskId);
 
 }
