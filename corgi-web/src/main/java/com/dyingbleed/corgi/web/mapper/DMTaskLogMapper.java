@@ -22,7 +22,7 @@ public interface DMTaskLogMapper {
             "  l.ts " +
             "FROM dm_task_log l " +
             "WHERE l.task_id=${taskId} " +
-            "ORDER BY l.ts DESC" +
+            "ORDER BY l.ts DESC " +
             "LIMIT 10")
     List<DMTaskLog> queryDMTaskLogByTaskId(@Param("taskId") Long taskId);
 
