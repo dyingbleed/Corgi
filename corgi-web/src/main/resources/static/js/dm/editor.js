@@ -7,7 +7,7 @@ $(function () {
     var sourceTableArray = []; // Source 表
     var sinkDBArray = []; // Sink 数据库
     var sinkTableArray = []; // Sink 表
-    var dayOffsetHelp = null;
+    var sinkColumnArray = []; // Sink 字段
 
     // Vue 实例
     var app = new Vue({
@@ -19,7 +19,7 @@ $(function () {
             sourceTableArray: sourceTableArray,
             sinkDBArray: sinkDBArray,
             sinkTableArray: sinkTableArray,
-            dayOffsetHelp: dayOffsetHelp
+            sinkColumnArray: sinkColumnArray
         },
         watch: {
             "dmTask.sourceDB": function (oldValue) {
@@ -30,6 +30,9 @@ $(function () {
             },
             "dmTask.sinkDB": function(oldValue) {
                 queryAllSinkTable(app.dmTask.datasourceId, oldValue);
+            },
+            "dmTask.sinkTable": function (oldValue) {
+                queryAllSinkColumn(app.dmTask.datasourceId, app.dmTask.sinkDB, oldValue);
             },
             "dmTask.dayOffset": function (oldValue) {
                 oldValue = _.toInteger(oldValue);
@@ -54,6 +57,7 @@ $(function () {
      *
      * */
     function insertOrUpdateDMTask(task) {
+        task.pks = JSON.stringify(task.pks);
         $.post('/api/v1/dm', task).done(function () {
             alert("保存成功！");
             window.location.href = '/dm/';
@@ -131,6 +135,23 @@ $(function () {
     }
 
     /**
+     * 查询所有 Sink 表字段
+     *
+     * @param id 数据源 ID
+     * @param db 数据库名
+     * @param table 表名
+     *
+     * */
+    function queryAllSinkColumn(id, db, table) {
+        var url = "/api/datasource/column/" + id + "/" + db + "/" + table;
+        $.get(url).done(function (data) {
+            app.sinkColumnArray = data;
+        }).fail(function (e) {
+            alert("查询 Sink 字段失败！");
+        });
+    }
+
+    /**
      * 根据 ID 查询批量任务
      *
      * @param id 批量任务 ID
@@ -139,6 +160,7 @@ $(function () {
     function queryDMTaskById(id) {
         var url = '/api/dm/' + id;
         $.get(url).done(function (data) {
+            data.pks = JSON.parse(data.pks);
             app.dmTask = data;
         }).fail(function () {
             alert("加载数据失败！");

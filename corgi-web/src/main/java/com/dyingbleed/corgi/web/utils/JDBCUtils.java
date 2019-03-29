@@ -26,17 +26,6 @@ public class JDBCUtils {
     }
 
     /**
-     * 获取数据库连接
-     *
-     * @param url
-     * @param username
-     * @param password
-     */
-    public static Connection getConnection(String url, String username, String password) throws ClassNotFoundException, SQLException {
-        return JDBCUtil.getConnection(url, username, password);
-    }
-
-    /**
      * 测试数据库连接
      *
      * @param url
@@ -45,7 +34,7 @@ public class JDBCUtils {
      *
      * */
     public static void testConnection(String url, String username, String password) throws ClassNotFoundException, SQLException {
-        try (Connection conn = getConnection(url, username, password)) {
+        try (Connection conn = JDBCUtil.getConnection(url, username, password)) {
             if (conn.isClosed()) throw new RuntimeException("数据库连接失败！");
         }
     }
@@ -63,7 +52,7 @@ public class JDBCUtils {
     public static List<String> showDatabases(String url, String username, String password) throws ClassNotFoundException, SQLException {
         List<String> schemas = new LinkedList<>();
 
-        try (Connection conn = getConnection(url, username, password)) {
+        try (Connection conn = JDBCUtil.getConnection(url, username, password)) {
             DatabaseMetaData dbmd = conn.getMetaData();
             try (ResultSet rs = getDatabases(url, dbmd)) {
                 while (rs.next()) {
@@ -90,7 +79,7 @@ public class JDBCUtils {
     public static List<String> showTables(String url, String username, String password, String db) throws ClassNotFoundException, SQLException {
         List<String> tables = new LinkedList<>();
 
-        try (Connection conn = getConnection(url, username, password)) {
+        try (Connection conn = JDBCUtil.getConnection(url, username, password)) {
             DatabaseMetaData dbmd = conn.getMetaData();
             try (ResultSet rs = dbmd.getTables(conn.getCatalog(), db, null, null)) {
                 while (rs.next()) {
@@ -116,7 +105,13 @@ public class JDBCUtils {
      *
      * */
     public static List<Column> descTable(String url, String username, String password, String db, String table) throws SQLException, ClassNotFoundException {
-        return JDBCUtil.getColumns(getConnection(url, username, password), db, table);
+        List<Column> r = new LinkedList<>();
+
+        try (Connection conn = JDBCUtil.getConnection(url, username, password)) {
+            r.addAll(JDBCUtil.getColumns(conn, db, table));
+        }
+
+        return r;
     }
 
 }

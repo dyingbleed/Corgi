@@ -6,11 +6,33 @@
         </encoder>
     </appender>
 
-    <logger name="org.springframework">
-        <level value="WARN"></level>
-    </logger>
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>corgi-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>5GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date [%thread] %-5level %logger{50} - %msg%n</pattern>
+        </encoder>
+    </appender>
 
-    <root level="DEBUG">
-        <appender-ref ref="STDOUT" />
-    </root>
+    <!-- 生产环境 -->
+    <springProfile name="prod">
+        <root level="WARN">
+            <appender-ref ref="FILE" />
+        </root>
+
+        <logger name="com.dyingbleed.corgi" level="INFO" additivity="false">
+            <appender-ref ref="FILE" />
+        </logger>
+    </springProfile>
+
+    <!-- 测试环境 -->
+    <springProfile name="!prod">
+        <root level="DEBUG">
+            <appender-ref ref="STDOUT" />
+        </root>
+    </springProfile>
 </configuration>

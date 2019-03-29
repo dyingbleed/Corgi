@@ -57,11 +57,17 @@
         <div class="form-group">
             <label for="mode">模式</label>
             <select class="form-control" id="mode" required v-model="dmTask.mode">
-                <option value=""></option>
                 <option value="UPDATE">更新数据</option>
                 <option value="COMPLETE">全量数据</option>
                 <option value="APPEND">追加数据</option>
             </select>
+        </div>
+        <div class="form-group">
+            <label for="pks">更新字段</label>
+            <select multiple class="form-control" id="pks" :disabled="dmTask.mode != 'UPDATE' || !dmTask.sinkTable" v-model="dmTask.pks">
+                <option v-if="dmTask.mode == 'UPDATE'" v-for="i in sinkColumnArray" :value="i.name">{{ i.name }}</option>
+            </select>
+            <small id="pksHelp" class="form-text text-muted">多选，默认为 Primary Key</small>
         </div>
         <button type="submit" class="btn btn-primary">保存</button>
     </form>

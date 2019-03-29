@@ -14,6 +14,7 @@
     <properties>
         <guice.version>4.1.0</guice.version>
         <fastjson.version>1.2.24</fastjson.version>
+        <commons-dbutils.version>1.7</commons-dbutils.version>
     </properties>
 
     <dependencies>
@@ -44,6 +45,13 @@
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
             <version>${fastjson.version}</version>
+        </dependency>
+
+        <!-- Commons -->
+        <dependency>
+            <groupId>commons-dbutils</groupId>
+            <artifactId>commons-dbutils</artifactId>
+            <version>${commons-dbutils.version}</version>
         </dependency>
 
         <!-- Database -->
