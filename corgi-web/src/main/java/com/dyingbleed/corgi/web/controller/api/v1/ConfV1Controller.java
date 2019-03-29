@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.*;
  * Created by 李震 on 2019/3/13.
  */
 @RestController
-@RequestMapping({"/api/conf", "/api/v1/conf"})
-public class ConfController {
+@RequestMapping("/api/v1/conf")
+public class ConfV1Controller {
 
     @Autowired
     private ODSTaskService odsTaskService;
