@@ -12,6 +12,8 @@ import com.dyingbleed.corgi.core.bean.DMTask
 import com.dyingbleed.corgi.core.constant.{DBMSVendor, Mode}
 import com.dyingbleed.corgi.dm.Application
 
+import scala.collection.JavaConversions._
+
 /**
   * Created by 李震 on 2019/3/12.
   */
@@ -115,6 +117,14 @@ class Conf private[Conf] (args: Array[String]) {
   def sinkDB: String = _dmTask.getSinkDB
 
   def sinkTable: String = _dmTask.getSinkTable
+
+  def pks: Option[Seq[String]] = {
+    if (null == _dmTask.getPks) {
+      None
+    } else {
+      Option(JSON.parseArray(_dmTask.getPks, classOf[String]))
+    }
+  }
 
   def sinkVendor: DBMSVendor = {
     if (_dmTask.getDatasourceUrl.startsWith("jdbc:mysql")) {

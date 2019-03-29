@@ -33,9 +33,10 @@ CREATE TABLE IF NOT EXISTS `dm_task` (
   `sink_table` varchar(32) NOT NULL,
   `where_exp` varchar(1024) DEFAULT NULL,
   `day_offset` int(11) DEFAULT '-1',
+  `pks` varchar(32) DEFAULT '[]',
   PRIMARY KEY (`id`),
   UNIQUE KEY `dm_task_name_uindex` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8;
 
 
 CREATE TABLE IF NOT EXISTS `dm_task_log` (

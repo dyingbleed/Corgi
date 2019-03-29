@@ -34,4 +34,6 @@ public class DMTask {
 
     private String mode;
 
+    private String pks;
+
 }

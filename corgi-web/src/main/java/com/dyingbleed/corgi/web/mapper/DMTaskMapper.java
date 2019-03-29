@@ -21,7 +21,8 @@ public interface DMTaskMapper {
             "  sink_db," +
             "  sink_table," +
             "  where_exp," +
-            "  day_offset" +
+            "  day_offset," +
+            "  pks " +
             ") VALUES (" +
             "  #{task.name}," +
             "  #{task.sourceDB}," +
@@ -31,7 +32,8 @@ public interface DMTaskMapper {
             "  #{task.sinkDB}," +
             "  #{task.sinkTable}," +
             "  #{task.whereExp}," +
-            "  #{task.dayOffset}" +
+            "  #{task.dayOffset}," +
+            "  #{task.pks} " +
             ")" +
             "")
     public void insertDMTask(@Param("task") DMTask task);
@@ -45,7 +47,8 @@ public interface DMTaskMapper {
             "  sink_db=#{task.sinkDB}," +
             "  sink_table=#{task.sinkTable}," +
             "  where_exp=#{task.whereExp}," +
-            "  day_offset=#{task.dayOffset} " +
+            "  day_offset=#{task.dayOffset}," +
+            "  pks=#{task.pks} " +
             "WHERE id=#{task.id}")
     public void updateDMTask(@Param("task") DMTask task);
 
@@ -74,7 +77,8 @@ public interface DMTaskMapper {
             "  sink_db," +
             "  sink_table," +
             "  where_exp," +
-            "  day_offset " +
+            "  day_offset," +
+            "  pks " +
             "FROM dm_task")
     public List<DMTask> queryAllDMTask();
 
@@ -97,7 +101,8 @@ public interface DMTaskMapper {
             "  sink_db," +
             "  sink_table," +
             "  where_exp," +
-            "  day_offset " +
+            "  day_offset," +
+            "  pks " +
             "FROM dm_task " +
             "WHERE id=#{id}")
     public DMTask queryDMTaskById(@Param("id") Long id);
@@ -127,7 +132,8 @@ public interface DMTaskMapper {
             "  ds.password AS datasource_password," +
             "  t.sink_db," +
             "  t.sink_table," +
-            "  t.mode " +
+            "  t.mode, " +
+            "  t.pks " +
             "FROM dm_task t " +
             "LEFT JOIN datasource ds " +
             "ON t.datasource_id = ds.id " +
