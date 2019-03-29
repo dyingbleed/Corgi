@@ -234,7 +234,7 @@ private[ods] final class Conf private(args: Array[String]) {
 
   private def initRemoteAppConf(): Unit = {
     val httpClient = HttpClients.createDefault()
-    val httpGet = new HttpGet("http://" + _apiServer + "/api/conf?name=" + _appName)
+    val httpGet = new HttpGet("http://" + _apiServer + "/api/v1/conf/ods?name=" + _appName)
     val httpResponse = httpClient.execute(httpGet)
 
     val statusCode = httpResponse.getStatusLine.getStatusCode

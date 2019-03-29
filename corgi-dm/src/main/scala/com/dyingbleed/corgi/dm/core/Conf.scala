@@ -71,7 +71,7 @@ class Conf private[Conf] (args: Array[String]) {
 
   private[this] def initRemoteConf(): Unit = {
     val httpClient = HttpClients.createDefault()
-    val httpGet = new HttpGet("http://" + _apiServer + "/api/conf/dm?name=" + _appName)
+    val httpGet = new HttpGet("http://" + _apiServer + "/api/v1/conf/dm?name=" + _appName)
     val httpResponse = httpClient.execute(httpGet)
 
     val statusCode = httpResponse.getStatusLine.getStatusCode
