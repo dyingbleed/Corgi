@@ -6,7 +6,6 @@ import com.dyingbleed.corgi.web.bean.DMTaskLog;
 import com.dyingbleed.corgi.web.mapper.DMTaskLogMapper;
 import com.dyingbleed.corgi.web.mapper.DMTaskMapper;
 import com.dyingbleed.corgi.web.service.DMTaskService;
-import org.apache.livy.JobHandle;
 import org.apache.livy.LivyClient;
 import org.apache.livy.LivyClientBuilder;
 import org.slf4j.Logger;
