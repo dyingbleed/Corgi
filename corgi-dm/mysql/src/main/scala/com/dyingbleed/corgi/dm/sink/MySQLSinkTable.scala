@@ -32,7 +32,7 @@ class MySQLSinkTable @Inject() (conf: Conf) extends SinkTable(conf.url, conf.use
         |AND tc.TABLE_NAME = ?
       """.stripMargin
 
-    val r = new QueryRunner()
+    new QueryRunner()
       .execute(_conn, sql, new MapListHandler(), conf.sinkDB, conf.sinkTable)
       .flatMap(_.toSeq)
       .map(m => {
@@ -54,8 +54,7 @@ class MySQLSinkTable @Inject() (conf: Conf) extends SinkTable(conf.url, conf.use
 
         c
       })
-
-    r.toSeq
+      .toSeq
   }
 
 }

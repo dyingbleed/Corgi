@@ -1,7 +1,6 @@
 package com.dyingbleed.corgi.dm.sink
 import java.sql.Connection
 
-import com.dyingbleed.corgi.core.bean.Column
 import com.dyingbleed.corgi.core.util.JDBCUtil
 import com.dyingbleed.corgi.core.util.JDBCUtil.WithConnection
 import com.dyingbleed.corgi.dm.annotation.EnableSinkOptimization
@@ -12,7 +11,6 @@ import org.apache.commons.dbutils.handlers.ScalarHandler
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import scala.collection.mutable
-import scala.util.control.Breaks._
 
 /**
   * Created by 李震 on 2019/3/14.
@@ -31,40 +29,23 @@ class MySQLInsertUpdateSink extends Sink {
   @EnableSinkOptimization
   override def sink(df: DataFrame): Unit = {
     // 📢 Sink 表配置
-    val confBroadcast = spark.sparkContext.broadcast((conf.url, conf.username, conf.password, conf.sinkDB, conf.sinkTable))
+    val confBroadcast = spark.sparkContext
+      .broadcast((conf.url, conf.username, conf.password, conf.sinkDB, conf.sinkTable))
     // 📢 Sink 表字段
     val columnsBroadcast = spark.sparkContext.broadcast(sinkTable.columns)
 
     // 📢 Sink 表更新字段
-    val keyColumns = {
-      val sinkColumnMap = sinkTable.columns.map(c => (c.getName, c)).toMap
-
-      val keyColumns = new mutable.HashSet[Column]()
-      for (pk <- conf.pks.get) {
-        keyColumns += sinkColumnMap(pk)
-      }
-
-      keyColumns.toSet
+    val keyColumns = if (conf.pks.isDefined && conf.pks.get.nonEmpty) {
+      sinkTable.getColumns(conf.pks.get)
+    } else {
+      // 默认为主键
+      sinkTable.pks
     }
-
     val keyColumnsBroadcast = spark.sparkContext.broadcast(keyColumns)
 
     // 📢 是否 Constraint 字段
-    val isConstraintColumn: Set[Column] => Boolean = columns => {
-      var r = false
-
-      breakable {
-        for (constraint <- sinkTable.constraints) {
-          if (constraint.getColumns.toSet.equals(columns)) {
-            r = true
-            break
-          }
-        }
-      }
-
-      r
-    }
-    val isConstraintColumnBroadcast = spark.sparkContext.broadcast(isConstraintColumn(keyColumns))
+    val isConstraintColumnBroadcast = spark.sparkContext
+      .broadcast(sinkTable.isConstraintColumn(keyColumns))
 
     df.foreachPartition(iterator => {
       val (url, username, password, sinkDB, sinkTable) = confBroadcast.value
@@ -138,7 +119,6 @@ class MySQLInsertUpdateSink extends Sink {
                     new QueryRunner().execute(conn, updateSQL, (updates ++: keys).map(_._3):_*)
                   }
                 }
-
               }
 
             })
