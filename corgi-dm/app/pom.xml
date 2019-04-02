@@ -17,14 +17,14 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-hive_2.11</artifactId>
             <version>${spark.version}</version>
-            <!--<scope>provided</scope>-->
+            <scope>provided</scope>
         </dependency>
         <!-- Livy -->
         <dependency>
             <groupId>org.apache.livy</groupId>
             <artifactId>livy-client-http</artifactId>
             <version>${livy.version}</version>
-            <!--<scope>provided</scope>-->
+            <scope>provided</scope>
         </dependency>
 
         <!-- Guice -->
