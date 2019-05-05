@@ -13,6 +13,10 @@ hdfs-site.xml
 yarn-site.xml
 hive-site.xml
 
+spark*.properties
 application.yml
 cluster.properties
 shiro.ini
+
+# 日志
+*.log
