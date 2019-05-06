@@ -14,6 +14,7 @@
         <module>corgi-web</module>
         <module>corgi-ods</module>
         <module>corgi-dm</module>
+        <module>corgi-client</module>
     </modules>
 
     <properties>
