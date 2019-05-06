@@ -1,6 +1,8 @@
 package com.dyingbleed.corgi.web.service;
 
 import com.dyingbleed.corgi.core.bean.ODSTask;
+import com.dyingbleed.corgi.web.bean.DMTaskLog;
+import com.dyingbleed.corgi.web.bean.ODSTaskLog;
 
 import java.util.List;
 
@@ -54,5 +56,11 @@ public interface ODSTaskService {
      *
      * */
     public ODSTask queryODSTaskByName(String name);
+
+    public void runODSTaskById(Long id);
+
+    public void runODSTaskByName(String name);
+
+    public List<ODSTaskLog> queryODSTaskLogByTaskId(Long taskId);
 
 }

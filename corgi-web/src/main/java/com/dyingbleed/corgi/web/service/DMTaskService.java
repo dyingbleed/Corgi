@@ -22,6 +22,8 @@ public interface DMTaskService {
 
     public void runDMTaskById(Long id);
 
+    public void runDMTaskByName(String name);
+
     public List<DMTaskLog> queryDMTaskLogByTaskId(Long taskId);
 
 }
