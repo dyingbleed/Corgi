@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="base :: base_header(~{::title}, ~{::link}, ~{::script})">
+    <title th:text="${appName}"></title>
+    <link rel="stylesheet" th:href="@{/css/ods/log.css}"/>
+    <script th:src="@{/js/ods/log.js}"></script>
+    <script th:text="${id != null} ? |var id = ${id};| : |var id = null;|"></script>
+</head>
+<body>
+<th:block th:replace="base :: navbar(${appName}, 'ods')"></th:block>
+<div id="app" class="container">
+    <table class="table table-borderless">
+        <thead>
+        <tr>
+            <th scope="col" class="state-column">状态</th>
+            <th scope="col">内容</th>
+            <th scope="col" class="ts-column">时间</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="i in logArray"  v-bind:class="stateClass(i)">
+            <td>{{ stateName(i.state) }}</td>
+            <td>{{ i.content }}</td>
+            <td>{{ i.ts }}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

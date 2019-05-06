@@ -31,10 +31,10 @@ $(function () {
      * */
     function runDMTaskById(id) {
         var url = '/api/dm/run/' + id;
-        $.post(url).done(function (url) {
-            alert("任务运行成功！");
+        $.post(url).done(function () {
+            alert("任务已启动！");
         }).fail(function () {
-            alert("任务运行失败！");
+            alert("任务启动失败！");
         });
     }
 

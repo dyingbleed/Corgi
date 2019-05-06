@@ -47,4 +47,17 @@ public class ODSTaskPageController {
         return modelAndView;
     }
 
+    /**
+     * 日志
+     * */
+    @GetMapping("/log/{id}")
+    public ModelAndView log(@PathVariable("id") Long id) {
+        ModelAndView modelAndView = new ModelAndView("ods/log");
+
+        ModelMap modelMap = modelAndView.getModelMap();
+        modelMap.addAttribute("id", id);
+
+        return modelAndView;
+    }
+
 }

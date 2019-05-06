@@ -15,6 +15,9 @@ $(function () {
             odsTaskArray: odsTaskArray
         },
         methods: {
+            runODSTaskById: function (id) {
+                runODSTaskById(id);
+            },
             deleteODSTaskById: function (id) {
                 if (confirm("是否确认删除？")) {
                     deleteODSTaskById(id);
@@ -51,6 +54,21 @@ $(function () {
             }
 
             return p;
+        });
+    }
+
+    /**
+     * 根据 ID 运行 DM 任务
+     *
+     * @param id 批量任务 ID
+     *
+     * */
+    function runODSTaskById(id) {
+        var url = '/api/ods/run/' + id;
+        $.post(url).done(function () {
+            alert("任务已启动！");
+        }).fail(function () {
+            alert("任务启动失败！");
         });
     }
 
