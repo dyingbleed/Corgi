@@ -52,9 +52,7 @@
             <td>{{ i.sinkDb }}.{{ i.sinkTable }}</td>
             <td>{{ MODE_CODE[i.mode] }}</td>
             <td>
-                <a href="#" class="btn btn-sm btn-primary" v-on:click="runODSTaskById(i.id)">运行</a>
                 <a href="#" class="btn btn-sm btn-danger" v-on:click="deleteODSTaskById(i.id)">删除</a>
-                <a :href="'/ods/log/' + i.id" class="btn btn-sm btn-light">查看日志</a>
             </td>
         </tr>
         </tbody>
