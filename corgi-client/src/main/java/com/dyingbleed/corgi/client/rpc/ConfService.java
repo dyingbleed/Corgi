@@ -2,6 +2,7 @@ package com.dyingbleed.corgi.client.rpc;
 
 import com.dyingbleed.corgi.core.bean.DMTask;
 import com.dyingbleed.corgi.core.bean.ODSTask;
+import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 
@@ -11,9 +12,9 @@ import retrofit2.http.Query;
 public interface ConfService {
 
     @GET("/api/v1/conf/ods")
-    ODSTask getODSTaskConf(@Query("name")String name);
+    Call<ODSTask> getODSTaskConf(@Query("name")String name);
 
     @GET("/api/v1/conf/dm")
-    DMTask getDMTaskConf(@Query("name")String name);
+    Call<DMTask> getDMTaskConf(@Query("name")String name);
 
 }

@@ -6,6 +6,7 @@ import com.dyingbleed.corgi.client.rpc.{ConfService, RunService}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.joda.time.LocalDate
 import retrofit2.Retrofit
+import retrofit2.converter.jackson.JacksonConverterFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -20,7 +21,10 @@ private[client] class DMImpl (url: String, spark: SparkSession) extends DM {
 
   implicit private[this] val context = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
 
-  private[this] val retrofit = new Retrofit.Builder().baseUrl(url).build()
+  private[this] val retrofit = new Retrofit.Builder()
+    .baseUrl(url)
+    .addConverterFactory(JacksonConverterFactory.create())
+    .build()
 
   private[this] val confV1Service = this.retrofit.create(classOf[ConfService])
 
@@ -38,7 +42,7 @@ private[client] class DMImpl (url: String, spark: SparkSession) extends DM {
 
   override def data(name: String): DataFrame = {
     assert(name != null && !name.isEmpty, "job name can not be null.")
-    val dmTask = this.confV1Service.getDMTaskConf(name)
+    val dmTask = this.confV1Service.getDMTaskConf(name).execute().body()
 
     val df = spark.table(s"${dmTask.getSourceDB}.${dmTask.getSourceTable}")
 
@@ -58,7 +62,8 @@ private[client] class DMImpl (url: String, spark: SparkSession) extends DM {
 
   private[this] def runInternal(name: String): Unit = {
     assert(name != null && !name.isEmpty, "job name can not be null.")
-    this.runService.runDMTask(name)
+    val response = this.runService.runDMTask(name).execute()
+    assert(response.code() == 200)
   }
 
 }

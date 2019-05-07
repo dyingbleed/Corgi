@@ -11,6 +11,7 @@ import com.dyingbleed.corgi.core.util.JDBCUtil.WithConnection
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.joda.time.LocalDate
 import retrofit2.Retrofit
+import retrofit2.converter.jackson.JacksonConverterFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.collection.JavaConversions._
@@ -27,7 +28,10 @@ private[client] class ODSImpl (url: String, spark: SparkSession) extends ODS {
 
   implicit private[this] val context = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
 
-  private[this] val retrofit = new Retrofit.Builder().baseUrl(url).build()
+  private[this] val retrofit = new Retrofit.Builder()
+    .baseUrl(url)
+    .addConverterFactory(JacksonConverterFactory.create())
+    .build()
 
   private[this] val confService = this.retrofit.create(classOf[ConfService])
 
@@ -45,7 +49,7 @@ private[client] class ODSImpl (url: String, spark: SparkSession) extends ODS {
 
   override def data(name: String): DataFrame = {
     assert(name != null && !name.isEmpty, "job name can not be null.")
-    val odsTask = this.confService.getODSTaskConf(name)
+    val odsTask = this.confService.getODSTaskConf(name).execute().body()
 
     val df = spark.table(s"${odsTask.getSinkDb}.${odsTask.getSinkTable}")
     Mode.valueOf(odsTask.getMode) match {
@@ -76,6 +80,7 @@ private[client] class ODSImpl (url: String, spark: SparkSession) extends ODS {
 
   private[this] def runInternal(name: String): Unit = {
     assert(name != null && !name.isEmpty, "job name can not be null.")
-    this.runService.runODSTask(name)
+    val response = this.runService.runODSTask(name).execute()
+    assert(response.code() == 200)
   }
 }

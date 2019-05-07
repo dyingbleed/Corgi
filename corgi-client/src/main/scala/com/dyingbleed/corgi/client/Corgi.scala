@@ -13,34 +13,34 @@ object Corgi {
     new CorgiBuilder
   }
 
+  class CorgiBuilder private[Corgi] () {
+
+    private[this] var url: String = _
+
+    private[this] var spark: SparkSession = _
+
+    def withURL(url: String): CorgiBuilder = {
+      this.url = url
+      this
+    }
+
+    def withSparkSession(spark: SparkSession): CorgiBuilder = {
+      this.spark = spark
+      this
+    }
+
+    def build(): Corgi = {
+      assert(this.url != null)
+      assert(this.spark != null)
+
+      new Corgi(url, spark)
+    }
+
+  }
+
 }
 
-class CorgiBuilder private[Corgi] () {
-
-  private[this] var url: String = _
-
-  private[this] var spark: SparkSession = _
-
-  def withURL(url: String): CorgiBuilder = {
-    this.url = url
-    this
-  }
-
-  def withSparkSession(spark: SparkSession): CorgiBuilder = {
-    this.spark = spark
-    this
-  }
-
-  def build(): Corgi = {
-    assert(this.url != null)
-    assert(this.spark != null)
-
-    new Corgi(url, spark)
-  }
-
-}
-
-class Corgi private[CorgiBuilder] (url: String, spark: SparkSession) {
+class Corgi private[Corgi] (url: String, spark: SparkSession) {
 
   def ods: ODS = {
     new ODSImpl(url, spark)
@@ -51,3 +51,4 @@ class Corgi private[CorgiBuilder] (url: String, spark: SparkSession) {
   }
 
 }
+
