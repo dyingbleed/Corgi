@@ -11,7 +11,7 @@ import scala.collection.JavaConversions._
 /**
   * Created by 李震 on 2019/4/1.
   */
-class OracleSinkTable(@Inject() conf: Conf) extends SinkTable(conf.url, conf.username, conf.password, conf.sinkDB, conf.sinkTable) {
+class OracleSinkTable @Inject() (conf: Conf) extends SinkTable(conf.url, conf.username, conf.password, conf.sinkDB, conf.sinkTable) {
 
   override def constraints: Seq[Constraint] = {
     // Seq 转 Map

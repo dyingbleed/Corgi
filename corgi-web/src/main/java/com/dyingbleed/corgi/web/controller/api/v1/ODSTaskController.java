@@ -1,6 +1,7 @@
 package com.dyingbleed.corgi.web.controller.api.v1;
 
 import com.dyingbleed.corgi.core.bean.ODSTask;
+import com.dyingbleed.corgi.web.bean.ODSTaskLog;
 import com.dyingbleed.corgi.web.service.ODSTaskService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +70,16 @@ public class ODSTaskController {
     @GetMapping("/{id}")
     public ODSTask queryODSTaskById(@PathVariable("id") Long id) {
         return this.odsTaskService.queryODSTaskById(id);
+    }
+
+    @PostMapping("/run/{id}")
+    public void runODSTaskById(@PathVariable("id") Long id) {
+        this.odsTaskService.runODSTaskById(id);
+    }
+
+    @GetMapping("/log/{task_id}")
+    public List<ODSTaskLog> queryODSTaskLogByTaskId(@PathVariable("task_id") Long taskId) {
+        return this.odsTaskService.queryODSTaskLogByTaskId(taskId);
     }
 
 }

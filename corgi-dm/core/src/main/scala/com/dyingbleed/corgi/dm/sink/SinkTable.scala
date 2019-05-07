@@ -15,7 +15,7 @@ abstract class SinkTable(url: String, username: String, password: String, db: St
 
   private[sink] lazy val _conn: Connection = JDBCUtil.getConnection(url, username, password)
 
-  private[Sink] lazy val _columnsMap = columns.map(c => (c.getName, c)).toMap
+  private[sink] lazy val _columnsMap = columns.map(c => (c.getName, c)).toMap
 
   lazy val columns: Seq[Column] = JDBCUtil.getColumns(_conn, db, table).toSeq
 

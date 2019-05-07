@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,11 +76,23 @@ public class DMTaskServiceImpl implements DMTaskService {
         return this.dmTaskMapper.queryDMTaskByName(name);
     }
 
+    @Async
     @Override
     public void runDMTaskById(Long id) {
         DMTask dmTask = queryDMTaskById(id);
         assert dmTask != null;
+        runDMTask(dmTask);
+    }
 
+    @Async
+    @Override
+    public void runDMTaskByName(String name) {
+        DMTask dmTask = queryDMTaskByName(name);
+        assert dmTask != null;
+        runDMTask(dmTask);
+    }
+
+    private void runDMTask(DMTask task) {
         LivyClient livyClient = null;
         try {
             livyClient = new LivyClientBuilder()
@@ -90,9 +103,9 @@ public class DMTaskServiceImpl implements DMTaskService {
             assert appFile.exists();
             livyClient.uploadJar(appFile);
 
-            livyClient.submit(new LivyJob(new String[]{dmTask.getName()})).get();
+            livyClient.submit(new LivyJob(new String[]{task.getName()})).get();
         } catch (IOException | URISyntaxException | InterruptedException | ExecutionException e) {
-            this.dmTaskLogMapper.insertDMTaskLog(DMTaskLog.failedLog(id, e)); // 记录失败日志
+            this.dmTaskLogMapper.insertDMTaskLog(DMTaskLog.failedLog(task.getId(), e)); // 记录失败日志
 
             throw new RuntimeException(e);
         } finally {
@@ -101,7 +114,7 @@ public class DMTaskServiceImpl implements DMTaskService {
             }
         }
 
-        this.dmTaskLogMapper.insertDMTaskLog(DMTaskLog.successLog(id)); // 记录成功日志
+        this.dmTaskLogMapper.insertDMTaskLog(DMTaskLog.successLog(task.getId())); // 记录成功日志
     }
 
     @Override
