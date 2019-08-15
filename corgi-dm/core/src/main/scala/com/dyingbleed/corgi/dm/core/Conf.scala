@@ -19,7 +19,7 @@ import scala.collection.JavaConversions._
 object Conf {
 
   def apply(args: Array[String]): Conf = {
-    val conf = new Conf(args)
+    val conf = new ConfImpl(args)
     conf.init()
     conf
   }
@@ -29,7 +29,37 @@ object Conf {
 
 }
 
-class Conf private[Conf] (args: Array[String]) {
+trait Conf {
+
+  def appName: String
+
+  def sourceDB: String
+
+  def sourceTable: String
+
+  def whereExp: Option[String]
+
+  def dayOffset: Option[Integer]
+
+  def mode: Mode
+
+  def url: String
+
+  def username: String
+
+  def password: String
+
+  def sinkDB: String
+
+  def sinkTable: String
+
+  def pks: Option[Seq[String]]
+
+  def sinkVendor: DBMSVendor
+
+}
+
+private class ConfImpl (args: Array[String]) extends Conf {
 
   /*
    * 参数
@@ -89,7 +119,7 @@ class Conf private[Conf] (args: Array[String]) {
     }
   }
 
-  private[Conf] def init(): Unit = {
+  def init(): Unit = {
     initArgsConf()
     initClasspathConf()
     initRemoteConf()

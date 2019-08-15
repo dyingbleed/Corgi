@@ -1,7 +1,7 @@
 package com.dyingbleed.corgi.dm.sink
 import java.sql.Connection
 
-import com.dyingbleed.corgi.core.util.JDBCUtil
+import com.dyingbleed.corgi.core.util.{JDBCUtil, TableConstraintUtil}
 import com.dyingbleed.corgi.core.util.JDBCUtil.WithConnection
 import com.dyingbleed.corgi.dm.annotation.EnableSinkOptimization
 import com.dyingbleed.corgi.dm.core.Conf
@@ -11,6 +11,7 @@ import org.apache.commons.dbutils.handlers.ScalarHandler
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import scala.collection.mutable
+import scala.collection.JavaConverters._
 
 /**
   * Created by 李震 on 2019/3/14.
@@ -43,9 +44,8 @@ class MySQLInsertUpdateSink extends Sink {
     }
     val keyColumnsBroadcast = spark.sparkContext.broadcast(keyColumns)
 
-    // 📢 是否 Constraint 字段
-    val isConstraintColumnBroadcast = spark.sparkContext
-      .broadcast(sinkTable.isConstraintColumn(keyColumns))
+    // 📢 Constraints
+    val constraintsBroadcast = spark.sparkContext.broadcast(sinkTable.constraints);
 
     df.foreachPartition(iterator => {
       val (url, username, password, sinkDB, sinkTable) = confBroadcast.value
@@ -55,6 +55,7 @@ class MySQLInsertUpdateSink extends Sink {
         override def withConnection(conn: Connection): Unit = {
           val sinkColumnMap = columnsBroadcast.value.map(c => (c.getName, c)).toMap // Sink 表字段
           val keyColumns = keyColumnsBroadcast.value
+          val contraints = constraintsBroadcast.value
 
           while (iterator.hasNext) { // 主循环，遍历分区
             val row = iterator.next()
@@ -75,11 +76,13 @@ class MySQLInsertUpdateSink extends Sink {
                   if (keyColumns.contains(c)) {
                     keys += i
                   } else {
-                    updates += i
+                    if (!TableConstraintUtil.isConstraint(contraints.asJava, Set(c).asJava)) {
+                      updates += i
+                    }
                   }
                 }
 
-                if (isConstraintColumnBroadcast.value) {
+                if (TableConstraintUtil.isConstraint(contraints.asJava, keyColumns.toSet.asJava)) {
                   val sql =
                     s"""
                        |INSERT INTO $sinkDB.$sinkTable (${inserts.map(_._1).mkString(",")})
